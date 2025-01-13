@@ -24,6 +24,11 @@ export default class AuxEventos {
     return db(AuxEventos.tableName).where({ id }).first()
   }
 
+  public static async getByEventId(eventId: number): Promise<IAuxEvento> {
+    const db = Db.getConnection()
+    return db(AuxEventos.tableName).where({ event_id: eventId }).first()
+  }
+
   public static async create(viagem: IAuxEvento): Promise<number> {
     const db = Db.getConnection()
     const [id] = await db(AuxEventos.tableName).insert(viagem)

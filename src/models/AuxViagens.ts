@@ -23,6 +23,11 @@ export default class AuxViagens {
     return db(AuxViagens.tableName).where({ id }).first()
   }
 
+  public static async getByTripId(tripId: number): Promise<IAuxViagem> {
+    const db = Db.getConnection()
+    return db(AuxViagens.tableName).where({ trip_id: tripId }).first()
+  }
+
   public static async create(viagem: IAuxViagem): Promise<number> {
     const db = Db.getConnection()
     const [id] = await db(AuxViagens.tableName).insert(viagem)

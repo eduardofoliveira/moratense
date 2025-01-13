@@ -6,6 +6,7 @@
   "scripts": {
     "motoristas": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-motoristas.ts",
     "viagens": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-viagens.ts",
+    "eventos": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-eventos.ts",
     "dev": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/index.ts",
     "build": "tsc"
   },

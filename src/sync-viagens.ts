@@ -14,6 +14,7 @@ import insertAuxEvento from "./use-cases/auxEvento/insertAuxEvento"
 import showTelemetriaTiposEvento from "./use-cases/telemetriaTiposEvento/showTelemetriaTiposEvento"
 import showTelemetriaTiposEventoConverter from "./use-cases/telemetriaTipoEventoConverter/showTelemetriaTiposEventoConverter"
 import insertDrankTelEvento from "./use-cases/drankTelEvento/insertDrankTelEvento"
+import showAuxViagem from "./use-cases/auxViagem/showAuxViagem"
 
 function converteDataParaTurno(data: string) {
   const dataObj = new Date(data)
@@ -57,6 +58,11 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
 
   for (const viagem of viagens) {
     console.log(`Viagem: ${count++}`)
+
+    const dbExists = await showAuxViagem({ tripId: viagem.TripId.toString() })
+    if (dbExists) {
+      continue
+    }
 
     if (viagem.SubTrips && viagem.SubTrips.length > 0) {
       for (const subTrip of viagem.SubTrips) {
@@ -245,6 +251,7 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
 const executar = async () => {
   const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
   await sincronizarViagens({ token: Number.parseInt(config.valor) })
+  // await sincronizarViagens({ token: 20250108000000 })
   console.log("viagens inseridas")
 
   setTimeout(async () => {
