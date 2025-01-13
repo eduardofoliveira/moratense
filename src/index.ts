@@ -118,7 +118,8 @@ const executar = async () => {
   // const apiMix = ApiMix.getInstance()
   // await apiMix.getToken()
 
-  await sincronizarViagens({ token: 20250107000000 })
+  const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
+  await sincronizarViagens({ token: Number.parseInt(config.valor) })
   console.log("viagens inseridas")
 
   // const listCarrosApi = await apiMix.listaCarros({
@@ -129,7 +130,7 @@ const executar = async () => {
   // console.log(getsincetoken)
   // console.log(viagens[0])
 
-  // const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
+  //
   // console.log({ config })
 }
 
