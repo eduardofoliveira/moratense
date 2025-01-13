@@ -12,7 +12,26 @@ class ApiMix {
       headers: {
         Authorization: `Bearer ${this.token ? this.token : ""}`,
       },
+      transformResponse: [
+        (data) => {
+          try {
+            return JSONBig.parse(data)
+          } catch (error) {
+            return data
+          }
+        },
+      ],
     })
+
+    // this.localAxios.interceptors.request.use((request) => {
+    //   request.transformResponse = [(data) => data]
+    //   return request
+    // })
+
+    // this.localAxios.interceptors.response.use((response) => {
+    //   response.data = JSONBig().parse(response.data)
+    //   return response
+    // })
   }
 
   public static getInstance(): ApiMix {
@@ -136,6 +155,24 @@ class ApiMix {
         hasmoreitems,
         eventos: response.data,
       }
+    } catch (error) {
+      console.error(error)
+
+      if (error instanceof AxiosError) {
+        console.error("Axios Error")
+        console.error(error)
+      }
+
+      throw error
+    }
+  }
+
+  public async listaMotoristas({ groupId }: { groupId: string }): Promise<any> {
+    try {
+      const response = await this.localAxios.get(
+        `/api/drivers/organisation/${groupId}`,
+      )
+      return response.data
     } catch (error) {
       console.error(error)
 

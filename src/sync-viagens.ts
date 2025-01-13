@@ -243,21 +243,13 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
 }
 
 const executar = async () => {
-  // const apiMix = ApiMix.getInstance()
-  // await apiMix.getToken()
-  // const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
-  // await sincronizarViagens({ token: Number.parseInt(config.valor) })
-  // console.log("viagens inseridas")
-  // const listCarrosApi = await apiMix.listaCarros({
-  //   groupId: empresa.mix_groupId,
-  // })
-  // await syncMixApi({ input: listCarrosApi, idEmpresa: empresa.id as number })
-  // console.log(getsincetoken)
-  // console.log(viagens[0])
-  //
-  // console.log({ config })
-  const configEvento = await showDrankTelConfig({ name: "sinceTokenEvents" })
-  await sincronizarEventos({ token: "20250112000000" })
+  const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
+  await sincronizarViagens({ token: Number.parseInt(config.valor) })
+  console.log("viagens inseridas")
+
+  setTimeout(async () => {
+    executar()
+  }, 60000)
 }
 
 executar()
