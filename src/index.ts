@@ -1,4 +1,5 @@
 import "dotenv/config"
+import { format, parseISO, subDays } from "date-fns"
 
 import ApiMix from "./service/api.mix"
 import showEmpresa from "./use-cases/empresa/showEmpresa"
@@ -9,6 +10,25 @@ import insertDrankTelViagem from "./use-cases/drankTelViagem/insertDrankTelViage
 import showTelemetriaCarro from "./use-cases/telemetriaCarro/showTelemetriaCarro"
 import showDrankTelMotorista from "./use-cases/drankTelMotorista/showDrankTelMotorista"
 import insertAuxViagem from "./use-cases/auxViagem/insertAuxViagem"
+import insertAuxEvento from "./use-cases/auxEvento/insertAuxEvento"
+import showTelemetriaTiposEvento from "./use-cases/telemetriaTiposEvento/showTelemetriaTiposEvento"
+import showTelemetriaTiposEventoConverter from "./use-cases/telemetriaTipoEventoConverter/showTelemetriaTiposEventoConverter"
+import insertDrankTelEvento from "./use-cases/drankTelEvento/insertDrankTelEvento"
+
+function converteDataParaTurno(data: string) {
+  const dataObj = new Date(data)
+  let dt = format(dataObj, "yyyy-MM-dd")
+
+  const hora = dataObj.getHours()
+  const minutos = dataObj.getMinutes()
+  const segundos = dataObj.getSeconds()
+
+  if (hora < 2 && minutos < 59 && segundos < 59) {
+    dt = format(subDays(parseISO(dt), 1), "yyyy-MM-dd")
+  }
+
+  return dt
+}
 
 const sincronizarViagens = async ({ token }: { token: number }) => {
   const empresa = await showEmpresa({ id: 4 })
@@ -114,13 +134,121 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
   await sincronizarViagens({ token: getsincetoken })
 }
 
+const sincronizarEventos = async ({ token }: { token: string }) => {
+  const empresa = await showEmpresa({ id: 4 })
+
+  const eventosDb = await showTelemetriaTiposEvento({
+    id_empresa: 4,
+  })
+
+  const eventosConverter = await showTelemetriaTiposEventoConverter({
+    id_empresa: 4,
+  })
+
+  const codigosEventos = []
+  for (const evento of eventosDb) {
+    if (
+      evento.rank_seguranca === 1 &&
+      evento.rank_consulmo === 1 &&
+      evento.carregar === 1
+    ) {
+      codigosEventos.push(evento.codigo)
+    }
+  }
+
+  const apiMix = ApiMix.getInstance()
+  await apiMix.getToken()
+
+  const response = await apiMix.listaEventosCarroPorDataST({
+    groupId: empresa.mix_groupId,
+    codigosEventos,
+    token,
+  })
+
+  const eventos = response.eventos
+  // const hasmoreitems = response.hasmoreitems
+  const getsincetoken = response.getsincetoken
+
+  console.log(`Token: ${getsincetoken}`)
+  console.log(`Eventos: ${eventos.length}`)
+  let count = 0
+
+  await updateDrankTelConfig({
+    name: "sinceTokenEvents",
+    value: getsincetoken,
+  })
+
+  if (eventos.length === 0) {
+    return
+  }
+
+  for (const evento of eventos) {
+    console.log(`Viagem: ${count++}`)
+
+    const carro = await showTelemetriaCarro({
+      codigo_mix: evento.AssetId,
+    })
+
+    const motorista = await showDrankTelMotorista({
+      codigo_mix: evento.DriverId,
+    })
+
+    const id_tipo = eventosConverter.find(
+      (item) => item.id_mix_entrada === evento.EventTypeId,
+    )
+
+    let long = ""
+    let lat = ""
+
+    if (evento.StartPosition) {
+      long = evento?.StartPosition?.Longitude
+      lat = evento?.StartPosition?.Latitude
+    }
+
+    const insert = {
+      id_empresa: empresa.id as number,
+      carro: carro.carro,
+      id_carro_tel: carro.id as number,
+      id_motorista: motorista ? (motorista.id as number) : 0,
+      data_ini: evento.StartDateTime
+        ? new Date(evento.StartDateTime)
+        : "0000-00-00 00:00:00",
+      data_fim:
+        evento.TotalTimeSeconds > 0
+          ? new Date(evento.EndDateTime)
+          : "0000-00-00 00:00:00",
+      id_tipo: id_tipo?.id_tipo_saida ? id_tipo?.id_tipo_saida : 0,
+      tempo: evento.TotalTimeSeconds,
+      quantidades_ocorrencias: evento.TotalOccurances
+        ? evento.TotalOccurances
+        : 1,
+      data_turno_tel: converteDataParaTurno(evento.StartDateTime),
+      data: new Date(),
+      long,
+      lat,
+    }
+
+    const id = await insertDrankTelEvento(insert)
+
+    await insertAuxEvento({
+      asset_id: evento.AssetId,
+      driver_id: evento.DriverId,
+      event_id: evento.EventId,
+      event_type_id: evento.EventTypeId,
+      id_drank_tel_eventos: id,
+    })
+  }
+
+  await sincronizarEventos({ token: getsincetoken })
+}
+
 const executar = async () => {
   // const apiMix = ApiMix.getInstance()
   // await apiMix.getToken()
 
-  const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
-  await sincronizarViagens({ token: Number.parseInt(config.valor) })
-  console.log("viagens inseridas")
+  // const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
+  // await sincronizarViagens({ token: Number.parseInt(config.valor) })
+  // console.log("viagens inseridas")
 
   // const listCarrosApi = await apiMix.listaCarros({
   //   groupId: empresa.mix_groupId,
@@ -132,6 +260,9 @@ const executar = async () => {
 
   //
   // console.log({ config })
+
+  const configEvento = await showDrankTelConfig({ name: "sinceTokenEvents" })
+  await sincronizarEventos({ token: "20250108000000" })
 }
 
 executar()
