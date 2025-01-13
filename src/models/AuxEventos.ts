@@ -11,32 +11,32 @@ export type IAuxEvento = {
 }
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
-export default class AuxViagens {
-  static tableName = "aux_viagens"
+export default class AuxEventos {
+  static tableName = "aux_eventos"
 
   public static async getAll(): Promise<IAuxEvento[]> {
     const db = Db.getConnection()
-    return db(AuxViagens.tableName).select("*")
+    return db(AuxEventos.tableName).select("*")
   }
 
   public static async getById(id: number): Promise<IAuxEvento> {
     const db = Db.getConnection()
-    return db(AuxViagens.tableName).where({ id }).first()
+    return db(AuxEventos.tableName).where({ id }).first()
   }
 
   public static async create(viagem: IAuxEvento): Promise<number> {
     const db = Db.getConnection()
-    const [id] = await db(AuxViagens.tableName).insert(viagem)
+    const [id] = await db(AuxEventos.tableName).insert(viagem)
     return id
   }
 
   public static async update(id: number, viagem: IAuxEvento): Promise<void> {
     const db = Db.getConnection()
-    await db(AuxViagens.tableName).where({ id }).update(viagem)
+    await db(AuxEventos.tableName).where({ id }).update(viagem)
   }
 
   public static async delete(id: number): Promise<void> {
     const db = Db.getConnection()
-    await db(AuxViagens.tableName).where({ id }).delete()
+    await db(AuxEventos.tableName).where({ id }).delete()
   }
 }
