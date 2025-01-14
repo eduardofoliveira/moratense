@@ -15,6 +15,9 @@ import showTelemetriaTiposEvento from "./use-cases/telemetriaTiposEvento/showTel
 import showTelemetriaTiposEventoConverter from "./use-cases/telemetriaTipoEventoConverter/showTelemetriaTiposEventoConverter"
 import insertDrankTelEvento from "./use-cases/drankTelEvento/insertDrankTelEvento"
 import showAuxEvento from "./use-cases/auxEvento/showAuxEvento"
+import insertDrankTelViagemPonto from "./use-cases/drankTelViagensPonto/insertDrankTelViagemPonto"
+import insertAuxPosition from "./use-cases/auxPosition/insertAuxPosition"
+import showAuxPosition from "./use-cases/auxPosition/showAuxPosition"
 
 function converteDataParaTurno(data: string) {
   const dataObj = new Date(data)
@@ -251,6 +254,71 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
   await sincronizarEventos({ token: getsincetoken })
 }
 
+const sincronizarPosicoes = async ({ token }: { token: string }) => {
+  const empresa = await showEmpresa({ id: 4 })
+
+  const apiMix = ApiMix.getInstance()
+  await apiMix.getToken()
+
+  const response = await apiMix.listarPosicoes({
+    groupId: empresa.mix_groupId,
+    token,
+  })
+
+  const { getsincetoken, hasmoreitems, posicoes } = response
+
+  console.log(`Token: ${getsincetoken}`)
+  console.log(`Posições: ${posicoes.length}`)
+  let count = 0
+
+  await updateDrankTelConfig({
+    name: "sinceTokenPositions",
+    value: getsincetoken,
+  })
+
+  if (posicoes.length === 0) {
+    return
+  }
+
+  for await (const posicao of posicoes) {
+    console.log(`Pontos: ${count++}`)
+
+    const carro = await showTelemetriaCarro({
+      codigo_mix: posicao.AssetId.toString(),
+    })
+
+    const positionExistDB = await showAuxPosition({
+      positionId: posicao.PositionId.toString(),
+    })
+
+    if (positionExistDB) {
+      continue
+    }
+
+    const insert = {
+      id_empresa: empresa.id as number,
+      carro: carro.carro,
+      km: posicao.SpeedKilometresPerHour,
+      long: posicao.Longitude.toString(),
+      lat: posicao.Latitude.toString(),
+      data: new Date(posicao.Timestamp),
+      data_turno: converteDataParaTurno(posicao.Timestamp),
+      data_cadastro: new Date(),
+    }
+
+    const id = await insertDrankTelViagemPonto(insert)
+
+    await insertAuxPosition({
+      asset_id: posicao.AssetId.toString(),
+      driver_id: posicao.DriverId.toString(),
+      id_drank_tel_viagens_pontos: id,
+      position_id: posicao.PositionId.toString(),
+    })
+  }
+
+  await sincronizarPosicoes({ token: getsincetoken })
+}
+
 const executar = async () => {
   // const apiMix = ApiMix.getInstance()
   // await apiMix.getToken()
@@ -265,9 +333,22 @@ const executar = async () => {
   // console.log(viagens[0])
   //
   // console.log({ config })
-  const configEvento = await showDrankTelConfig({ name: "sinceTokenEvents" })
-  await sincronizarEventos({ token: configEvento.valor })
-  console.log("eventos inseridas")
+  // const configEvento = await showDrankTelConfig({ name: "sinceTokenEvents" })
+  // await sincronizarEventos({ token: configEvento.valor })
+  // console.log("eventos inseridas")
+  // setTimeout(async () => {
+  //   executar()
+  // }, 60000)
+
+  try {
+    const configEvento = await showDrankTelConfig({
+      name: "sinceTokenPositions",
+    })
+    await sincronizarPosicoes({ token: configEvento.valor })
+    console.log("posições inseridas")
+  } catch (error) {
+    console.log(error)
+  }
 
   setTimeout(async () => {
     executar()

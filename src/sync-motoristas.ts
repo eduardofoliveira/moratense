@@ -6,51 +6,54 @@ import indexTelemetriaMotorista from "./use-cases/telemetriaMotorista/indexTelem
 import insertTelemetriaMotorista from "./use-cases/telemetriaMotorista/insertTelemetriaMotorista"
 
 const executar = async () => {
-  const empresa = await showEmpresa({ id: 4 })
+  try {
+    const empresa = await showEmpresa({ id: 4 })
+    const apiMix = ApiMix.getInstance()
+    await apiMix.getToken()
 
-  const apiMix = ApiMix.getInstance()
-  await apiMix.getToken()
+    const motoristasDb = await indexTelemetriaMotorista()
 
-  const motoristasDb = await indexTelemetriaMotorista()
+    const motoristas = await apiMix.listaMotoristas({
+      groupId: empresa.mix_groupId,
+    })
 
-  const motoristas = await apiMix.listaMotoristas({
-    groupId: empresa.mix_groupId,
-  })
+    console.log(`Total: ${motoristas.length}`)
+    let count = 0
 
-  console.log(`Total: ${motoristas.length}`)
-  let count = 0
+    for await (const motorista of motoristas) {
+      console.log(`Motorista: ${count++}`)
 
-  for await (const motorista of motoristas) {
-    console.log(`Motorista: ${count++}`)
+      const exists = motoristasDb.find(
+        (item) => BigInt(item.codigo) === BigInt(motorista.DriverId),
+      )
 
-    const exists = motoristasDb.find(
-      (item) => BigInt(item.codigo) === BigInt(motorista.DriverId),
-    )
+      if (!exists) {
+        console.log("Motorista não encontrado, inserindo...")
 
-    if (!exists) {
-      console.log("Motorista não encontrado, inserindo...")
+        if (
+          motorista.EmployeeNumber &&
+          Number.parseInt(motorista.EmployeeNumber, 10)
+        ) {
+          console.log({
+            codigo: motorista.DriverId.toString(),
+            id_empresa: empresa.id as number,
+            codigo_motorista: motorista.EmployeeNumber,
+            nome: motorista.Name,
+            data_cadastro: new Date(),
+          })
 
-      if (
-        motorista.EmployeeNumber &&
-        Number.parseInt(motorista.EmployeeNumber, 10)
-      ) {
-        console.log({
-          codigo: motorista.DriverId.toString(),
-          id_empresa: empresa.id as number,
-          codigo_motorista: motorista.EmployeeNumber,
-          nome: motorista.Name,
-          data_cadastro: new Date(),
-        })
-
-        await insertTelemetriaMotorista({
-          codigo: motorista.DriverId.toString(),
-          id_empresa: empresa.id as number,
-          codigo_motorista: Number.parseInt(motorista.EmployeeNumber, 10),
-          nome: motorista.Name,
-          data_cadastro: new Date(),
-        })
+          await insertTelemetriaMotorista({
+            codigo: motorista.DriverId.toString(),
+            id_empresa: empresa.id as number,
+            codigo_motorista: Number.parseInt(motorista.EmployeeNumber, 10),
+            nome: motorista.Name,
+            data_cadastro: new Date(),
+          })
+        }
       }
     }
+  } catch (error) {
+    console.log(error)
   }
 }
 

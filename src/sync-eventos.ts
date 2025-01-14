@@ -202,8 +202,12 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
       codigo_mix: evento.DriverId.toString(),
     })
 
-    const id_tipo = eventosConverter.find(
+    const idTipoConverter = eventosConverter.find(
       (item) => item.id_mix_entrada === evento.EventTypeId.toString(),
+    )
+
+    const findEventoDB = eventosDb.find(
+      (item) => item.codigo === evento.EventTypeId.toString(),
     )
 
     let long = ""
@@ -214,11 +218,22 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
       lat = evento?.StartPosition?.Latitude.toString()
     }
 
+    let id_tipo = 0
+    if (idTipoConverter) {
+      id_tipo = idTipoConverter.id_tipo_saida
+    }
+    if (id_tipo === 0 && findEventoDB && findEventoDB.id_tipo_original) {
+      id_tipo = findEventoDB.id_tipo_original as number
+    }
+    if (id_tipo === 0 && findEventoDB) {
+      id_tipo = findEventoDB.id as number
+    }
+
     const insert = {
       id_empresa: empresa.id as number,
       carro: carro.carro,
       id_carro_tel: carro.id as number,
-      id_motorista: motorista ? (motorista.id as number) : 0,
+      id_motorista: motorista ? (motorista.codigo_motorista as number) : 0,
       data_ini: evento.StartDateTime
         ? new Date(evento.StartDateTime)
         : "0000-00-00 00:00:00",
@@ -226,7 +241,7 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
         evento.TotalTimeSeconds > 0
           ? new Date(evento.EndDateTime)
           : "0000-00-00 00:00:00",
-      id_tipo: id_tipo?.id_tipo_saida ? id_tipo?.id_tipo_saida : 0,
+      id_tipo,
       tempo: evento.TotalTimeSeconds,
       quantidades_ocorrencias: evento.TotalOccurances
         ? evento.TotalOccurances
@@ -265,9 +280,13 @@ const executar = async () => {
   // console.log(viagens[0])
   //
   // console.log({ config })
-  const configEvento = await showDrankTelConfig({ name: "sinceTokenEvents" })
-  await sincronizarEventos({ token: configEvento.valor })
-  console.log("eventos inseridas")
+  try {
+    const configEvento = await showDrankTelConfig({ name: "sinceTokenEvents" })
+    await sincronizarEventos({ token: configEvento.valor })
+    console.log("eventos inseridas")
+  } catch (error) {
+    console.error(error)
+  }
 
   setTimeout(async () => {
     executar()

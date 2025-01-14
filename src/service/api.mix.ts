@@ -184,6 +184,40 @@ class ApiMix {
       throw error
     }
   }
+
+  public async listarPosicoes({
+    groupId,
+    token,
+  }: { groupId: string; token: string }): Promise<any> {
+    try {
+      const options = {
+        method: "POST",
+        url: `https://integrate.us.mixtelematics.com/api/positions/groups/createdsince/entitytype/Asset/sincetoken/${token}/quantity/1000`,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: JSONBig.stringify([BigInt(groupId)]),
+      }
+
+      const response = await this.localAxios.request(options)
+      const { getsincetoken, hasmoreitems } = response.headers
+
+      return {
+        getsincetoken,
+        hasmoreitems,
+        posicoes: response.data,
+      }
+    } catch (error) {
+      console.error(error)
+
+      if (error instanceof AxiosError) {
+        console.error("Axios Error")
+        console.error(error)
+      }
+
+      throw error
+    }
+  }
 }
 
 export default ApiMix

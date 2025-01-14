@@ -79,7 +79,9 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
             carro: carro.carro,
             id_empresa: 4,
             id_carro_tel: carro.id as number,
-            motorista_cod: motorista ? (motorista.id as number) : 0,
+            motorista_cod: motorista
+              ? (motorista.codigo_motorista as number)
+              : 0,
             motorista_nome: motorista ? motorista.nome : "",
             data_ini: new Date(subTrip.SubTripStart),
             data_fim: new Date(subTrip.SubTripEnd),
@@ -114,7 +116,7 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
         carro: carro.carro,
         id_empresa: 4,
         id_carro_tel: carro.id as number,
-        motorista_cod: motorista ? (motorista.id as number) : 0,
+        motorista_cod: motorista ? (motorista.codigo_motorista as number) : 0,
         motorista_nome: motorista ? motorista.nome : "",
         data_ini: new Date(viagem.SubTripStart),
         data_fim: new Date(viagem.SubTripEnd),
@@ -249,10 +251,13 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
 }
 
 const executar = async () => {
-  const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
-  await sincronizarViagens({ token: Number.parseInt(config.valor) })
-  // await sincronizarViagens({ token: 20250108000000 })
-  console.log("viagens inseridas")
+  try {
+    const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
+    await sincronizarViagens({ token: Number.parseInt(config.valor) })
+    console.log("viagens inseridas")
+  } catch (error) {
+    console.error(error)
+  }
 
   setTimeout(async () => {
     executar()
