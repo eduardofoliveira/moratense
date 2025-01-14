@@ -4,6 +4,9 @@ import ApiMix from "./service/api.mix"
 import showEmpresa from "./use-cases/empresa/showEmpresa"
 import indexTelemetriaMotorista from "./use-cases/telemetriaMotorista/indexTelemetriaMotorista"
 import insertTelemetriaMotorista from "./use-cases/telemetriaMotorista/insertTelemetriaMotorista"
+import updateDrankTelMotoristaByCodMix from "./use-cases/drankTelMotorista/updateDrankTelMotoristaByCodMix"
+import showDrankTelMotorista from "./use-cases/drankTelMotorista/showDrankTelMotorista"
+import insertDrankTelMotorista from "./use-cases/drankTelMotorista/insertDrankTelMotorista"
 
 const executar = async () => {
   try {
@@ -22,6 +25,32 @@ const executar = async () => {
 
     for await (const motorista of motoristas) {
       console.log(`Motorista: ${count++}`)
+
+      const motoristaExistDrank = await showDrankTelMotorista({
+        codigo_mix: motorista.DriverId.toString(),
+      })
+
+      if (
+        motoristaExistDrank &&
+        Number.parseInt(motorista.EmployeeNumber, 10) > 0
+      ) {
+        await updateDrankTelMotoristaByCodMix({
+          codigo_mix: motorista.DriverId.toString(),
+          codigo_motorista: Number.parseInt(motorista.EmployeeNumber, 10),
+          id_empresa: empresa.id as number,
+          nome: motorista.Name,
+        })
+      } else {
+        if (Number.parseInt(motorista.EmployeeNumber, 10) > 0) {
+          await insertDrankTelMotorista({
+            codigo: motorista.DriverId.toString(),
+            codigo_motorista: Number.parseInt(motorista.EmployeeNumber, 10),
+            data_cadastro: new Date(),
+            id_empresa: empresa.id as number,
+            nome: motorista.Name,
+          })
+        }
+      }
 
       const exists = motoristasDb.find(
         (item) => BigInt(item.codigo) === BigInt(motorista.DriverId),

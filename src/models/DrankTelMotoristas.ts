@@ -9,6 +9,13 @@ export type IDrankTelMotoristas = {
   data_cadastro: Date
 }
 
+type updateByMixCodeInput = {
+  codigo_mix: string
+  codigo_motorista: number
+  nome: string
+  id_empresa: number
+}
+
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default class DrankTelMotoristas {
   static tableName = "drank_tel_motoristas"
@@ -21,6 +28,16 @@ export default class DrankTelMotoristas {
   public static async getById(id: number): Promise<IDrankTelMotoristas> {
     const db = Db.getConnection()
     return db(DrankTelMotoristas.tableName).where({ id }).first()
+  }
+
+  public static async updateByMixCode({
+    codigo_mix,
+    ...rest
+  }: updateByMixCodeInput): Promise<void> {
+    const db = Db.getConnection()
+    await db(DrankTelMotoristas.tableName)
+      .where({ codigo: codigo_mix })
+      .update(rest)
   }
 
   public static async findByMixCode(
