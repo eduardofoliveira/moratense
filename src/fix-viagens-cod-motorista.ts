@@ -7,25 +7,47 @@ const executar = async () => {
 
   const [result] = await conn.raw(`
     SELECT
-      dv.id,
-      tm.codigo_motorista,
-      dv.motorista_cod,
-      tm.nome
-    FROM
-      drank_tel_viagens dv,
-      aux_viagens av,
-      telemetria_motoristas tm
-    WHERE
-      dv.id = av.id_drank_tel_viagens and
-      dv.motorista_cod != tm.codigo_motorista and
-      tm.codigo = av.driver_id
+			a.id_drank_tel_eventos
+		FROM
+			aux_eventos a
+		where
+			a.event_type_id IN (-3021016551627388635, -8571486384802428876)
+		ORDER BY
+			created_at DESC
   `)
 
-  result.map((item: any) => {
-    console.log(
-      `UPDATE drank_tel_viagens SET motorista_cod = ${item.codigo_motorista}, motorista_nome = '${item.nome}'  WHERE id = ${item.id};`,
-    )
-  })
+  let count = 0
+
+  for await (const item of result) {
+    console.log(`Evento: ${count++}`)
+
+    conn.raw(`
+      UPDATE
+        teleconsult.drank_tel_eventos de
+      SET
+        de.id_tipo = 1295
+      where
+        de.id = ${item.id_drank_tel_eventos}
+    `)
+
+    conn.raw(`
+      UPDATE
+        teleconsult_api.drank_tel_eventos de
+      SET
+        de.id_tipo = 1295
+      where
+        de.id = ${item.id_drank_tel_eventos}
+    `)
+
+    await conn.raw(`
+      UPDATE
+        teleconsult_app.drank_tel_eventos de
+      SET
+        de.id_tipo = 1295
+      where
+        de.id = ${item.id_drank_tel_eventos}
+    `)
+  }
 
   await conn.destroy()
 }
