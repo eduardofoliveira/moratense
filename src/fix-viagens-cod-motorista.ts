@@ -10,7 +10,7 @@ const executar = async () => {
   const stream = connHG
     .select("*")
     .from("drank_tel_eventos")
-    .whereBetween("data_turno_tel", ["2025-01-10", "2025-01-12"])
+    .whereBetween("data_turno_tel", ["2025-01-11", "2025-01-12"])
     .stream()
     .on("finish", () => {
       console.log("Transferência concluída!")
