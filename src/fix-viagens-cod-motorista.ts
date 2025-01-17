@@ -40,9 +40,9 @@ const executar = async () => {
   }
 
   // Insere os registros restantes no batch
-  // if (batch.length > 0) {
-  //   await insertBatch(batch)
-  // }
+  if (batch.length > 0) {
+    await conn.batchInsert("drank_tel_eventos", batch)
+  }
 
   // conn.destroy()
   // connHG.destroy()
