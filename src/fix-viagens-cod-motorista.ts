@@ -1,5 +1,7 @@
 import "dotenv/config"
 
+import ApiMix from "./service/api.mix"
+import showEmpresa from "./use-cases/empresa/showEmpresa"
 import Db from "./database/connectionManager"
 import DbH from "./database/connectionManagerHostgator"
 
@@ -9,31 +11,22 @@ const executar = async () => {
 
   const stream = connHG
     .select("*")
-    .from("drank_tel_eventos")
-    .whereBetween("data_turno_tel", ["2025-01-12", "2025-01-12"])
+    .from("telemetria_eventos")
+    .whereBetween("data_turno_tel", ["2025-01-15", "2025-01-15"])
     .stream()
     .on("finish", () => {
       console.log("Transferência concluída!")
     })
 
-  // const insertBatch = async (rows: any) => {
-  //   console.log("inserindo")
-
-  //   // Insere os dados na conexão de destino
-  //   await conn.batchInsert("drank_tel_eventos", rows)
-  // }
-
   const batchSize = 500 // Número de registros por batch
   let batch = []
-
   // Lê os dados do stream e insere em batches
   for await (const row of stream) {
     row.id = undefined
-
     batch.push(row)
     if (batch.length === batchSize) {
       stream.pause()
-      await conn.batchInsert("drank_tel_eventos", batch)
+      await conn.batchInsert("telemetria_eventos", batch)
       batch = [] // Limpa o batch
       stream.resume()
     }
@@ -41,52 +34,68 @@ const executar = async () => {
 
   // Insere os registros restantes no batch
   if (batch.length > 0) {
-    await conn.batchInsert("drank_tel_eventos", batch)
+    await conn.batchInsert("telemetria_eventos", batch)
   }
 
-  // conn.destroy()
-  // connHG.destroy()
-
+  conn.destroy()
+  connHG.destroy()
+  // ---------------------------------------------------------
   // const conn = Db.getConnection()
   // const [result] = await conn.raw(`
   //   SELECT
-  // 		a.id_drank_tel_eventos
-  // 	FROM
-  // 		aux_eventos a
-  // 	where
-  // 		a.event_type_id IN (-3021016551627388635, -8571486384802428876)
-  // 	ORDER BY
-  // 		created_at DESC
+  //     c.nome,
+  //     dm.nome,
+  //     c.chapa,
+  //     dm.codigo_motorista
+  //   FROM
+  //     colaboradores c,
+  //     drank_tel_motoristas dm
+  //   WHERE
+  //     c.nome = dm.nome and
+  //     dm.codigo_motorista != c.chapa
   // `)
   // let count = 0
   // for await (const item of result) {
   //   console.log(`Evento: ${count++}`)
-  //   conn.raw(`
-  //     UPDATE
-  //       teleconsult.drank_tel_eventos de
-  //     SET
-  //       de.id_tipo = 1295
-  //     where
-  //       de.id = ${item.id_drank_tel_eventos}
-  //   `)
-  //   conn.raw(`
-  //     UPDATE
-  //       teleconsult_api.drank_tel_eventos de
-  //     SET
-  //       de.id_tipo = 1295
-  //     where
-  //       de.id = ${item.id_drank_tel_eventos}
-  //   `)
   //   await conn.raw(`
   //     UPDATE
-  //       teleconsult_app.drank_tel_eventos de
+  //       colaboradores
   //     SET
-  //       de.id_tipo = 1295
-  //     where
-  //       de.id = ${item.id_drank_tel_eventos}
+  //       chapa = ${item.codigo_motorista}
+  //     WHERE
+  //       nome = '${item.nome}'
   //   `)
   // }
   // await conn.destroy()
 }
 
-executar()
+// executar()
+
+const fixAssets = async () => {
+  const empresa = await showEmpresa({ id: 4 })
+
+  const apiMix = ApiMix.getInstance()
+  await apiMix.getToken()
+
+  const carros = await apiMix.listaCarros({ groupId: empresa.mix_groupId })
+
+  const conn = Db.getConnection()
+
+  for await (const carro of carros) {
+    const assetId = carro.AssetId.toString()
+
+    if (Number.parseInt(carro.Description, 10) > 0) {
+      await conn("telemetria_carros")
+        .update({
+          data_cadastro: new Date(),
+          carro: Number.parseInt(carro.Description, 10),
+        })
+        .where("codigo_mix", assetId)
+    }
+  }
+
+  await conn.destroy()
+  console.log("FIM")
+}
+
+fixAssets()

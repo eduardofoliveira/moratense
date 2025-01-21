@@ -148,11 +148,7 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
 
   const codigosEventos = []
   for (const evento of eventosDb) {
-    if (
-      evento.rank_seguranca === 1 &&
-      evento.rank_consulmo === 1 &&
-      evento.carregar === 1
-    ) {
+    if (evento.carregar === 1) {
       codigosEventos.push(evento.codigo)
     }
   }
