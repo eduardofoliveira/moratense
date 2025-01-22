@@ -4,6 +4,7 @@ import ApiMix from "./service/api.mix"
 import showEmpresa from "./use-cases/empresa/showEmpresa"
 import indexTelemetriaMotorista from "./use-cases/telemetriaMotorista/indexTelemetriaMotorista"
 import insertTelemetriaMotorista from "./use-cases/telemetriaMotorista/insertTelemetriaMotorista"
+import updateTelemetriaMotorista from "./use-cases/telemetriaMotorista/updateTelemetriaMotorista"
 import updateDrankTelMotoristaByCodMix from "./use-cases/drankTelMotorista/updateDrankTelMotoristaByCodMix"
 import showDrankTelMotorista from "./use-cases/drankTelMotorista/showDrankTelMotorista"
 import insertDrankTelMotorista from "./use-cases/drankTelMotorista/insertDrankTelMotorista"
@@ -79,6 +80,18 @@ const executar = async () => {
             data_cadastro: new Date(),
           })
         }
+      } else {
+        updateTelemetriaMotorista(
+          motorista.DriverId.toString(),
+          empresa.id as number,
+          {
+            codigo: motorista.DriverId.toString(),
+            codigo_motorista: Number.parseInt(motorista.EmployeeNumber, 10),
+            data_cadastro: new Date(),
+            id_empresa: empresa.id as number,
+            nome: motorista.Name,
+          },
+        )
       }
     }
   } catch (error) {

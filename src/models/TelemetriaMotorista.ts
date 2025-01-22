@@ -55,11 +55,14 @@ export default class TelemetriaMotorista {
   }
 
   public static async update(
-    id: string,
+    codigo: string,
+    id_empresa: number,
     motorista: ITelemetriaMotorista,
   ): Promise<void> {
     const db = Db.getConnection()
-    await db(TelemetriaMotorista.tableName).where({ id }).update(motorista)
+    await db(TelemetriaMotorista.tableName)
+      .where({ codigo, id_empresa })
+      .update(motorista)
   }
 
   public static async delete(id: string): Promise<void> {
