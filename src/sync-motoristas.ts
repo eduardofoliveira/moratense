@@ -81,17 +81,22 @@ const executar = async () => {
           })
         }
       } else {
-        updateTelemetriaMotorista(
-          motorista.DriverId.toString(),
-          empresa.id as number,
-          {
-            codigo: motorista.DriverId.toString(),
-            codigo_motorista: Number.parseInt(motorista.EmployeeNumber, 10),
-            data_cadastro: new Date(),
-            id_empresa: empresa.id as number,
-            nome: motorista.Name,
-          },
-        )
+        if (
+          motorista.EmployeeNumber &&
+          Number.parseInt(motorista.EmployeeNumber, 10)
+        ) {
+          updateTelemetriaMotorista(
+            motorista.DriverId.toString(),
+            empresa.id as number,
+            {
+              codigo: motorista.DriverId.toString(),
+              codigo_motorista: Number.parseInt(motorista.EmployeeNumber, 10),
+              data_cadastro: new Date(),
+              id_empresa: empresa.id as number,
+              nome: motorista.Name,
+            },
+          )
+        }
       }
     }
   } catch (error) {
