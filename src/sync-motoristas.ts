@@ -31,17 +31,7 @@ const executar = async () => {
         codigo_mix: motorista.DriverId.toString(),
       })
 
-      if (
-        motoristaExistDrank &&
-        Number.parseInt(motorista.EmployeeNumber, 10) > 0
-      ) {
-        await updateDrankTelMotoristaByCodMix({
-          codigo_mix: motorista.DriverId.toString(),
-          codigo_motorista: Number.parseInt(motorista.EmployeeNumber, 10),
-          id_empresa: empresa.id as number,
-          nome: motorista.Name,
-        })
-      } else {
+      if (!motoristaExistDrank) {
         if (Number.parseInt(motorista.EmployeeNumber, 10) > 0) {
           await insertDrankTelMotorista({
             codigo: motorista.DriverId.toString(),
@@ -53,25 +43,23 @@ const executar = async () => {
         }
       }
 
+      if (motoristaExistDrank) {
+        if (Number.parseInt(motorista.EmployeeNumber, 10) > 0) {
+          await updateDrankTelMotoristaByCodMix({
+            codigo_mix: motorista.DriverId.toString(),
+            codigo_motorista: Number.parseInt(motorista.EmployeeNumber, 10),
+            id_empresa: empresa.id as number,
+            nome: motorista.Name,
+          })
+        }
+      }
+
       const exists = motoristasDb.find(
         (item) => BigInt(item.codigo) === BigInt(motorista.DriverId),
       )
 
       if (!exists) {
-        console.log("Motorista não encontrado, inserindo...")
-
-        if (
-          motorista.EmployeeNumber &&
-          Number.parseInt(motorista.EmployeeNumber, 10)
-        ) {
-          console.log({
-            codigo: motorista.DriverId.toString(),
-            id_empresa: empresa.id as number,
-            codigo_motorista: motorista.EmployeeNumber,
-            nome: motorista.Name,
-            data_cadastro: new Date(),
-          })
-
+        if (Number.parseInt(motorista.EmployeeNumber, 10) > 0) {
           await insertTelemetriaMotorista({
             codigo: motorista.DriverId.toString(),
             id_empresa: empresa.id as number,
@@ -80,11 +68,10 @@ const executar = async () => {
             data_cadastro: new Date(),
           })
         }
-      } else {
-        if (
-          motorista.EmployeeNumber &&
-          Number.parseInt(motorista.EmployeeNumber, 10)
-        ) {
+      }
+
+      if (exists) {
+        if (Number.parseInt(motorista.EmployeeNumber, 10) > 0) {
           updateTelemetriaMotorista(
             motorista.DriverId.toString(),
             empresa.id as number,
