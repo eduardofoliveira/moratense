@@ -9,7 +9,15 @@ import updateDrankTelMotoristaByCodMix from "./use-cases/drankTelMotorista/updat
 import showDrankTelMotorista from "./use-cases/drankTelMotorista/showDrankTelMotorista"
 import insertDrankTelMotorista from "./use-cases/drankTelMotorista/insertDrankTelMotorista"
 
+let executando = false
+
 const executar = async () => {
+  if (executando) {
+    return
+  }
+
+  executando = true
+
   try {
     const empresa = await showEmpresa({ id: 4 })
     const apiMix = ApiMix.getInstance()
@@ -26,12 +34,14 @@ const executar = async () => {
 
     for await (const motorista of motoristas) {
       console.log(`Motorista: ${count++}`)
+      console.log(`Motorista: ${motorista.Name}`)
 
       const motoristaExistDrank = await showDrankTelMotorista({
         codigo_mix: motorista.DriverId.toString(),
       })
 
       if (!motoristaExistDrank) {
+        console.log(`Inserindo Motorista ${motorista.Name} no Drank`)
         if (Number.parseInt(motorista.EmployeeNumber, 10) > 0) {
           await insertDrankTelMotorista({
             codigo: motorista.DriverId.toString(),
@@ -44,6 +54,7 @@ const executar = async () => {
       }
 
       if (motoristaExistDrank) {
+        // console.log("Motorista existe no Drank")
         if (Number.parseInt(motorista.EmployeeNumber, 10) > 0) {
           await updateDrankTelMotoristaByCodMix({
             codigo_mix: motorista.DriverId.toString(),
@@ -59,6 +70,7 @@ const executar = async () => {
       )
 
       if (!exists) {
+        console.log(`Inserindo Motorista ${motorista.Name} no Telemetria`)
         if (Number.parseInt(motorista.EmployeeNumber, 10) > 0) {
           await insertTelemetriaMotorista({
             codigo: motorista.DriverId.toString(),
@@ -87,11 +99,14 @@ const executar = async () => {
       }
     }
   } catch (error) {
+    executando = false
     console.log(error)
   }
+
+  executando = false
 }
 
-setTimeout(() => {
+setInterval(() => {
   executar()
 }, 60000)
 
