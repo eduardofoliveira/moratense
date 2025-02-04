@@ -8,6 +8,7 @@
     "viagens": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-viagens.ts",
     "eventos": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-eventos.ts",
     "fix": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/fix-viagens-cod-motorista.ts",
+    "populate_viagens": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/populate_table_viagens_processada.ts",
     "dev": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/index.ts",
     "build": "tsc"
   },
