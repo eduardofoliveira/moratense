@@ -281,39 +281,43 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
   }
 
   for await (const posicao of posicoes) {
-    console.log(`Pontos: ${count++}`)
+    try {
+      console.log(`Pontos: ${count++}`)
 
-    const carro = await showTelemetriaCarro({
-      codigo_mix: posicao.AssetId.toString(),
-    })
+      const carro = await showTelemetriaCarro({
+        codigo_mix: posicao.AssetId.toString(),
+      })
 
-    const positionExistDB = await showAuxPosition({
-      positionId: posicao.PositionId.toString(),
-    })
+      const positionExistDB = await showAuxPosition({
+        positionId: posicao.PositionId.toString(),
+      })
 
-    if (positionExistDB) {
-      continue
+      if (positionExistDB) {
+        continue
+      }
+
+      const insert = {
+        id_empresa: empresa.id as number,
+        carro: carro.carro,
+        km: posicao.SpeedKilometresPerHour,
+        long: posicao.Longitude.toString(),
+        lat: posicao.Latitude.toString(),
+        data: new Date(posicao.Timestamp),
+        data_turno: converteDataParaTurno(posicao.Timestamp),
+        data_cadastro: new Date(),
+      }
+
+      const id = await insertDrankTelViagemPonto(insert)
+
+      await insertAuxPosition({
+        asset_id: posicao.AssetId.toString(),
+        driver_id: posicao.DriverId.toString(),
+        id_drank_tel_viagens_pontos: id,
+        position_id: posicao.PositionId.toString(),
+      })
+    } catch (error) {
+      console.log(error)
     }
-
-    const insert = {
-      id_empresa: empresa.id as number,
-      carro: carro.carro,
-      km: posicao.SpeedKilometresPerHour,
-      long: posicao.Longitude.toString(),
-      lat: posicao.Latitude.toString(),
-      data: new Date(posicao.Timestamp),
-      data_turno: converteDataParaTurno(posicao.Timestamp),
-      data_cadastro: new Date(),
-    }
-
-    const id = await insertDrankTelViagemPonto(insert)
-
-    await insertAuxPosition({
-      asset_id: posicao.AssetId.toString(),
-      driver_id: posicao.DriverId.toString(),
-      id_drank_tel_viagens_pontos: id,
-      position_id: posicao.PositionId.toString(),
-    })
   }
 
   await sincronizarPosicoes({ token: getsincetoken })
