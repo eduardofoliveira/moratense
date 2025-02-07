@@ -12,6 +12,7 @@ class ApiMix {
       headers: {
         Authorization: `Bearer ${this.token ? this.token : ""}`,
       },
+      timeout: 5000000,
       transformResponse: [
         (data) => {
           try {
@@ -216,6 +217,145 @@ class ApiMix {
       }
 
       throw error
+    }
+  }
+
+  public async buscarPosicoesPorCarroData({
+    assets,
+    start,
+    end,
+  }: {
+    assets: string[]
+    start: string
+    end: string
+  }): Promise<any> {
+    const maxRetries = 5 // Número máximo de tentativas
+    const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const options = {
+          method: "POST",
+          url: `https://integrate.us.mixtelematics.com/api/positions/assets/from/${start}/to/${end}`,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: JSONBig.stringify(assets.map((asset) => BigInt(asset))),
+        }
+
+        const response = await this.localAxios.request(options)
+
+        console.log(" ")
+        console.log(response.status)
+        console.log(response.statusText)
+        console.log(response.data.length)
+
+        return response.data
+      } catch (error: any) {
+        console.error(`Erro na tentativa ${attempt}:`, new Date())
+
+        if (attempt === maxRetries) {
+          console.error("Número máximo de tentativas atingido. Lançando erro.")
+          if (error instanceof AxiosError) {
+            console.error("Axios Error")
+            console.error(error)
+          }
+
+          throw error
+        }
+
+        console.log(
+          `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
+        )
+        await delay(2000) // Espera 2 segundos antes de tentar novamente
+      }
+    }
+  }
+
+  public async getTripsByAsset({
+    assets,
+    start,
+    end,
+  }: { assets: string[]; start: string; end: string }): Promise<any> {
+    const maxRetries = 5 // Número máximo de tentativas
+    const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const options = {
+          method: "POST",
+          url: `https://integrate.us.mixtelematics.com/api/trips/assets/from/${start}/to/${end}`,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: JSONBig.stringify(assets.map((asset) => BigInt(asset))),
+        }
+
+        const response = await this.localAxios.request(options)
+
+        console.log(" ")
+        console.log(response.status)
+        console.log(response.statusText)
+        console.log(response.data.length)
+
+        return response.data
+      } catch (error) {
+        console.error(`Erro na tentativa ${attempt}:`, new Date())
+
+        if (attempt === maxRetries) {
+          console.error("Número máximo de tentativas atingido. Lançando erro.")
+          if (error instanceof AxiosError) {
+            console.error("Axios Error")
+            console.error(error)
+          }
+
+          throw error
+        }
+
+        console.log(
+          `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
+        )
+        await delay(2000) // Espera 2 segundos antes de tentar novamente
+      }
+    }
+  }
+
+  public async getEventTypes({ orgId }: { orgId: string }): Promise<any> {
+    const maxRetries = 5 // Número máximo de tentativas
+    const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const options = {
+          method: "GET",
+          url: `https://integrate.us.mixtelematics.com/api/libraryevents/organisation/${orgId}`,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          // data: JSONBig.stringify(assets.map((asset) => BigInt(asset))),
+        }
+
+        const response = await this.localAxios.request(options)
+
+        return response.data
+      } catch (error) {
+        console.error(`Erro na tentativa ${attempt}:`, new Date())
+
+        if (attempt === maxRetries) {
+          console.error("Número máximo de tentativas atingido. Lançando erro.")
+          if (error instanceof AxiosError) {
+            console.error("Axios Error")
+            console.error(error)
+          }
+
+          throw error
+        }
+
+        console.log(
+          `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
+        )
+        await delay(2000) // Espera 2 segundos antes de tentar novamente
+      }
     }
   }
 }
