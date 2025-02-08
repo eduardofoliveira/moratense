@@ -7,10 +7,6 @@ const config = {
   development: {},
 }
 
-// (ADDRESS_LIST =
-//   (ADDRESS = (PROTOCOL = TCP)(HOST = ${process.env.ORCL_HOST})(PORT = ${process.env.ORCL_PORT}))
-// )
-
 const testConnString = `(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${process.env.ORCL_HOST})(PORT=${process.env.ORCL_PORT}))(CONNECT_DATA=(SID=${process.env.ORCL_SID})))`
 
 console.log(testConnString)
@@ -18,7 +14,6 @@ console.log({
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    // database: process.env.ORCL_SID,
     connectString: testConnString,
   },
 })
@@ -28,11 +23,7 @@ config.production = {
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    debugger: true,
-    debug: true,
-    // database: process.env.ORCL_SID,
     connectString: testConnString,
-    // connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}`,
   },
 }
 config.development = {
@@ -40,10 +31,7 @@ config.development = {
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    debugger: true,
-    debug: true,
     connectString: testConnString,
-    // connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}`,
   },
 }
 

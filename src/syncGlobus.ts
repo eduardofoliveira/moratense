@@ -1,10 +1,11 @@
 import "dotenv/config"
+import fs from "node:fs/promises"
 
 import Db from "./database/connectionManagerOracle"
 
 const execute = async () => {
-  const start = "2025-02-05 00:00:00"
-  const end = "2025-02-05 23:59:59"
+  const start = "2025-02-01 00:00:00"
+  const end = "2025-02-07 23:59:59"
 
   const db = Db.getConnection()
 
@@ -39,7 +40,7 @@ const execute = async () => {
       t_arr_viagens_guia.QTD_HORA_INI between to_date('${start}','yyyy-mm-dd hh24:mi:ss') and to_date('${end}','yyyy-mm-dd hh24:mi:ss')
   `)
 
-  console.log(data)
+  fs.writeFile("./globus.json", JSON.stringify(data, null, 2))
 
   await db.destroy()
 }
