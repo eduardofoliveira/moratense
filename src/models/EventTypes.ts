@@ -31,6 +31,15 @@ export default class EventTypes {
     return db(EventTypes.tableName).select("*")
   }
 
+  public static async getAllActiveItensCarregar({
+    id_empresa,
+  }: { id_empresa: number }): Promise<IEventType[]> {
+    const db = Db.getConnection()
+    return db(EventTypes.tableName)
+      .select("*")
+      .where({ carregar: true, id_empresa })
+  }
+
   public static async getById(id: number): Promise<IEventType> {
     const db = Db.getConnection()
     return db(EventTypes.tableName).where({ id }).first()

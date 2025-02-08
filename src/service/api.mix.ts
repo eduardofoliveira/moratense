@@ -5,6 +5,7 @@ class ApiMix {
   private static instance: ApiMix
   private localAxios: AxiosInstance
   private token = ""
+  private tokenRenew: NodeJS.Timeout | null = null
 
   private constructor() {
     this.localAxios = axios.create({
@@ -63,6 +64,24 @@ class ApiMix {
 
       this.token = response.data.access_token
       this.localAxios.defaults.headers.Authorization = `Bearer ${this.token}`
+
+      if (!this.tokenRenew) {
+        this.tokenRenew = setTimeout(
+          () => {
+            this.getToken()
+          },
+          1000 * 3600 - 100,
+        )
+      } else {
+        clearTimeout(this.tokenRenew)
+        this.tokenRenew = setTimeout(
+          () => {
+            this.getToken()
+          },
+          1000 * 3600 - 100,
+        )
+      }
+
       return this.token
     } catch (error) {
       console.error(error)
@@ -336,6 +355,63 @@ class ApiMix {
         }
 
         const response = await this.localAxios.request(options)
+
+        return response.data
+      } catch (error) {
+        console.error(`Erro na tentativa ${attempt}:`, new Date())
+
+        if (attempt === maxRetries) {
+          console.error("Número máximo de tentativas atingido. Lançando erro.")
+          if (error instanceof AxiosError) {
+            console.error("Axios Error")
+            console.error(error)
+          }
+
+          throw error
+        }
+
+        console.log(
+          `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
+        )
+        await delay(2000) // Espera 2 segundos antes de tentar novamente
+      }
+    }
+  }
+
+  public async getEventByAssets({
+    assets,
+    tempEventTypes,
+    start,
+    end,
+  }: {
+    assets: string[]
+    tempEventTypes: string[]
+    start: string
+    end: string
+  }): Promise<any> {
+    const maxRetries = 5 // Número máximo de tentativas
+    const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const options = {
+          method: "POST",
+          url: `https://integrate.us.mixtelematics.com/api/events/assets/from/${start}/to/${end}`,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          data: JSONBig.stringify({
+            EntityIds: assets.map((asset) => BigInt(asset)),
+            EventTypeIds: tempEventTypes.map((eventType) => BigInt(eventType)),
+          }),
+        }
+
+        const response = await this.localAxios.request(options)
+
+        console.log(" ")
+        console.log(response.status)
+        console.log(response.statusText)
+        console.log(response.data.length)
 
         return response.data
       } catch (error) {

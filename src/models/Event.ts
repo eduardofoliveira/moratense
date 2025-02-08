@@ -10,8 +10,8 @@ export type IEvent = {
   endPosition: string
   totalOccurances: number
   totalTimeSeconds: number
-  startDateTime: Date
-  endDateTime: Date
+  startDateTime?: Date
+  endDateTime?: Date
   eventCategory: string
   value: string
   startOdometerKilometres: string

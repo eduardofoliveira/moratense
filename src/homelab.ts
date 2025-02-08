@@ -8,6 +8,10 @@ import Asset from "./models/Asset"
 import Position from "./models/Position"
 import Trip from "./models/Trip"
 import EventTypes from "./models/EventTypes"
+import Event from "./models/Event"
+
+const start = "20250208000000"
+const end = "20250208235959"
 
 const syncDrivers = async () => {
   try {
@@ -139,6 +143,30 @@ function dividirLista<T>(lista: T[], tamanho: number): T[][] {
   return resultado
 }
 
+const insertPositions = async (positions: any) => {
+  for (const position of positions) {
+    try {
+      const positionExists = await Position.findMixCode(
+        position.PositionId.toString(),
+      )
+
+      if (!positionExists) {
+        await Position.create({
+          positionId: position.PositionId.toString(),
+          driverId: position.DriverId.toString(),
+          assetId: position.AssetId.toString(),
+          lat: position.Latitude.toString(),
+          long: position.Longitude.toString(),
+          km: position.SpeedKilometresPerHour,
+          data: addHours(new Date(position.Timestamp), 3),
+        })
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+}
+
 const syncPositionsByAsset = async () => {
   try {
     const empresa = await showEmpresa({ id: 4 })
@@ -146,40 +174,40 @@ const syncPositionsByAsset = async () => {
     await apiMix.getToken()
 
     const carros = await Asset.getAll()
-
-    // let ignore = false
-    // carros = carros.filter((carro) => {
-    //   if (carro.description === "1314") {
-    //     ignore = true
-    //   }
-    //   return ignore
-    // })
-
-    const listaDividida = dividirLista(carros, 37)
+    const listaDividida = dividirLista(carros, 10)
     for await (const assets of listaDividida) {
       const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
 
+      console.log(tempAssets)
       const positions = await apiMix.buscarPosicoesPorCarroData({
         assets: tempAssets,
-        start: "20250206000000",
-        end: "20250206035959",
+        start,
+        end,
       })
 
-      for await (const position of positions) {
-        try {
-          await Position.create({
-            positionId: position.PositionId.toString(),
-            driverId: position.DriverId.toString(),
-            assetId: position.AssetId.toString(),
-            lat: position.Latitude.toString(),
-            long: position.Longitude.toString(),
-            km: position.SpeedKilometresPerHour,
-            data: addHours(new Date(position.Timestamp), 3),
-          })
-        } catch (error) {
-          // se houver erro a posição existe
-        }
-      }
+      insertPositions(positions)
+
+      // for await (const position of positions) {
+      //   try {
+      //     const positionExists = await Position.findMixCode(
+      //       position.PositionId.toString(),
+      //     )
+
+      //     if (!positionExists) {
+      //       await Position.create({
+      //         positionId: position.PositionId.toString(),
+      //         driverId: position.DriverId.toString(),
+      //         assetId: position.AssetId.toString(),
+      //         lat: position.Latitude.toString(),
+      //         long: position.Longitude.toString(),
+      //         km: position.SpeedKilometresPerHour,
+      //         data: addHours(new Date(position.Timestamp), 3),
+      //       })
+      //     }
+      //   } catch (error) {
+      //     // se houver erro a posição existe
+      //   }
+      // }
     }
 
     console.log("syncPosicoesPorCarro: Fim")
@@ -196,7 +224,7 @@ const syncTrips = async () => {
 
     const carros = await Asset.getAll()
     // carros = carros.filter((carro) => carro.assetId === "1580750191846305792")
-    const listaDividida = dividirLista(carros, 37)
+    const listaDividida = dividirLista(carros, 10)
 
     for await (const assets of listaDividida) {
       const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
@@ -205,18 +233,105 @@ const syncTrips = async () => {
 
       const trips = await apiMix.getTripsByAsset({
         assets: tempAssets,
-        start: "20250205000000",
-        end: "20250205235959",
+        start,
+        end,
       })
 
       for await (const trip of trips) {
         try {
+          const tripExists = await Trip.findMixCode(trip.TripId.toString())
+          if (tripExists) {
+            continue
+          }
+
+          if (trip.StartPosition) {
+            const startPositionExists = await Position.findMixCode(
+              trip.StartPosition.PositionId.toString(),
+            )
+            if (!startPositionExists) {
+              await Position.create({
+                positionId: trip.StartPosition.PositionId.toString(),
+                driverId: trip.StartPosition.DriverId.toString(),
+                assetId: trip.StartPosition.AssetId.toString(),
+                lat: trip.StartPosition.Latitude.toString(),
+                long: trip.StartPosition.Longitude.toString(),
+                km: trip.StartPosition.SpeedKilometresPerHour,
+                data: addHours(new Date(trip.StartPosition.Timestamp), 3),
+              })
+            }
+          }
+
+          if (trip.EndPosition) {
+            const endPositionExists = await Position.findMixCode(
+              trip.EndPosition.PositionId.toString(),
+            )
+            if (!endPositionExists) {
+              await Position.create({
+                positionId: trip.EndPosition.PositionId.toString(),
+                driverId: trip.EndPosition.DriverId.toString(),
+                assetId: trip.EndPosition.AssetId.toString(),
+                lat: trip.EndPosition.Latitude.toString(),
+                long: trip.EndPosition.Longitude.toString(),
+                km: trip.EndPosition.SpeedKilometresPerHour,
+                data: addHours(new Date(trip.EndPosition.Timestamp), 3),
+              })
+            }
+          }
+
+          if (trip.SubTrips) {
+            for await (const subTrip of trip.SubTrips) {
+              try {
+                if (subTrip.StartPosition) {
+                  const positionExists = await Position.findMixCode(
+                    subTrip.StartPosition.PositionId.toString(),
+                  )
+                  if (!positionExists) {
+                    await Position.create({
+                      positionId: subTrip.StartPosition.PositionId.toString(),
+                      driverId: subTrip.StartPosition.DriverId.toString(),
+                      assetId: subTrip.StartPosition.AssetId.toString(),
+                      lat: subTrip.StartPosition.Latitude.toString(),
+                      long: subTrip.StartPosition.Longitude.toString(),
+                      km: subTrip.StartPosition.SpeedKilometresPerHour,
+                      data: addHours(
+                        new Date(subTrip.StartPosition.Timestamp),
+                        3,
+                      ),
+                    })
+                  }
+                }
+                if (subTrip.EndPosition) {
+                  const positionExists = await Position.findMixCode(
+                    subTrip.StartPosition.PositionId.toString(),
+                  )
+
+                  if (!positionExists) {
+                    await Position.create({
+                      positionId: subTrip.EndPosition.PositionId.toString(),
+                      driverId: subTrip.EndPosition.DriverId.toString(),
+                      assetId: subTrip.EndPosition.AssetId.toString(),
+                      lat: subTrip.EndPosition.Latitude.toString(),
+                      long: subTrip.EndPosition.Longitude.toString(),
+                      km: subTrip.EndPosition.SpeedKilometresPerHour,
+                      data: addHours(
+                        new Date(subTrip.EndPosition.Timestamp),
+                        3,
+                      ),
+                    })
+                  }
+                }
+              } catch (error) {
+                console.error(error)
+              }
+            }
+          }
+
           await Trip.create({
             assetId: trip.AssetId.toString(),
             driverId: trip.DriverId.toString(),
             tripId: trip.TripId.toString(),
-            startPositionId: trip.StartPositionId.toString(),
-            endPositionId: trip.EndPositionId.toString(),
+            startPositionId: trip?.StartPositionId?.toString(),
+            endPositionId: trip?.EndPositionId?.toString(),
             distanceKilometers: trip.DistanceKilometers,
             duration: trip.Duration,
             drivingTime: trip.DrivingTime,
@@ -239,7 +354,8 @@ const syncTrips = async () => {
             tripStart: addHours(new Date(trip.TripStart), 3),
           })
         } catch (error) {
-          //
+          console.log(trip)
+          console.error(error)
         }
       }
     }
@@ -287,7 +403,128 @@ const eventTypes = async () => {
       }
     }
 
-    console.log("syncTrips: Fim")
+    console.log("eventTypes: Fim")
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const insertEvents = async (events: any) => {
+  const drivers = await Driver.getAll()
+  const driversIds = drivers.map<string>((driver) => driver.driverId.toString())
+
+  for (const event of events) {
+    try {
+      const eventExists = await Event.findMixCode(event.EventId.toString())
+
+      if (event.StartPosition) {
+        const positionExists = await Position.findMixCode(
+          event.StartPosition.PositionId.toString(),
+        )
+        if (
+          !positionExists &&
+          driversIds.includes(event.StartPosition.DriverId.toString())
+        ) {
+          await Position.create({
+            positionId: event.StartPosition.PositionId.toString(),
+            driverId: event.StartPosition.DriverId.toString(),
+            assetId: event.StartPosition.AssetId.toString(),
+            lat: event.StartPosition.Latitude.toString(),
+            long: event.StartPosition.Longitude.toString(),
+            km: event.StartPosition.SpeedKilometresPerHour,
+            data: addHours(new Date(event.StartPosition.Timestamp), 3),
+          })
+        }
+      }
+
+      if (event.EndPosition) {
+        const positionExists = await Position.findMixCode(
+          event.EndPosition.PositionId.toString(),
+        )
+        if (
+          !positionExists &&
+          driversIds.includes(event.EndPosition.DriverId.toString())
+        ) {
+          await Position.create({
+            positionId: event.EndPosition.PositionId.toString(),
+            driverId: event.EndPosition.DriverId.toString(),
+            assetId: event.EndPosition.AssetId.toString(),
+            lat: event.EndPosition.Latitude.toString(),
+            long: event.EndPosition.Longitude.toString(),
+            km: event.EndPosition.SpeedKilometresPerHour,
+            data: addHours(new Date(event.EndPosition.Timestamp), 3),
+          })
+        }
+      }
+
+      if (!eventExists && driversIds.includes(event.DriverId.toString())) {
+        await Event.create({
+          eventTypeId: event.EventTypeId.toString(),
+          eventId: event.EventId.toString(),
+          driverId: event.DriverId.toString(),
+          assetId: event.AssetId.toString(),
+          startPosition:
+            event?.StartPosition?.PositionId?.toString() ?? undefined,
+          endPosition: event?.EndPosition?.PositionId?.toString() ?? undefined,
+          totalOccurances: event?.TotalOccurances,
+          totalTimeSeconds: event?.TotalTimeSeconds,
+          startDateTime: event.StartDateTime
+            ? addHours(new Date(event.StartDateTime), 3)
+            : undefined,
+          endDateTime: event.EndDateTime
+            ? addHours(new Date(event.EndDateTime), 3)
+            : undefined,
+          eventCategory: event?.EventCategory,
+          value: event?.Value?.toString(),
+          startOdometerKilometres: event?.StartOdometerKilometres,
+          endOdometerKilometres: event?.EndOdometerKilometres,
+          fuelUsedLitres: event?.FuelUsedLitres,
+        })
+      }
+    } catch (error: any) {
+      console.log(JSON.stringify(event, null, 2))
+      console.error(error.sqlMessage)
+      console.error(error.sql)
+    }
+  }
+}
+
+const syncEvents = async () => {
+  try {
+    const idEmpresa = 4
+    const empresa = await showEmpresa({ id: idEmpresa })
+    const apiMix = ApiMix.getInstance()
+    await apiMix.getToken()
+
+    const carros = await Asset.getAll()
+    const listaDividida = dividirLista(carros, 10)
+
+    const drivers = await Driver.getAll()
+    const driversIds = drivers.map<string>((driver) =>
+      driver.driverId.toString(),
+    )
+
+    const listaEventTypesCarregar = await EventTypes.getAllActiveItensCarregar({
+      id_empresa: idEmpresa,
+    })
+
+    for await (const assets of listaDividida) {
+      const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
+      const tempEventTypes = listaEventTypesCarregar.map<string>(
+        (et) => et.eventTypeId,
+      )
+
+      const events = await apiMix.getEventByAssets({
+        assets: tempAssets,
+        tempEventTypes,
+        start,
+        end,
+      })
+
+      insertEvents(events)
+    }
+
+    console.log("syncEvents: Fim")
   } catch (error) {
     console.error(error)
   }
@@ -297,4 +534,5 @@ const eventTypes = async () => {
 // syncAssets()
 // syncPositionsByAsset()
 // syncTrips()
-eventTypes()
+// eventTypes()
+// syncEvents()
