@@ -16,6 +16,8 @@ const testConnString = `
 	)
 `
 
+console.log(testConnString)
+
 config.production = {
   client: "oracledb",
   connection: {
