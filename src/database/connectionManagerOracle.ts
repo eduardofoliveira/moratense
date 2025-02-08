@@ -5,12 +5,23 @@ const config = {
   development: {},
 }
 
+const testConnString = `
+  (DESCRIPTION =
+			(ADDRESS_LIST =
+				(ADDRESS = (PROTOCOL = TCP)(HOST = "${process.env.ORCL_HOST}")(PORT = "${process.env.ORCL_PORT}"))
+			)
+			(CONNECT_DATA =
+				(SID = ${process.env.ORCL_SID})
+			)
+	)
+`
+
 config.production = {
   client: "oracledb",
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    connectString: process.env.ORCL_CONN_STRING,
+    connectString: testConnString,
   },
 }
 config.development = {
@@ -18,7 +29,7 @@ config.development = {
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    connectString: process.env.ORCL_CONN_STRING,
+    connectString: testConnString,
   },
 }
 
