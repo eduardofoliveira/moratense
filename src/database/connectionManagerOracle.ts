@@ -26,6 +26,8 @@ config.production = {
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
+    debugger: true,
+    debug: true,
     // database: process.env.ORCL_SID,
     connectString: testConnString,
     // connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}`,
