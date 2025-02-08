@@ -16,7 +16,7 @@ console.log({
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    database: process.env.ORCL_SID,
+    // database: process.env.ORCL_SID,
     connectString: testConnString,
   },
 })
@@ -26,7 +26,7 @@ config.production = {
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    database: process.env.ORCL_SID,
+    // database: process.env.ORCL_SID,
     connectString: testConnString,
     // connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}`,
   },
