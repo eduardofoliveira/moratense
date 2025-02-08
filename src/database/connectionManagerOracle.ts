@@ -19,6 +19,14 @@ const testConnString = `
 `
 
 console.log(testConnString)
+console.log({
+  connection: {
+    user: process.env.ORCL_USER,
+    password: process.env.ORCL_PASS,
+    database: process.env.ORCL_SID,
+    connectString: testConnString,
+  },
+})
 
 config.production = {
   client: "oracledb",
