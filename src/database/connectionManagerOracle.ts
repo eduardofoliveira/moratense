@@ -70,10 +70,10 @@ class ConnectionManager {
     ConnectionManager.instance = knex(getConfig())
 
     // Escutar erros na conexão
-    ConnectionManager.instance.raw("SELECT 1").catch((err) => {
-      console.error("Initial database connection failed:", err)
-      ConnectionManager.attemptReconnect()
-    })
+    // ConnectionManager.instance.raw("SELECT 1").catch((err) => {
+    //   console.error("Initial database connection failed:", err)
+    //   ConnectionManager.attemptReconnect()
+    // })
 
     // Escuta erros para tentar reconectar
     ConnectionManager.instance.on("query-error", (err) => {
