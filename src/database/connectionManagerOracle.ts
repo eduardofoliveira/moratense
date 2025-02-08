@@ -1,4 +1,6 @@
 import knex, { Knex } from "knex"
+const oracledb = require("oracledb")
+oracledb.initOracleClient()
 
 const config = {
   production: {},
