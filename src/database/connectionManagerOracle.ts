@@ -9,14 +9,7 @@ const config = {
 //   (ADDRESS = (PROTOCOL = TCP)(HOST = ${process.env.ORCL_HOST})(PORT = ${process.env.ORCL_PORT}))
 // )
 
-const testConnString = `
-  (DESCRIPTION =
-      (ADDRESS = (PROTOCOL = TCP)(HOST = ${process.env.ORCL_HOST})(PORT = ${process.env.ORCL_PORT}))
-			(CONNECT_DATA =
-				(SID = ${process.env.ORCL_SID})
-			)
-	)
-`
+const testConnString = `(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${process.env.ORCL_HOST})(PORT=${process.env.ORCL_PORT}))(CONNECT_DATA=(SID=${process.env.ORCL_SID})))`
 
 console.log(testConnString)
 console.log({
