@@ -33,7 +33,7 @@ const execute = async () => {
 			left Join flp_funcionarios fm
         on fm.CODINTFUNC = T_ARR_TROCAS_FUNC.CODINTFUNC
 		where
-      t_arr_viagens_guia.QTD_HORA_INI between to_date(${start} || ' 03:00:00','yyyy-mm-dd hh24:mi:ss') and to_date(${end} || ' 02:59:59','yyyy-mm-dd hh24:mi:ss')
+      t_arr_viagens_guia.QTD_HORA_INI between to_date('${start}','yyyy-mm-dd hh24:mi:ss') and to_date('${end}','yyyy-mm-dd hh24:mi:ss')
   `)
 
   console.log(data)
