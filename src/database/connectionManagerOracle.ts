@@ -26,8 +26,8 @@ config.production = {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
     database: process.env.ORCL_SID,
-    // connectString: testConnString,
-    connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}`,
+    connectString: testConnString,
+    // connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}`,
   },
 }
 config.development = {
@@ -36,8 +36,8 @@ config.development = {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
     database: process.env.ORCL_SID,
-    // connectString: testConnString,
-    connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}`,
+    connectString: testConnString,
+    // connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}`,
   },
 }
 
