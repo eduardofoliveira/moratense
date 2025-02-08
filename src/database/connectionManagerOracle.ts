@@ -38,7 +38,8 @@ config.development = {
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    database: process.env.ORCL_SID,
+    debugger: true,
+    debug: true,
     connectString: testConnString,
     // connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}`,
   },
