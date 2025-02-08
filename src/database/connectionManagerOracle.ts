@@ -13,7 +13,7 @@ const testConnString = `
   (DESCRIPTION =
       (ADDRESS = (PROTOCOL = TCP)(HOST = ${process.env.ORCL_HOST})(PORT = ${process.env.ORCL_PORT}))
 			(CONNECT_DATA =
-				(SID = ${process.env.ORCL_SID}) 
+				(SID = ${process.env.ORCL_SID})
 			)
 	)
 `
@@ -25,7 +25,8 @@ config.production = {
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    connectString: testConnString,
+    // connectString: testConnString,
+    connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}/${process.env.ORCL_SID}`,
   },
 }
 config.development = {
@@ -33,7 +34,8 @@ config.development = {
   connection: {
     user: process.env.ORCL_USER,
     password: process.env.ORCL_PASS,
-    connectString: testConnString,
+    // connectString: testConnString,
+    connectString: `${process.env.ORCL_HOST}:${process.env.ORCL_PORT}/${process.env.ORCL_SID}`,
   },
 }
 
