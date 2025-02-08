@@ -5,13 +5,15 @@ const config = {
   development: {},
 }
 
+// (ADDRESS_LIST =
+//   (ADDRESS = (PROTOCOL = TCP)(HOST = ${process.env.ORCL_HOST})(PORT = ${process.env.ORCL_PORT}))
+// )
+
 const testConnString = `
   (DESCRIPTION =
-			(ADDRESS_LIST =
-				(ADDRESS = (PROTOCOL = TCP)(HOST = ${process.env.ORCL_HOST})(PORT = ${process.env.ORCL_PORT}))
-			)
+      (ADDRESS = (PROTOCOL = TCP)(HOST = ${process.env.ORCL_HOST})(PORT = ${process.env.ORCL_PORT}))
 			(CONNECT_DATA =
-				(SID = ${process.env.ORCL_SID})
+				(SID = ${process.env.ORCL_SID}) 
 			)
 	)
 `
