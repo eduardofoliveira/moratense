@@ -5,6 +5,7 @@ import DbOracle from "./database/connectionManagerOracle"
 import DbTeleconsult from "./database/connectionManager"
 import GlobusCarro from "./models/GlobusCarro"
 import Asset from "./models/Asset"
+import Driver from "./models/Driver"
 import GlobusLinha from "./models/GlobusLinha"
 
 const execute = async () => {
@@ -167,17 +168,17 @@ const syncLinhasGlobus = async () => {
 
     const data = await db.raw(`
         select
-            CODIGOORGCONC,
-            CODIGOLINHA,
-            NROFICIALLINHA,
-            NOMELINHA
+          CODIGOORGCONC,
+          CODIGOLINHA,
+          NROFICIALLINHA,
+          NOMELINHA
         from
-            bgm_cadlinhas
+          bgm_cadlinhas
         where
-            CODIGOEMPRESA = ${idEmpresa} AND
-            CODIGOORGCONC is not null
+          CODIGOEMPRESA = ${idEmpresa} AND
+          CODIGOORGCONC is not null
         order by
-            CODIGOLINHA
+          CODIGOLINHA
     `)
 
     for await (const linhaGlobus of data) {
@@ -211,6 +212,37 @@ const syncLinhasGlobus = async () => {
     console.error(error)
   }
 }
+
+const syncFuncionariosGlobus = async () => {
+  try {
+    const idEmpresa = 4
+    const db = DbOracle.getConnection()
+
+    const data = await db.raw(`
+      select
+        f.codintfunc,
+        f.chapafunc,
+        f.nomefunc,
+        f.codfunc,
+        f.apelidofunc
+      from
+        flp_funcionarios f
+      where
+        f.CODIGOEMPRESA = ${idEmpresa} and
+        f.SITUACAOFUNC = 'A'
+    `)
+
+    const motoristas = await Driver.getAll()
+
+    console.log(data[0])
+    console.log(motoristas[0])
+
+    console.log("syncFuncionariosGlobus: fim")
+  } catch (error) {
+    console.error(error)
+  }
+}
 // execute()
 // syncCarrosGlobus()
-syncLinhasGlobus()
+// syncLinhasGlobus()
+syncFuncionariosGlobus()
