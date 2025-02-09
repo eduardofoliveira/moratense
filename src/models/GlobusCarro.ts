@@ -18,7 +18,7 @@ export type IGlobusCarroCreate = Omit<
   IGlobusCarro,
   "id" | "created_at" | "updated_at"
 >
-export type IGlobusCarroUpdate = Omit<IGlobusCarro, "id" | "updated_at">
+export type IGlobusCarroUpdate = Omit<IGlobusCarro, "id" | "created_at">
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default class GlobusCarro {
@@ -41,6 +41,13 @@ export default class GlobusCarro {
   public static async getById(id: number): Promise<IGlobusCarro> {
     const db = Db.getConnection()
     return db(GlobusCarro.tableName).where({ id }).first()
+  }
+
+  public static async findByCodigoVeiculo(
+    codigo_veiculo: number,
+  ): Promise<IGlobusCarro> {
+    const db = Db.getConnection()
+    return db(GlobusCarro.tableName).where({ codigo_veiculo }).first()
   }
 
   public static async findMixCode(assetId: string): Promise<IGlobusCarro> {

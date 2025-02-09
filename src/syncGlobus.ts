@@ -95,18 +95,6 @@ const syncCarrosGlobus = async () => {
       )
 
       const chassi = carrosWithChassi.find((chassi: any) => {
-        // console.log(" ")
-        // console.log(chassi.codigo_carro)
-        // console.log(carroGlobus.PREFIXOVEIC)
-        // console.log({ chassi })
-        // console.log({ carroGlobus })
-        // console.log(" ")
-
-        // console.log(
-        //   Number.parseInt(chassi.codigo_carro, 10),
-        //   Number.parseInt(carroGlobus.PREFIXOVEIC, 10),
-        // )
-
         if (
           Number.parseInt(chassi.codigo_carro, 10) ===
           Number.parseInt(carroGlobus.PREFIXOVEIC, 10)
@@ -132,9 +120,40 @@ const syncCarrosGlobus = async () => {
     await db.destroy()
     await dbTeleconsult.destroy()
 
-    data.map((item: any) => {
-      console.log(item)
-    })
+    console.log(data.length)
+
+    for await (const carroGlobus of data) {
+      const carroGlobusExists = await GlobusCarro.findByCodigoVeiculo(
+        carroGlobus.CODIGOVEIC,
+      )
+
+      if (!carroGlobusExists) {
+        await GlobusCarro.create({
+          id_empresa: idEmpresa,
+          codigo_veiculo: carroGlobus.CODIGOVEIC,
+          codigo_frota: carroGlobus.CODIGOTPFROTA,
+          placa: carroGlobus.PLACAATUALVEIC,
+          prefixo: carroGlobus.PREFIXOVEIC,
+          condicao: carroGlobus.CONDICAOVEIC,
+          assetId: carroGlobus.assetId ? carroGlobus.assetId : null,
+          chassi: carroGlobus.chassi ? carroGlobus.chassi : null,
+        })
+      } else {
+        await GlobusCarro.update(carroGlobusExists.id, {
+          id_empresa: idEmpresa,
+          codigo_veiculo: carroGlobus.CODIGOVEIC,
+          codigo_frota: carroGlobus.CODIGOTPFROTA,
+          placa: carroGlobus.PLACAATUALVEIC,
+          prefixo: carroGlobus.PREFIXOVEIC,
+          condicao: carroGlobus.CONDICAOVEIC,
+          assetId: carroGlobus.assetId ? carroGlobus.assetId : null,
+          chassi: carroGlobus.chassi ? carroGlobus.chassi : null,
+          updated_at: new Date(),
+        })
+      }
+    }
+
+    console.log("syncCarrosGlobus: fim")
   } catch (error) {
     console.error(error)
   }
