@@ -71,7 +71,7 @@ const syncCarrosGlobus = async () => {
     `)
 
     const carros = await Asset.getAll()
-    const [carrosWithChassi] = await dbTeleconsult.raw(` 
+    const [carrosWithChassi] = await dbTeleconsult.raw(`
       SELECT
         c.id,
         c.id_empresa,
@@ -95,17 +95,17 @@ const syncCarrosGlobus = async () => {
       )
 
       const chassi = carrosWithChassi.find((chassi: any) => {
-        console.log(" ")
-        console.log(chassi.codigo_carro)
-        console.log(carroGlobus.PREFIXOVEIC)
-        console.log({ chassi })
-        console.log({ carroGlobus })
-        console.log(" ")
+        // console.log(" ")
+        // console.log(chassi.codigo_carro)
+        // console.log(carroGlobus.PREFIXOVEIC)
+        // console.log({ chassi })
+        // console.log({ carroGlobus })
+        // console.log(" ")
 
-        console.log(
-          Number.parseInt(chassi.codigo_carro, 10),
-          Number.parseInt(carroGlobus.PREFIXOVEIC, 10),
-        )
+        // console.log(
+        //   Number.parseInt(chassi.codigo_carro, 10),
+        //   Number.parseInt(carroGlobus.PREFIXOVEIC, 10),
+        // )
 
         if (
           Number.parseInt(chassi.codigo_carro, 10) ===
