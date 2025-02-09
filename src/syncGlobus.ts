@@ -3,6 +3,7 @@ import fs from "node:fs/promises"
 
 import DbOracle from "./database/connectionManagerOracle"
 import GlobusCarro from "./models/GlobusCarro"
+import Asset from "./models/Asset"
 
 const execute = async () => {
   const start = "2025-02-01 00:00:00"
@@ -50,7 +51,7 @@ const syncCarrosGlobus = async () => {
   try {
     const db = DbOracle.getConnection()
 
-    const data = await db.raw(`
+    let data = await db.raw(`
         select
           codigoveic,
           CODIGOTPFROTA,
@@ -64,6 +65,25 @@ const syncCarrosGlobus = async () => {
         order by
           PREFIXOVEIC
     `)
+
+    const carros = await Asset.getAll()
+
+    data = data.map((carroGlobus: any) => {
+      const asset = carros.find(
+        (carro) =>
+          Number.parseInt(carro.description, 10) ===
+          Number.parseInt(carroGlobus.PREFIXOVEIC, 10),
+      )
+
+      if (asset) {
+        return {
+          ...carroGlobus,
+          assetId: asset.assetId,
+        }
+      }
+
+      return carroGlobus
+    })
 
     console.log(data)
   } catch (error) {
