@@ -87,6 +87,9 @@ const syncCarrosGlobus = async () => {
         cc.id_chassi = ch.id
     `)
 
+    console.log(carrosWithChassi[0])
+    process.exit()
+
     data = data.map((carroGlobus: any) => {
       const asset = carros.find(
         (carro) =>
