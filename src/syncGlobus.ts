@@ -110,7 +110,7 @@ const syncCarrosGlobus = async () => {
         temp = { ...temp, chassi: chassi.chassi }
       }
 
-      return carroGlobus
+      return temp
     })
 
     await db.destroy()
