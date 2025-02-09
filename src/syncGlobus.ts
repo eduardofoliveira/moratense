@@ -71,7 +71,7 @@ const syncCarrosGlobus = async () => {
     `)
 
     const carros = await Asset.getAll()
-    const carrosWithChassi = await dbTeleconsult.raw(`
+    const [carrosWithChassi] = await dbTeleconsult.raw(` 
       SELECT
         c.id,
         c.id_empresa,
