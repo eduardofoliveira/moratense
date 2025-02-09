@@ -116,7 +116,9 @@ const syncCarrosGlobus = async () => {
     await db.destroy()
     await dbTeleconsult.destroy()
 
-    console.log(data)
+    data.map((item: any) => {
+      console.log(item)
+    })
   } catch (error) {
     console.error(error)
   }
