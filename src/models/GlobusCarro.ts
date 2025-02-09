@@ -29,15 +29,6 @@ export default class GlobusCarro {
     return db(GlobusCarro.tableName).select("*")
   }
 
-  public static async getAllActiveItensCarregar({
-    id_empresa,
-  }: { id_empresa: number }): Promise<IGlobusCarro[]> {
-    const db = Db.getConnection()
-    return db(GlobusCarro.tableName)
-      .select("*")
-      .where({ carregar: true, id_empresa })
-  }
-
   public static async getById(id: number): Promise<IGlobusCarro> {
     const db = Db.getConnection()
     return db(GlobusCarro.tableName).where({ id }).first()

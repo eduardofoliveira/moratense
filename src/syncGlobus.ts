@@ -5,6 +5,7 @@ import DbOracle from "./database/connectionManagerOracle"
 import DbTeleconsult from "./database/connectionManager"
 import GlobusCarro from "./models/GlobusCarro"
 import Asset from "./models/Asset"
+import GlobusLinha from "./models/GlobusLinha"
 
 const execute = async () => {
   const start = "2025-02-01 00:00:00"
@@ -159,5 +160,57 @@ const syncCarrosGlobus = async () => {
   }
 }
 
+const syncLinhasGlobus = async () => {
+  try {
+    const idEmpresa = 4
+    const db = DbOracle.getConnection()
+
+    const data = await db.raw(`
+        select
+            CODIGOORGCONC,
+            CODIGOLINHA,
+            NROFICIALLINHA,
+            NOMELINHA
+        from
+            bgm_cadlinhas
+        where
+            CODIGOEMPRESA = ${idEmpresa} AND
+            CODIGOORGCONC is not null
+        order by
+            CODIGOLINHA
+    `)
+
+    for await (const linhaGlobus of data) {
+      const linhaGlobusExists = await GlobusLinha.findByCodigoAndFilial(
+        linhaGlobus.CODIGOLINHA,
+        linhaGlobus.CODIGOORGCONC,
+      )
+
+      if (!linhaGlobusExists) {
+        await GlobusLinha.create({
+          id_empresa: idEmpresa,
+          codigo_filial: linhaGlobus.CODIGOORGCONC,
+          codigo_linha: linhaGlobus.CODIGOLINHA,
+          nome_linha: linhaGlobus.NOMELINHA,
+          numero_oficial_linha: linhaGlobus.NROFICIALLINHA,
+        })
+      } else {
+        await GlobusLinha.update(linhaGlobusExists.id, {
+          id_empresa: idEmpresa,
+          codigo_filial: linhaGlobus.CODIGOORGCONC,
+          codigo_linha: linhaGlobus.CODIGOLINHA,
+          nome_linha: linhaGlobus.NOMELINHA,
+          numero_oficial_linha: linhaGlobus.NROFICIALLINHA,
+          updated_at: new Date(),
+        })
+      }
+    }
+
+    console.log("syncLinhasGlobus: fim")
+  } catch (error) {
+    console.error(error)
+  }
+}
 // execute()
-syncCarrosGlobus()
+// syncCarrosGlobus()
+syncLinhasGlobus()
