@@ -53,7 +53,7 @@ const syncCarrosGlobus = async () => {
 
   try {
     const db = DbOracle.getConnection()
-    const dbTeleconsult = DbOracle.getConnection()
+    const dbTeleconsult = DbTeleconsult.getConnection()
 
     let data = await db.raw(`
         select
