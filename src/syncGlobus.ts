@@ -2,6 +2,7 @@ import "dotenv/config"
 import fs from "node:fs/promises"
 
 import DbOracle from "./database/connectionManagerOracle"
+import DbTeleconsult from "./database/connectionManager"
 import GlobusCarro from "./models/GlobusCarro"
 import Asset from "./models/Asset"
 
@@ -48,8 +49,11 @@ const execute = async () => {
 }
 
 const syncCarrosGlobus = async () => {
+  const idEmpresa = 4
+
   try {
     const db = DbOracle.getConnection()
+    const dbTeleconsult = DbOracle.getConnection()
 
     let data = await db.raw(`
         select
@@ -61,12 +65,27 @@ const syncCarrosGlobus = async () => {
         from
           FRT_CADVEICULOS
         where
-          CODIGOEMPRESA = 4
+          CODIGOEMPRESA = ${idEmpresa}
         order by
           PREFIXOVEIC
     `)
 
     const carros = await Asset.getAll()
+    const carrosWithChassi = await dbTeleconsult.raw(`
+      SELECT
+        c.id,
+        c.id_empresa,
+        c.codigo AS codigo_carro,
+        ch.codigo AS chassi
+      FROM
+        carros c,
+        carros_chassis cc,
+        chassis ch
+      WHERE
+        c.id_empresa = 4 and
+        cc.id_carro = c.id and
+        cc.id_chassi = ch.id
+    `)
 
     data = data.map((carroGlobus: any) => {
       const asset = carros.find(
@@ -75,15 +94,27 @@ const syncCarrosGlobus = async () => {
           Number.parseInt(carroGlobus.PREFIXOVEIC, 10),
       )
 
+      const chassi = carrosWithChassi.find(
+        (chassi: any) =>
+          Number.parseInt(chassi.codigo_carro, 10) ===
+          Number.parseInt(carroGlobus.prefixoveic, 10),
+      )
+
+      let temp = carroGlobus
+
       if (asset) {
-        return {
-          ...carroGlobus,
-          assetId: asset.assetId,
-        }
+        temp = { ...carroGlobus, assetId: asset.assetId }
+      }
+
+      if (chassi) {
+        temp = { ...temp, chassi: chassi.chassi }
       }
 
       return carroGlobus
     })
+
+    await db.destroy()
+    await dbTeleconsult.destroy()
 
     console.log(data)
   } catch (error) {
