@@ -95,8 +95,12 @@ const syncCarrosGlobus = async () => {
       )
 
       const chassi = carrosWithChassi.find((chassi: any) => {
+        console.log(" ")
         console.log(chassi.codigo_carro)
         console.log(carroGlobus.PREFIXOVEIC)
+        console.log({ chassi })
+        console.log({ carroGlobus })
+        console.log(" ")
 
         console.log(
           Number.parseInt(chassi.codigo_carro, 10),
