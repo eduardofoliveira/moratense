@@ -7,6 +7,7 @@ import GlobusCarro from "./models/GlobusCarro"
 import Asset from "./models/Asset"
 import Driver from "./models/Driver"
 import GlobusLinha from "./models/GlobusLinha"
+import GlobusFuncionario from "./models/GlobusFuncionario"
 
 const execute = async () => {
   const start = "2025-02-01 00:00:00"
@@ -234,8 +235,44 @@ const syncFuncionariosGlobus = async () => {
 
     const motoristas = await Driver.getAll()
 
-    console.log(data[0])
-    console.log(motoristas[0])
+    for (const funcionarioGlobus of data) {
+      const findMotorista = motoristas.find(
+        (item) =>
+          item.employeeNumber ===
+          Number.parseInt(funcionarioGlobus.CHAPAFUNC, 10),
+      )
+
+      const funcionarioGlobusExists = await GlobusFuncionario.findByChapa(
+        funcionarioGlobus.CHAPAFUNC,
+      )
+
+      if (!funcionarioGlobusExists) {
+        await GlobusFuncionario.create({
+          id_empresa: idEmpresa,
+          codigo: funcionarioGlobus.CODFUNC,
+          codigo_funcionario: funcionarioGlobus.CODINTFUNC,
+          apelido: funcionarioGlobus.APELIDOFUNC,
+          chapa: funcionarioGlobus.CHAPAFUNC,
+          driverId: findMotorista
+            ? findMotorista.driverId.toString()
+            : undefined,
+          nome: funcionarioGlobus.NOMEFUNC,
+        })
+      } else {
+        await GlobusFuncionario.update(funcionarioGlobusExists.id, {
+          id_empresa: idEmpresa,
+          codigo: funcionarioGlobus.CODFUNC,
+          codigo_funcionario: funcionarioGlobus.CODINTFUNC,
+          apelido: funcionarioGlobus.APELIDOFUNC,
+          chapa: funcionarioGlobus.CHAPAFUNC,
+          driverId: findMotorista
+            ? findMotorista.driverId.toString()
+            : undefined,
+          nome: funcionarioGlobus.NOMEFUNC,
+          updated_at: new Date(),
+        })
+      }
+    }
 
     console.log("syncFuncionariosGlobus: fim")
   } catch (error) {
