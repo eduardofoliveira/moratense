@@ -94,11 +94,23 @@ const syncCarrosGlobus = async () => {
           Number.parseInt(carroGlobus.PREFIXOVEIC, 10),
       )
 
-      const chassi = carrosWithChassi.find(
-        (chassi: any) =>
-          Number.parseInt(chassi.codigo_carro, 10) ===
+      const chassi = carrosWithChassi.find((chassi: any) => {
+        console.log(chassi.codigo_carro)
+        console.log(carroGlobus.PREFIXOVEIC)
+
+        console.log(
+          Number.parseInt(chassi.codigo_carro, 10),
           Number.parseInt(carroGlobus.PREFIXOVEIC, 10),
-      )
+        )
+
+        if (
+          Number.parseInt(chassi.codigo_carro, 10) ===
+          Number.parseInt(carroGlobus.PREFIXOVEIC, 10)
+        ) {
+          return true
+        }
+        return false
+      })
 
       let temp = carroGlobus
 
