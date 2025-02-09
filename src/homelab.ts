@@ -174,7 +174,7 @@ const syncPositionsByAsset = async () => {
     await apiMix.getToken()
 
     const carros = await Asset.getAll()
-    const listaDividida = dividirLista(carros, 10)
+    const listaDividida = dividirLista(carros, 5)
     for await (const assets of listaDividida) {
       const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
 
@@ -224,7 +224,7 @@ const syncTrips = async () => {
 
     const carros = await Asset.getAll()
     // carros = carros.filter((carro) => carro.assetId === "1580750191846305792")
-    const listaDividida = dividirLista(carros, 10)
+    const listaDividida = dividirLista(carros, 37)
 
     for await (const assets of listaDividida) {
       const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
@@ -302,7 +302,7 @@ const syncTrips = async () => {
                 }
                 if (subTrip.EndPosition) {
                   const positionExists = await Position.findMixCode(
-                    subTrip.StartPosition.PositionId.toString(),
+                    subTrip.EndPosition.PositionId.toString(),
                   )
 
                   if (!positionExists) {
@@ -497,7 +497,7 @@ const syncEvents = async () => {
     await apiMix.getToken()
 
     const carros = await Asset.getAll()
-    const listaDividida = dividirLista(carros, 10)
+    const listaDividida = dividirLista(carros, 5)
 
     const drivers = await Driver.getAll()
     const driversIds = drivers.map<string>((driver) =>

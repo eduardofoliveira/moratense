@@ -286,7 +286,7 @@ class ApiMix {
         console.log(
           `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
         )
-        await delay(2000) // Espera 2 segundos antes de tentar novamente
+        await delay(60000) // Espera 2 segundos antes de tentar novamente
       }
     }
   }
@@ -334,7 +334,7 @@ class ApiMix {
         console.log(
           `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
         )
-        await delay(2000) // Espera 2 segundos antes de tentar novamente
+        await delay(60000) // Espera 2 segundos antes de tentar novamente
       }
     }
   }
@@ -373,7 +373,7 @@ class ApiMix {
         console.log(
           `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
         )
-        await delay(2000) // Espera 2 segundos antes de tentar novamente
+        await delay(60000) // Espera 2 segundos antes de tentar novamente
       }
     }
   }
@@ -430,7 +430,7 @@ class ApiMix {
         console.log(
           `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
         )
-        await delay(2000) // Espera 2 segundos antes de tentar novamente
+        await delay(60000) // Espera 2 segundos antes de tentar novamente
       }
     }
   }
