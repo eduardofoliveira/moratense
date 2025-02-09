@@ -1,13 +1,14 @@
 import "dotenv/config"
 import fs from "node:fs/promises"
 
-import Db from "./database/connectionManagerOracle"
+import DbOracle from "./database/connectionManagerOracle"
+import GlobusCarro from "./models/GlobusCarro"
 
 const execute = async () => {
   const start = "2025-02-01 00:00:00"
   const end = "2025-02-07 23:59:59"
 
-  const db = Db.getConnection()
+  const db = DbOracle.getConnection()
 
   await new Promise((resolve) => setTimeout(resolve, 5000))
 
@@ -45,4 +46,30 @@ const execute = async () => {
   await db.destroy()
 }
 
-execute()
+const syncCarrosGlobus = async () => {
+  try {
+    const db = DbOracle.getConnection()
+
+    const data = await db.raw(`
+        select
+          codigoveic,
+          CODIGOTPFROTA,
+          placaatualveic,
+          prefixoveic,
+          condicaoveic
+        from
+          FRT_CADVEICULOS
+        where
+          CODIGOEMPRESA = 4
+        order by
+          PREFIXOVEIC
+    `)
+
+    console.log(data)
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+// execute()
+syncCarrosGlobus()
