@@ -87,9 +87,6 @@ const syncCarrosGlobus = async () => {
         cc.id_chassi = ch.id
     `)
 
-    console.log(carrosWithChassi[0])
-    process.exit()
-
     data = data.map((carroGlobus: any) => {
       const asset = carros.find(
         (carro) =>
@@ -100,7 +97,7 @@ const syncCarrosGlobus = async () => {
       const chassi = carrosWithChassi.find(
         (chassi: any) =>
           Number.parseInt(chassi.codigo_carro, 10) ===
-          Number.parseInt(carroGlobus.prefixoveic, 10),
+          Number.parseInt(carroGlobus.PREFIXOVEIC, 10),
       )
 
       let temp = carroGlobus
