@@ -8,6 +8,7 @@ import Asset from "./models/Asset"
 import Driver from "./models/Driver"
 import GlobusLinha from "./models/GlobusLinha"
 import GlobusFuncionario from "./models/GlobusFuncionario"
+import GlobusViagem from "./models/GlobusViagem"
 
 const execute = async () => {
   const start = "2025-02-01 00:00:00"
@@ -280,12 +281,43 @@ const syncFuncionariosGlobus = async () => {
   }
 }
 
+type ViagemGlobus = {
+  // DT: '2025-02-01',
+  // PREFIXOVEIC: '0012079',
+  // CODIGOLINHA: '088',
+  // NOMELINHA: '508 - JD JAPAO  X  PORTAO',
+  // CODIGOORGCONC: '1',
+  // COD_SERVDIARIA: null,
+  // DTI: '2025-02-01 05:50:00',
+  // DTF: '2025-02-01 06:51:00',
+  // CDFT: 1,
+  // F1COD: '042147',
+  // F1AP: null,
+  // F1NOME: 'GILANIO DE SOUZA SANTOS',
+  // DTG: '2025-02-01 05:50:00',
+  // CODIGOEMPRESA: 4
+  DT: string
+  PREFIXOVEIC: string
+  CODIGOLINHA: string
+  NOMELINHA: string
+  CODIGOORGCONC: string
+  COD_SERVDIARIA: string
+  DTI: string
+  DTF: string
+  CDFT: number
+  F1COD: string
+  F1AP: string
+  F1NOME: string
+  DTG: string
+  CODIGOEMPRESA: number
+}
+
 const syncViagensGlobus = async () => {
   try {
     const idEmpresa = 4
     const db = DbOracle.getConnection()
 
-    const data = await db.raw(`
+    const data = await db.raw<ViagemGlobus[]>(`
       select
         to_char( t_arr_viagens_guia.QTD_HORA_INI , 'yyyy-mm-dd' ) dt,
         prefixoveic,
@@ -316,7 +348,58 @@ const syncViagensGlobus = async () => {
         t_arr_viagens_guia.QTD_HORA_INI between to_date('2025-02-01 00:00:00','yyyy-mm-dd hh24:mi:ss') and to_date('2025-02-09 23:59:59','yyyy-mm-dd hh24:mi:ss')
     `)
 
-    console.log(data[0])
+    for await (const viagemGlobus of data) {
+      console.log(viagemGlobus)
+
+      const linhaGlobus = await GlobusLinha.findByCodigoAndFilial(
+        viagemGlobus.CODIGOLINHA,
+        Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+      )
+
+      console.log({ linhaGlobus })
+
+      const funcioarioGlobus = await GlobusFuncionario.findByCodigo(
+        viagemGlobus.F1COD,
+      )
+
+      console.log({ funcioarioGlobus })
+
+      const carroGlobus = await GlobusCarro.findByPrefixo(
+        viagemGlobus.PREFIXOVEIC,
+      )
+
+      console.log({ carroGlobus })
+
+      console.log({
+        id_empresa: idEmpresa,
+        assetId: carroGlobus.assetId ? carroGlobus.assetId : undefined,
+        driverId: funcioarioGlobus.driverId
+          ? funcioarioGlobus.driverId
+          : undefined,
+        codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+        codigo_frota: viagemGlobus.CDFT,
+        data_recolhido: new Date(viagemGlobus.DTF),
+        data_saida_garagem: new Date(viagemGlobus.DTI),
+        fk_id_globus_funcionario: funcioarioGlobus.id,
+        fk_id_globus_linha: linhaGlobus.id,
+      })
+
+      process.exit(0)
+
+      await GlobusViagem.create({
+        id_empresa: idEmpresa,
+        assetId: carroGlobus.assetId ? carroGlobus.assetId : undefined,
+        driverId: funcioarioGlobus.driverId
+          ? funcioarioGlobus.driverId
+          : undefined,
+        codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+        codigo_frota: viagemGlobus.CDFT,
+        data_recolhido: new Date(viagemGlobus.DTF),
+        data_saida_garagem: new Date(viagemGlobus.DTI),
+        fk_id_globus_funcionario: funcioarioGlobus.id,
+        fk_id_globus_linha: linhaGlobus.id,
+      })
+    }
 
     console.log("syncViagensGlobus: fim")
   } catch (error) {

@@ -34,6 +34,11 @@ export default class GlobusCarro {
     return db(GlobusCarro.tableName).where({ id }).first()
   }
 
+  public static async findByPrefixo(prefixo: string): Promise<IGlobusCarro> {
+    const db = Db.getConnection()
+    return db(GlobusCarro.tableName).where({ prefixo }).first()
+  }
+
   public static async findByCodigoVeiculo(
     codigo_veiculo: number,
   ): Promise<IGlobusCarro> {
