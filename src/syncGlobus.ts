@@ -349,42 +349,40 @@ const syncViagensGlobus = async () => {
     `)
 
     for await (const viagemGlobus of data) {
-      console.log(viagemGlobus)
+      // console.log(viagemGlobus)
 
       const linhaGlobus = await GlobusLinha.findByCodigoAndFilial(
         viagemGlobus.CODIGOLINHA,
         Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
       )
 
-      console.log({ linhaGlobus })
+      // console.log({ linhaGlobus })
 
       const funcioarioGlobus = await GlobusFuncionario.findByCodigo(
         viagemGlobus.F1COD,
       )
 
-      console.log({ funcioarioGlobus })
+      // console.log({ funcioarioGlobus })
 
       const carroGlobus = await GlobusCarro.findByPrefixo(
         viagemGlobus.PREFIXOVEIC,
       )
 
-      console.log({ carroGlobus })
+      // console.log({ carroGlobus })
 
-      console.log({
-        id_empresa: idEmpresa,
-        assetId: carroGlobus.assetId ? carroGlobus.assetId : undefined,
-        driverId: funcioarioGlobus.driverId
-          ? funcioarioGlobus.driverId
-          : undefined,
-        codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
-        codigo_frota: viagemGlobus.CDFT,
-        data_recolhido: new Date(viagemGlobus.DTF),
-        data_saida_garagem: new Date(viagemGlobus.DTI),
-        fk_id_globus_funcionario: funcioarioGlobus.id,
-        fk_id_globus_linha: linhaGlobus.id,
-      })
-
-      process.exit(0)
+      // console.log({
+      //   id_empresa: idEmpresa,
+      //   assetId: carroGlobus.assetId ? carroGlobus.assetId : undefined,
+      //   driverId: funcioarioGlobus.driverId
+      //     ? funcioarioGlobus.driverId
+      //     : undefined,
+      //   codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+      //   codigo_frota: viagemGlobus.CDFT,
+      //   data_recolhido: new Date(viagemGlobus.DTF),
+      //   data_saida_garagem: new Date(viagemGlobus.DTI),
+      //   fk_id_globus_funcionario: funcioarioGlobus.id,
+      //   fk_id_globus_linha: linhaGlobus.id,
+      // })
 
       await GlobusViagem.create({
         id_empresa: idEmpresa,
@@ -400,6 +398,8 @@ const syncViagensGlobus = async () => {
         fk_id_globus_linha: linhaGlobus.id,
       })
     }
+
+    console.log(data.length)
 
     console.log("syncViagensGlobus: fim")
   } catch (error) {
