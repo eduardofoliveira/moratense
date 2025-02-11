@@ -365,8 +365,11 @@ const syncViagensGlobus = async () => {
         viagemGlobus.PREFIXOVEIC,
       )
 
-      if (!carroGlobus) {
-        console.log({ PREFIXOVEIC: viagemGlobus.PREFIXOVEIC })
+      if (!carroGlobus || (carroGlobus && !carroGlobus.assetId)) {
+        console.log({
+          PREFIXOVEIC: viagemGlobus.PREFIXOVEIC,
+          carroGlobus,
+        })
       }
 
       // if (!linhaGlobus || !funcioarioGlobus || !carroGlobus) {
