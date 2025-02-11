@@ -279,7 +279,53 @@ const syncFuncionariosGlobus = async () => {
     console.error(error)
   }
 }
+
+const syncViagensGlobus = async () => {
+  try {
+    const idEmpresa = 4
+    const db = DbOracle.getConnection()
+
+    const data = await db.raw(`
+      select
+        to_char( t_arr_viagens_guia.QTD_HORA_INI , 'yyyy-mm-dd' ) dt,
+        prefixoveic,
+        l.codigolinha,
+        l.nomelinha,
+        codigoorgconc,
+        '' cod_servdiaria,
+        to_char( t_arr_viagens_guia.QTD_HORA_INI , 'yyyy-mm-dd hh24:mi:ss' ) dti,
+        to_char( t_arr_viagens_guia.QTD_HORA_FINAL , 'yyyy-mm-dd hh24:mi:ss' ) dtf,
+        frt_cadveiculos.CODIGOTPFROTA cdft,
+        fm.codfunc f1cod,
+        fm.apelidofunc f1ap,
+        fm.nomefunc f1nome,
+        to_char( t_arr_viagens_guia.QTD_HORA_INI , 'yyyy-mm-dd hh24:mi:ss' ) dtg,
+        frt_cadveiculos.CODIGOEMPRESA
+      from
+        t_arr_viagens_guia
+        left join frt_cadveiculos
+          on frt_cadveiculos.codigoveic = t_arr_viagens_guia.COD_VEICULO
+        Join bgm_cadlinhas l
+          on t_arr_viagens_guia.cod_intlinha = l.codintlinha
+        left join T_ARR_TROCAS_FUNC
+          on T_ARR_TROCAS_FUNC.COD_SEQ_GUIA = t_arr_viagens_guia.COD_SEQ_GUIA and FLG_MOT_COB = 'M'
+        left Join flp_funcionarios fm
+          on fm.CODINTFUNC = T_ARR_TROCAS_FUNC.CODINTFUNC
+      where
+        frt_cadveiculos.CODIGOEMPRESA = ${idEmpresa} and
+        t_arr_viagens_guia.QTD_HORA_INI between to_date('2025-02-01 00:00:00','yyyy-mm-dd hh24:mi:ss') and to_date('2025-02-09 23:59:59','yyyy-mm-dd hh24:mi:ss')
+    `)
+
+    console.log(data[0])
+
+    console.log("syncViagensGlobus: fim")
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 // execute()
 // syncCarrosGlobus()
 // syncLinhasGlobus()
-syncFuncionariosGlobus()
+// syncFuncionariosGlobus()
+syncViagensGlobus()

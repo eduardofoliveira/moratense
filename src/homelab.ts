@@ -10,8 +10,8 @@ import Trip from "./models/Trip"
 import EventTypes from "./models/EventTypes"
 import Event from "./models/Event"
 
-const start = "20250208000000"
-const end = "20250208235959"
+const start = "20250209000000"
+const end = "20250209235959"
 
 const syncDrivers = async () => {
   try {
@@ -532,7 +532,7 @@ const syncEvents = async () => {
 
 // syncDrivers()
 // syncAssets()
-// syncPositionsByAsset()
-// syncTrips()
 // eventTypes()
-// syncEvents()
+// syncTrips()
+syncPositionsByAsset()
+syncEvents()

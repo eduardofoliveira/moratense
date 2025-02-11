@@ -78,19 +78,35 @@ const fixAssets = async () => {
   await apiMix.getToken()
 
   const carros = await apiMix.listaCarros({ groupId: empresa.mix_groupId })
-
   const conn = Db.getConnection()
 
   for await (const carro of carros) {
-    const assetId = carro.AssetId.toString()
+    const carroExists = await conn("telemetria_carros")
+      .where({ codigo_mix: carro.AssetId.toString() })
+      .first()
 
-    if (Number.parseInt(carro.Description, 10) > 0) {
-      await conn("telemetria_carros")
-        .update({
-          data_cadastro: new Date(),
+    if (!carroExists) {
+      if (Number.parseInt(carro.Description, 10) > 0) {
+        console.log("Inserindo carro")
+        await conn("telemetria_carros").insert({
+          id_empresa: 4,
           carro: Number.parseInt(carro.Description, 10),
+          codigo_mix: carro.AssetId.toString(),
+          data_cadastro: new Date(),
         })
-        .where("codigo_mix", assetId)
+      }
+    }
+
+    if (carroExists) {
+      if (Number.parseInt(carro.Description, 10) > 0) {
+        console.log("Atualizando carro")
+        await conn("telemetria_carros")
+          .update({
+            // data_cadastro: new Date(),
+            carro: Number.parseInt(carro.Description, 10),
+          })
+          .where("codigo_mix", carro.AssetId.toString())
+      }
     }
   }
 
