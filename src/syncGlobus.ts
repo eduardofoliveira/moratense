@@ -1,5 +1,6 @@
 import "dotenv/config"
 import fs from "node:fs/promises"
+import { format } from "date-fns"
 
 import DbOracle from "./database/connectionManagerOracle"
 import DbTeleconsult from "./database/connectionManager"
@@ -361,6 +362,29 @@ const syncViagensGlobus = async () => {
       const carroGlobus = await GlobusCarro.findByPrefixo(
         viagemGlobus.PREFIXOVEIC,
       )
+
+      if (!linhaGlobus || !funcioarioGlobus || !carroGlobus) {
+        console.log({
+          CODIGOLINHA: viagemGlobus.CODIGOLINHA,
+          CODIGOORGCONC: viagemGlobus.CODIGOORGCONC,
+          F1COD: viagemGlobus.F1COD,
+          PREFIXOVEIC: viagemGlobus.PREFIXOVEIC,
+          assetId: carroGlobus ? carroGlobus.assetId : undefined,
+          driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
+          fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
+          fk_id_globus_funcionario: funcioarioGlobus
+            ? funcioarioGlobus.id
+            : undefined,
+          data_recolhido: format(
+            new Date(viagemGlobus.DTF),
+            "yyyy-MM-dd HH:mm:ss",
+          ),
+          data_saida_garagem: format(
+            new Date(viagemGlobus.DTI),
+            "yyyy-MM-dd HH:mm:ss",
+          ),
+        })
+      }
 
       try {
         await GlobusViagem.create({
