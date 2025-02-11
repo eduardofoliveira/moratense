@@ -381,6 +381,7 @@ const syncViagensGlobus = async () => {
         console.log({ linhaGlobus })
         console.log({ funcioarioGlobus })
         console.log({ carroGlobus })
+        console.log({ viagemGlobus })
         console.log({
           id_empresa: idEmpresa,
           assetId: carroGlobus.assetId ? carroGlobus.assetId : undefined,
