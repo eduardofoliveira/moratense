@@ -174,11 +174,12 @@ const syncLinhasGlobus = async () => {
           CODIGOORGCONC,
           CODIGOLINHA,
           NROFICIALLINHA,
-          NOMELINHA
+          NOMELINHA,
+          CODIGOEMPRESA
         from
           bgm_cadlinhas
         where
-          CODIGOEMPRESA = ${idEmpresa} AND
+          -- CODIGOEMPRESA = ${idEmpresa} AND
           CODIGOORGCONC is not null
         order by
           CODIGOLINHA
@@ -192,7 +193,7 @@ const syncLinhasGlobus = async () => {
 
       if (!linhaGlobusExists) {
         await GlobusLinha.create({
-          id_empresa: idEmpresa,
+          id_empresa: linhaGlobus.CODIGOEMPRESA,
           codigo_filial: linhaGlobus.CODIGOORGCONC,
           codigo_linha: linhaGlobus.CODIGOLINHA,
           nome_linha: linhaGlobus.NOMELINHA,
@@ -200,7 +201,7 @@ const syncLinhasGlobus = async () => {
         })
       } else {
         await GlobusLinha.update(linhaGlobusExists.id, {
-          id_empresa: idEmpresa,
+          id_empresa: linhaGlobus.CODIGOEMPRESA,
           codigo_filial: linhaGlobus.CODIGOORGCONC,
           codigo_linha: linhaGlobus.CODIGOLINHA,
           nome_linha: linhaGlobus.NOMELINHA,
@@ -432,6 +433,6 @@ const syncViagensGlobus = async () => {
 
 // execute()
 // syncCarrosGlobus()
-// syncLinhasGlobus()
+syncLinhasGlobus()
 // syncFuncionariosGlobus()
-syncViagensGlobus()
+// syncViagensGlobus()
