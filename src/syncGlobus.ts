@@ -228,11 +228,12 @@ const syncFuncionariosGlobus = async () => {
         f.chapafunc,
         f.nomefunc,
         f.codfunc,
-        f.apelidofunc
+        f.apelidofunc,
+        f.codigoempresa
       from
         flp_funcionarios f
       where
-        f.CODIGOEMPRESA = ${idEmpresa} and
+        -- f.CODIGOEMPRESA = ${idEmpresa} and
         f.SITUACAOFUNC = 'A'
     `)
 
@@ -434,5 +435,5 @@ const syncViagensGlobus = async () => {
 // execute()
 // syncCarrosGlobus()
 // syncLinhasGlobus()
-// syncFuncionariosGlobus()
-syncViagensGlobus()
+syncFuncionariosGlobus()
+// syncViagensGlobus()
