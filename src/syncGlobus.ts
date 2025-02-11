@@ -357,71 +357,75 @@ const syncViagensGlobus = async () => {
         Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
       )
 
-      const funcioarioGlobus = await GlobusFuncionario.findByCodigo(
-        viagemGlobus.F1COD,
-      )
+      // const funcioarioGlobus = await GlobusFuncionario.findByCodigo(
+      //   viagemGlobus.F1COD,
+      // )
 
-      const carroGlobus = await GlobusCarro.findByPrefixo(
-        viagemGlobus.PREFIXOVEIC,
-      )
+      // const carroGlobus = await GlobusCarro.findByPrefixo(
+      //   viagemGlobus.PREFIXOVEIC,
+      // )
 
-      if (!linhaGlobus || !funcioarioGlobus || !carroGlobus) {
-        console.log({
-          CODIGOLINHA: viagemGlobus.CODIGOLINHA,
-          CODIGOORGCONC: viagemGlobus.CODIGOORGCONC,
-          F1COD: viagemGlobus.F1COD,
-          PREFIXOVEIC: viagemGlobus.PREFIXOVEIC,
-          assetId: carroGlobus ? carroGlobus.assetId : undefined,
-          driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
-          fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
-          fk_id_globus_funcionario: funcioarioGlobus
-            ? funcioarioGlobus.id
-            : undefined,
-          data_recolhido: format(
-            new Date(viagemGlobus.DTF),
-            "yyyy-MM-dd HH:mm:ss",
-          ),
-          data_saida_garagem: format(
-            new Date(viagemGlobus.DTI),
-            "yyyy-MM-dd HH:mm:ss",
-          ),
-        })
+      if (!linhaGlobus) {
+        console.log({ PREFIXOVEIC: viagemGlobus.PREFIXOVEIC })
       }
 
-      try {
-        await GlobusViagem.create({
-          id_empresa: idEmpresa,
-          assetId: carroGlobus ? carroGlobus.assetId : undefined,
-          driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
-          codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
-          codigo_frota: viagemGlobus.CDFT,
-          data_recolhido: new Date(viagemGlobus.DTF),
-          data_saida_garagem: new Date(viagemGlobus.DTI),
-          fk_id_globus_funcionario: funcioarioGlobus
-            ? funcioarioGlobus.id
-            : undefined,
-          fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
-        })
-      } catch (error) {
-        console.log(error)
-        console.log({ linhaGlobus })
-        console.log({ funcioarioGlobus })
-        console.log({ carroGlobus })
-        console.log({ viagemGlobus })
-        console.log({
-          id_empresa: idEmpresa,
-          assetId: carroGlobus ? carroGlobus.assetId : undefined,
-          driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
-          codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
-          codigo_frota: viagemGlobus.CDFT,
-          data_recolhido: new Date(viagemGlobus.DTF),
-          data_saida_garagem: new Date(viagemGlobus.DTI),
-          fk_id_globus_funcionario: funcioarioGlobus
-            ? funcioarioGlobus.id
-            : undefined,
-          fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
-        })
-      }
+      // if (!linhaGlobus || !funcioarioGlobus || !carroGlobus) {
+      //   console.log({
+      //     CODIGOLINHA: viagemGlobus.CODIGOLINHA,
+      //     CODIGOORGCONC: viagemGlobus.CODIGOORGCONC,
+      //     F1COD: viagemGlobus.F1COD,
+      //     PREFIXOVEIC: viagemGlobus.PREFIXOVEIC,
+      //     assetId: carroGlobus ? carroGlobus.assetId : undefined,
+      //     driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
+      //     fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
+      //     fk_id_globus_funcionario: funcioarioGlobus
+      //       ? funcioarioGlobus.id
+      //       : undefined,
+      //     data_recolhido: format(
+      //       new Date(viagemGlobus.DTF),
+      //       "yyyy-MM-dd HH:mm:ss",
+      //     ),
+      //     data_saida_garagem: format(
+      //       new Date(viagemGlobus.DTI),
+      //       "yyyy-MM-dd HH:mm:ss",
+      //     ),
+      //   })
+      // }
+
+      // try {
+      //   await GlobusViagem.create({
+      //     id_empresa: idEmpresa,
+      //     assetId: carroGlobus ? carroGlobus.assetId : undefined,
+      //     driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
+      //     codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+      //     codigo_frota: viagemGlobus.CDFT,
+      //     data_recolhido: new Date(viagemGlobus.DTF),
+      //     data_saida_garagem: new Date(viagemGlobus.DTI),
+      //     fk_id_globus_funcionario: funcioarioGlobus
+      //       ? funcioarioGlobus.id
+      //       : undefined,
+      //     fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
+      //   })
+      // } catch (error) {
+      //   console.log(error)
+      //   console.log({ linhaGlobus })
+      //   console.log({ funcioarioGlobus })
+      //   console.log({ carroGlobus })
+      //   console.log({ viagemGlobus })
+      //   console.log({
+      //     id_empresa: idEmpresa,
+      //     assetId: carroGlobus ? carroGlobus.assetId : undefined,
+      //     driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
+      //     codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+      //     codigo_frota: viagemGlobus.CDFT,
+      //     data_recolhido: new Date(viagemGlobus.DTF),
+      //     data_saida_garagem: new Date(viagemGlobus.DTI),
+      //     fk_id_globus_funcionario: funcioarioGlobus
+      //       ? funcioarioGlobus.id
+      //       : undefined,
+      //     fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
+      //   })
+      // }
     }
 
     console.log(data.length)
