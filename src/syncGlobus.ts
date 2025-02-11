@@ -409,5 +409,5 @@ const syncViagensGlobus = async () => {
 // execute()
 // syncCarrosGlobus()
 // syncLinhasGlobus()
-// syncFuncionariosGlobus()
-syncViagensGlobus()
+syncFuncionariosGlobus()
+// syncViagensGlobus()
