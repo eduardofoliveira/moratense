@@ -352,20 +352,20 @@ const syncViagensGlobus = async () => {
     `)
 
     for await (const viagemGlobus of data) {
-      const linhaGlobus = await GlobusLinha.findByCodigoAndFilial(
-        viagemGlobus.CODIGOLINHA,
-        Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
-      )
+      // const linhaGlobus = await GlobusLinha.findByCodigoAndFilial(
+      //   viagemGlobus.CODIGOLINHA,
+      //   Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+      // )
 
       // const funcioarioGlobus = await GlobusFuncionario.findByCodigo(
       //   viagemGlobus.F1COD,
       // )
 
-      // const carroGlobus = await GlobusCarro.findByPrefixo(
-      //   viagemGlobus.PREFIXOVEIC,
-      // )
+      const carroGlobus = await GlobusCarro.findByPrefixo(
+        viagemGlobus.PREFIXOVEIC,
+      )
 
-      if (!linhaGlobus) {
+      if (!carroGlobus) {
         console.log({ PREFIXOVEIC: viagemGlobus.PREFIXOVEIC })
       }
 
