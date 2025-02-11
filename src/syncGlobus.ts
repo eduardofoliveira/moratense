@@ -365,16 +365,16 @@ const syncViagensGlobus = async () => {
       try {
         await GlobusViagem.create({
           id_empresa: idEmpresa,
-          assetId: carroGlobus.assetId ? carroGlobus.assetId : undefined,
-          driverId: funcioarioGlobus.driverId
-            ? funcioarioGlobus.driverId
-            : undefined,
+          assetId: carroGlobus ? carroGlobus.assetId : undefined,
+          driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
           codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
           codigo_frota: viagemGlobus.CDFT,
           data_recolhido: new Date(viagemGlobus.DTF),
           data_saida_garagem: new Date(viagemGlobus.DTI),
-          fk_id_globus_funcionario: funcioarioGlobus.id,
-          fk_id_globus_linha: linhaGlobus.id,
+          fk_id_globus_funcionario: funcioarioGlobus
+            ? funcioarioGlobus.id
+            : undefined,
+          fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
         })
       } catch (error) {
         console.log(error)
@@ -384,16 +384,16 @@ const syncViagensGlobus = async () => {
         console.log({ viagemGlobus })
         console.log({
           id_empresa: idEmpresa,
-          assetId: carroGlobus.assetId ? carroGlobus.assetId : undefined,
-          driverId: funcioarioGlobus.driverId
-            ? funcioarioGlobus.driverId
-            : undefined,
+          assetId: carroGlobus ? carroGlobus.assetId : undefined,
+          driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
           codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
           codigo_frota: viagemGlobus.CDFT,
           data_recolhido: new Date(viagemGlobus.DTF),
           data_saida_garagem: new Date(viagemGlobus.DTI),
-          fk_id_globus_funcionario: funcioarioGlobus.id,
-          fk_id_globus_linha: linhaGlobus.id,
+          fk_id_globus_funcionario: funcioarioGlobus
+            ? funcioarioGlobus.id
+            : undefined,
+          fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
         })
       }
     }
