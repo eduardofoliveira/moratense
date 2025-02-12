@@ -122,8 +122,8 @@ const syncCarrosGlobus = async () => {
       return temp
     })
 
-    await db.destroy()
-    await dbTeleconsult.destroy()
+    // await db.destroy()
+    // await dbTeleconsult.destroy()
 
     console.log(data.length)
 
