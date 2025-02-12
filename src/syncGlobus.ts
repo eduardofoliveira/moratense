@@ -395,6 +395,21 @@ const syncViagensGlobus = async () => {
         })
       }
 
+      console.log({
+        assetId: carroGlobus ? carroGlobus.assetId : undefined,
+        driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
+        codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+        codigo_frota: viagemGlobus.CDFT,
+        data_recolhido: new Date(viagemGlobus.DTF),
+        data_saida_garagem: new Date(viagemGlobus.DTI),
+        fk_id_globus_funcionario: funcioarioGlobus
+          ? funcioarioGlobus.id
+          : undefined,
+        fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
+      })
+
+      process.exit(0)
+
       try {
         await GlobusViagem.create({
           id_empresa: idEmpresa,
