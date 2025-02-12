@@ -35,13 +35,28 @@ export default class GlobusViagem {
     return db(GlobusViagem.tableName).where({ id }).first()
   }
 
-  public static async findByCodigoAndFilial(
-    codigo_linha: string,
-    codigo_filial: number,
+  public static async find(
+    assetId?: string,
+    driverId?: string,
+    codigo_filial?: number,
+    codigo_frota?: number,
+    data_recolhido?: Date,
+    data_saida_garagem?: Date,
+    fk_id_globus_funcionario?: number,
+    fk_id_globus_linha?: number,
   ): Promise<IGlobusViagem> {
     const db = Db.getConnection()
     return db(GlobusViagem.tableName)
-      .where({ codigo_linha, codigo_filial })
+      .where({
+        assetId,
+        driverId,
+        codigo_filial,
+        codigo_frota,
+        data_recolhido,
+        data_saida_garagem,
+        fk_id_globus_funcionario,
+        fk_id_globus_linha,
+      })
       .first()
   }
 

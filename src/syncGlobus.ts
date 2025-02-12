@@ -395,25 +395,37 @@ const syncViagensGlobus = async () => {
         })
       }
 
-      console.log({
-        assetId: carroGlobus ? carroGlobus.assetId : undefined,
-        driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
-        codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
-        codigo_frota: viagemGlobus.CDFT,
-        data_recolhido: format(
-          new Date(viagemGlobus.DTF),
-          "yyyy-MM-dd HH:mm:ss",
-        ),
-        data_saida_garagem: format(
-          new Date(viagemGlobus.DTI),
-          "yyyy-MM-dd HH:mm:ss",
-        ),
-        fk_id_globus_funcionario: funcioarioGlobus
-          ? funcioarioGlobus.id
-          : undefined,
-        fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
-      })
+      // console.log({
+      //   assetId: carroGlobus ? carroGlobus.assetId : undefined,
+      //   driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
+      //   codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+      //   codigo_frota: viagemGlobus.CDFT,
+      //   data_recolhido: format(
+      //     new Date(viagemGlobus.DTF),
+      //     "yyyy-MM-dd HH:mm:ss",
+      //   ),
+      //   data_saida_garagem: format(
+      //     new Date(viagemGlobus.DTI),
+      //     "yyyy-MM-dd HH:mm:ss",
+      //   ),
+      //   fk_id_globus_funcionario: funcioarioGlobus
+      //     ? funcioarioGlobus.id
+      //     : undefined,
+      //   fk_id_globus_linha: linhaGlobus ? linhaGlobus.id : undefined,
+      // })
 
+      const viagemGlobusExists = await GlobusViagem.find(
+        carroGlobus ? carroGlobus.assetId : undefined,
+        funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
+        Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
+        viagemGlobus.CDFT,
+        new Date(viagemGlobus.DTF),
+        new Date(viagemGlobus.DTI),
+        funcioarioGlobus ? funcioarioGlobus.id : undefined,
+        linhaGlobus ? linhaGlobus.id : undefined,
+      )
+
+      console.log({ viagemGlobusExists })
       process.exit(0)
 
       try {
