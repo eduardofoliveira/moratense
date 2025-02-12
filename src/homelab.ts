@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { addHours } from "date-fns"
+import { addHours, format, subDays } from "date-fns"
 
 import ApiMix from "./service/api.mix"
 import showEmpresa from "./use-cases/empresa/showEmpresa"
@@ -10,8 +10,12 @@ import Trip from "./models/Trip"
 import EventTypes from "./models/EventTypes"
 import Event from "./models/Event"
 
-const start = "20250210000000"
-const end = "20250210235959"
+const today = new Date()
+const start = format(subDays(today, 1), "yyyyMMdd000000")
+const end = format(subDays(today, 1), "yyyyMMdd235959")
+
+// const start = "20250210000000"
+// const end = "20250210235959"
 
 const syncDrivers = async () => {
   try {
@@ -185,7 +189,7 @@ const syncPositionsByAsset = async () => {
         end,
       })
 
-      insertPositions(positions)
+      await insertPositions(positions)
 
       // for await (const position of positions) {
       //   try {
@@ -521,7 +525,7 @@ const syncEvents = async () => {
         end,
       })
 
-      insertEvents(events)
+      await insertEvents(events)
     }
 
     console.log("syncEvents: Fim")
@@ -530,9 +534,20 @@ const syncEvents = async () => {
   }
 }
 
+const sync = async () => {
+  await syncDrivers()
+  await syncAssets()
+  await syncTrips()
+  await eventTypes()
+  await syncPositionsByAsset()
+  await syncEvents()
+  process.exit(0)
+}
+
+sync()
 // syncDrivers()
 // syncAssets()
 // eventTypes()
 // syncTrips()
-syncPositionsByAsset()
+// syncPositionsByAsset()
 // syncEvents()
