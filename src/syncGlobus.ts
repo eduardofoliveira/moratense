@@ -348,7 +348,7 @@ const syncViagensGlobus = async () => {
           on fm.CODINTFUNC = T_ARR_TROCAS_FUNC.CODINTFUNC
       where
         frt_cadveiculos.CODIGOEMPRESA = ${idEmpresa} and
-        t_arr_viagens_guia.QTD_HORA_INI between to_date('2025-02-01 00:00:00','yyyy-mm-dd hh24:mi:ss') and to_date('2025-02-09 23:59:59','yyyy-mm-dd hh24:mi:ss')
+        t_arr_viagens_guia.QTD_HORA_INI between to_date('2025-02-10 00:00:00','yyyy-mm-dd hh24:mi:ss') and to_date('2025-02-10 23:59:59','yyyy-mm-dd hh24:mi:ss')
     `)
 
     for await (const viagemGlobus of data) {
@@ -440,7 +440,7 @@ const syncViagensGlobus = async () => {
 }
 
 // execute()
-syncCarrosGlobus()
-syncLinhasGlobus()
-syncFuncionariosGlobus()
+// syncCarrosGlobus()
+// syncLinhasGlobus()
+// syncFuncionariosGlobus()
 syncViagensGlobus()
