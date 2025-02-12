@@ -400,8 +400,8 @@ const syncViagensGlobus = async () => {
         driverId: funcioarioGlobus ? funcioarioGlobus.driverId : undefined,
         codigo_filial: Number.parseInt(viagemGlobus.CODIGOORGCONC, 10),
         codigo_frota: viagemGlobus.CDFT,
-        data_recolhido: new Date(viagemGlobus.DTF),
-        data_saida_garagem: new Date(viagemGlobus.DTI),
+        data_recolhido: format(new Date(viagemGlobus.DTF), "yyyy-MM-dd HH:mm:ss"), ,
+        data_saida_garagem: format(new Date(viagemGlobus.DTI), "yyyy-MM-dd HH:mm:ss"), ,
         fk_id_globus_funcionario: funcioarioGlobus
           ? funcioarioGlobus.id
           : undefined,
