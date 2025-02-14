@@ -178,7 +178,7 @@ const syncPositionsByAsset = async () => {
     await apiMix.getToken()
 
     const carros = await Asset.getAll()
-    const listaDividida = dividirLista(carros, 5)
+    const listaDividida = dividirLista(carros, 10)
     for await (const assets of listaDividida) {
       const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
 
@@ -501,7 +501,7 @@ const syncEvents = async () => {
     await apiMix.getToken()
 
     const carros = await Asset.getAll()
-    const listaDividida = dividirLista(carros, 5)
+    const listaDividida = dividirLista(carros, 10)
 
     const drivers = await Driver.getAll()
     const driversIds = drivers.map<string>((driver) =>

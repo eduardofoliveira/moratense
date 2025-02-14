@@ -4,6 +4,7 @@ import ApiMix from "./service/api.mix"
 import showEmpresa from "./use-cases/empresa/showEmpresa"
 import Db from "./database/connectionManager"
 import DbH from "./database/connectionManagerHostgator"
+import DbMoratense from "./database/connectionManagerHomeLab"
 
 const executar = async () => {
   const conn = Db.getConnection()
@@ -114,4 +115,72 @@ const fixAssets = async () => {
   console.log("FIM")
 }
 
-fixAssets()
+// fixAssets()
+
+const fixColaboradoresLegado = async () => {
+  try {
+    const connTeleconsult = Db.getConnection()
+    const connMoratense = DbMoratense.getConnection()
+
+    // const funcionariosGlobus =
+    //   await connMoratense("globus_funcionario").select("*")
+
+    // for await (const funcionario of funcionariosGlobus) {
+    //   const codigo = Number.parseInt(funcionario.codigo, 10)
+    //   const chapa = Number.parseInt(funcionario.chapa, 10)
+
+    //   await connTeleconsult.raw(`
+    //     UPDATE
+    //       colaboradores
+    //     SET
+    //       chapa = ${chapa},
+    //       nome = '${funcionario.nome}'
+    //     WHERE
+    //       codigo = ${codigo} and
+    //       id_empresa = 4
+    //   `)
+    // }
+    // console.log(funcionariosGlobus)
+
+    let [funcionariosDuplicados] = await connTeleconsult.raw(`SELECT
+        codigo,
+          COUNT(*) AS qtd
+        FROM
+          colaboradores
+        WHERE
+          id_empresa = 4
+        GROUP BY
+          codigo
+        ORDER BY
+          qtd desc
+    `)
+
+    funcionariosDuplicados = funcionariosDuplicados.filter(
+      (item: any) => item.qtd > 1,
+    )
+
+    for await (const funcionario of funcionariosDuplicados) {
+      const [funcionarios] = await connTeleconsult.raw(
+        `SELECT * FROM colaboradores WHERE codigo = ${funcionario.codigo} and id_empresa = 4`,
+      )
+      console.log(funcionarios.length)
+
+      for (let i = 0; i < funcionarios.length; i++) {
+        if (i === 0) {
+          continue
+        }
+
+        console.log("Removendo colaborador duplicado", funcionarios[i].id)
+        await connTeleconsult.raw(`
+          DELETE FROM colaboradores WHERE id = ${funcionarios[i].id}
+        `)
+      }
+    }
+
+    console.log("Corrigindo colaboradores legado")
+  } catch (error) {
+    console.log("Erro ao corrigir colaboradores legado", error)
+  }
+}
+
+fixColaboradoresLegado()
