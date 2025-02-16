@@ -66,11 +66,12 @@ const syncCarrosGlobus = async () => {
           CODIGOTPFROTA,
           placaatualveic,
           prefixoveic,
-          condicaoveic
+          condicaoveic,
+          CODIGOEMPRESA
         from
           FRT_CADVEICULOS
         where
-          CODIGOEMPRESA = ${idEmpresa}
+          -- CODIGOEMPRESA = idEmpresa
         order by
           PREFIXOVEIC
     `)
@@ -179,7 +180,7 @@ const syncLinhasGlobus = async () => {
         from
           bgm_cadlinhas
         where
-          -- CODIGOEMPRESA = ${idEmpresa} AND
+          -- CODIGOEMPRESA = idEmpresa AND
           CODIGOORGCONC is not null
         order by
           CODIGOLINHA
@@ -193,7 +194,7 @@ const syncLinhasGlobus = async () => {
 
       if (!linhaGlobusExists) {
         await GlobusLinha.create({
-          id_empresa: linhaGlobus.CODIGOEMPRESA,
+          id_empresa: idEmpresa,
           codigo_filial: linhaGlobus.CODIGOORGCONC,
           codigo_linha: linhaGlobus.CODIGOLINHA,
           nome_linha: linhaGlobus.NOMELINHA,
@@ -201,7 +202,7 @@ const syncLinhasGlobus = async () => {
         })
       } else {
         await GlobusLinha.update(linhaGlobusExists.id, {
-          id_empresa: linhaGlobus.CODIGOEMPRESA,
+          id_empresa: idEmpresa,
           codigo_filial: linhaGlobus.CODIGOORGCONC,
           codigo_linha: linhaGlobus.CODIGOLINHA,
           nome_linha: linhaGlobus.NOMELINHA,
@@ -233,7 +234,7 @@ const syncFuncionariosGlobus = async () => {
       from
         flp_funcionarios f
       where
-        -- f.CODIGOEMPRESA = ${idEmpresa} and
+        -- f.CODIGOEMPRESA = idEmpresa and
         f.SITUACAOFUNC = 'A'
     `)
 
@@ -303,8 +304,10 @@ type ViagemGlobus = {
 
 const syncViagensGlobus = async () => {
   const today = new Date()
-  const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd 00:00:00")
-  const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd 23:59:59")
+  // const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd 00:00:00")
+  // const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd 23:59:59")
+  const inicio = "2025-02-01 00:00:00"
+  const termino = "2025-02-15 23:59:59"
 
   try {
     const idEmpresa = 4
@@ -337,7 +340,7 @@ const syncViagensGlobus = async () => {
         left Join flp_funcionarios fm
           on fm.CODINTFUNC = T_ARR_TROCAS_FUNC.CODINTFUNC
       where
-        frt_cadveiculos.CODIGOEMPRESA = ${idEmpresa} and
+        -- frt_cadveiculos.CODIGOEMPRESA = id_empresa and
         t_arr_viagens_guia.QTD_HORA_INI between to_date('${inicio}','yyyy-mm-dd hh24:mi:ss') and to_date('${termino}','yyyy-mm-dd hh24:mi:ss')
     `)
 

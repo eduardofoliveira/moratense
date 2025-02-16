@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { addHours, format, subDays } from "date-fns"
+import { format, subDays } from "date-fns"
 
 import ApiMix from "./service/api.mix"
 import showEmpresa from "./use-cases/empresa/showEmpresa"
@@ -162,7 +162,7 @@ const insertPositions = async (positions: any) => {
           lat: position.Latitude.toString(),
           long: position.Longitude.toString(),
           km: position.SpeedKilometresPerHour,
-          data: addHours(new Date(position.Timestamp), 3),
+          data: new Date(position.Timestamp),
         })
       }
     } catch (error) {
@@ -260,7 +260,7 @@ const syncTrips = async () => {
                 lat: trip.StartPosition.Latitude.toString(),
                 long: trip.StartPosition.Longitude.toString(),
                 km: trip.StartPosition.SpeedKilometresPerHour,
-                data: addHours(new Date(trip.StartPosition.Timestamp), 3),
+                data: new Date(trip.StartPosition.Timestamp),
               })
             }
           }
@@ -277,7 +277,7 @@ const syncTrips = async () => {
                 lat: trip.EndPosition.Latitude.toString(),
                 long: trip.EndPosition.Longitude.toString(),
                 km: trip.EndPosition.SpeedKilometresPerHour,
-                data: addHours(new Date(trip.EndPosition.Timestamp), 3),
+                data: new Date(trip.EndPosition.Timestamp),
               })
             }
           }
@@ -297,10 +297,7 @@ const syncTrips = async () => {
                       lat: subTrip.StartPosition.Latitude.toString(),
                       long: subTrip.StartPosition.Longitude.toString(),
                       km: subTrip.StartPosition.SpeedKilometresPerHour,
-                      data: addHours(
-                        new Date(subTrip.StartPosition.Timestamp),
-                        3,
-                      ),
+                      data: new Date(subTrip.StartPosition.Timestamp),
                     })
                   }
                 }
@@ -317,10 +314,7 @@ const syncTrips = async () => {
                       lat: subTrip.EndPosition.Latitude.toString(),
                       long: subTrip.EndPosition.Longitude.toString(),
                       km: subTrip.EndPosition.SpeedKilometresPerHour,
-                      data: addHours(
-                        new Date(subTrip.EndPosition.Timestamp),
-                        3,
-                      ),
+                      data: new Date(subTrip.EndPosition.Timestamp),
                     })
                   }
                 }
@@ -340,8 +334,8 @@ const syncTrips = async () => {
             duration: trip.Duration,
             drivingTime: trip.DrivingTime,
             maxRpm: trip.MaxRpm,
-            lastHalt: addHours(new Date(trip.LastHalt), 3),
-            firstDepart: addHours(new Date(trip.FirstDepart), 3),
+            lastHalt: new Date(trip.LastHalt),
+            firstDepart: new Date(trip.FirstDepart),
             endEngineSeconds: trip.EndEngineSeconds,
             endOdometerKilometers: trip.EndOdometerKilometers,
             engineSeconds: trip.EngineSeconds,
@@ -354,8 +348,8 @@ const syncTrips = async () => {
             standingTime: trip.StandingTime,
             startEngineSeconds: trip.StartEngineSeconds,
             startOdometerKilometers: trip.StartOdometerKilometers,
-            tripEnd: addHours(new Date(trip.TripEnd), 3),
-            tripStart: addHours(new Date(trip.TripStart), 3),
+            tripEnd: new Date(trip.TripEnd),
+            tripStart: new Date(trip.TripStart),
           })
         } catch (error) {
           console.log(trip)
@@ -436,7 +430,7 @@ const insertEvents = async (events: any) => {
             lat: event.StartPosition.Latitude.toString(),
             long: event.StartPosition.Longitude.toString(),
             km: event.StartPosition.SpeedKilometresPerHour,
-            data: addHours(new Date(event.StartPosition.Timestamp), 3),
+            data: new Date(event.StartPosition.Timestamp),
           })
         }
       }
@@ -456,7 +450,7 @@ const insertEvents = async (events: any) => {
             lat: event.EndPosition.Latitude.toString(),
             long: event.EndPosition.Longitude.toString(),
             km: event.EndPosition.SpeedKilometresPerHour,
-            data: addHours(new Date(event.EndPosition.Timestamp), 3),
+            data: new Date(event.EndPosition.Timestamp),
           })
         }
       }
@@ -473,10 +467,10 @@ const insertEvents = async (events: any) => {
           totalOccurances: event?.TotalOccurances,
           totalTimeSeconds: event?.TotalTimeSeconds,
           startDateTime: event.StartDateTime
-            ? addHours(new Date(event.StartDateTime), 3)
+            ? new Date(event.StartDateTime)
             : undefined,
           endDateTime: event.EndDateTime
-            ? addHours(new Date(event.EndDateTime), 3)
+            ? new Date(event.EndDateTime)
             : undefined,
           eventCategory: event?.EventCategory,
           value: event?.Value?.toString(),

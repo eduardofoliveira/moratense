@@ -12,6 +12,7 @@ config.production = {
     user: process.env.MYSQL_USER_HL,
     password: process.env.MYSQL_PASS_HL,
     database: process.env.MYSQL_DATABASE_HL,
+    timezone: "-03:00",
     typeCast: (field: any, next: any) => {
       if (
         field.type === "DECIMAL" ||
@@ -31,6 +32,7 @@ config.development = {
     user: process.env.MYSQL_USER_HL,
     password: process.env.MYSQL_PASS_HL,
     database: process.env.MYSQL_DATABASE_HL,
+    timezone: "-03:00",
     typeCast: (field: any, next: any) => {
       if (
         field.type === "DECIMAL" ||
