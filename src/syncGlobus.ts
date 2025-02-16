@@ -70,7 +70,7 @@ const syncCarrosGlobus = async () => {
           CODIGOEMPRESA
         from
           FRT_CADVEICULOS
-        where
+        -- where
           -- CODIGOEMPRESA = idEmpresa
         order by
           PREFIXOVEIC
