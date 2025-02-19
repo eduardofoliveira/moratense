@@ -251,7 +251,7 @@ class ApiMix {
     start: string
     end: string
   }): Promise<any> {
-    const maxRetries = 5 // Número máximo de tentativas
+    const maxRetries = 20 // Número máximo de tentativas
     const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -299,7 +299,7 @@ class ApiMix {
     start,
     end,
   }: { assets: string[]; start: string; end: string }): Promise<any> {
-    const maxRetries = 5 // Número máximo de tentativas
+    const maxRetries = 20 // Número máximo de tentativas
     const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -345,7 +345,7 @@ class ApiMix {
   }
 
   public async getEventTypes({ orgId }: { orgId: string }): Promise<any> {
-    const maxRetries = 5 // Número máximo de tentativas
+    const maxRetries = 20 // Número máximo de tentativas
     const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -394,7 +394,7 @@ class ApiMix {
     start: string
     end: string
   }): Promise<any> {
-    const maxRetries = 5 // Número máximo de tentativas
+    const maxRetries = 20 // Número máximo de tentativas
     const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {

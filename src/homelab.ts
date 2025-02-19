@@ -14,8 +14,8 @@ const today = new Date()
 // const start = format(subDays(today, 1), "yyyyMMdd000000")
 // const end = format(subDays(today, 1), "yyyyMMdd235959")
 
-const start = "20250212090000"
-const end = "20250216235959"
+const start = "20250215020000"
+const end = "20250218035959"
 
 const syncDrivers = async () => {
   try {
@@ -178,7 +178,7 @@ const syncPositionsByAsset = async () => {
     await apiMix.getToken()
 
     const carros = await Asset.getAll()
-    const listaDividida = dividirLista(carros, 10)
+    const listaDividida = dividirLista(carros, 5)
     for await (const assets of listaDividida) {
       const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
 
@@ -495,7 +495,7 @@ const syncEvents = async () => {
     await apiMix.getToken()
 
     const carros = await Asset.getAll()
-    const listaDividida = dividirLista(carros, 10)
+    const listaDividida = dividirLista(carros, 5)
 
     const drivers = await Driver.getAll()
     const driversIds = drivers.map<string>((driver) =>
@@ -529,12 +529,12 @@ const syncEvents = async () => {
 }
 
 const sync = async () => {
-  // await syncDrivers()
-  // await syncAssets()
+  await syncDrivers()
+  await syncAssets()
   await syncTrips()
-  // await eventTypes()
-  // await syncPositionsByAsset()
-  // await syncEvents()
+  await eventTypes()
+  await syncPositionsByAsset()
+  await syncEvents()
   process.exit(0)
 }
 
