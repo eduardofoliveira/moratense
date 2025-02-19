@@ -26,12 +26,15 @@ class ApiMix {
     })
 
     // this.localAxios.interceptors.request.use((request) => {
-    //   request.transformResponse = [(data) => data]
+    //   // request.transformResponse = [(data) => data]
+    //   // console.log(request.)
+    //   console.log(request.data)
     //   return request
     // })
 
     // this.localAxios.interceptors.response.use((response) => {
-    //   response.data = JSONBig().parse(response.data)
+    //   console.log(response.status)
+    //   console.log(response.data)
     //   return response
     // })
   }
@@ -318,8 +321,10 @@ class ApiMix {
         console.log(response.data.length)
 
         return response.data
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Erro na tentativa ${attempt}:`, new Date())
+        console.log(error.response.status)
+        console.log(error.response.data)
 
         if (attempt === maxRetries) {
           console.error("Número máximo de tentativas atingido. Lançando erro.")

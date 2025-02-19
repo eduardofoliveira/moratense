@@ -117,27 +117,10 @@ export default class Summary {
   }: IGetConsumptionReturn): Promise<any> {
     const db = Db.getConnection()
 
-    if (assetId === "1580749594598039552") {
-      console.log(
-        `
-        SELECT
-          t.distanceKilometers,
-          t.fuelUsedLitres,
-          t.tripStart,
-          t.tripEnd
-        FROM
-          trips t
-        WHERE
-          t.assetId = '1580749594598039552'
-        ORDER BY
-          ABS(TIMESTAMPDIFF(SECOND, t.tripStart, '${start}'))
-        LIMIT 1
-      `,
-      )
-    }
-
-    const [consumption] = await db.raw(`
+    let [consumption] = await db.raw(`
       SELECT
+        t.id,
+        t.tripId,
         t.distanceKilometers,
         t.fuelUsedLitres,
         t.tripStart,
@@ -145,40 +128,52 @@ export default class Summary {
       FROM
         trips t
       WHERE
-        t.assetId = '1580749594598039552'
+        t.assetId = '${assetId}' and
+        ABS(TIMESTAMPDIFF(SECOND, t.tripStart, '${start}')) < 600
       ORDER BY
         ABS(TIMESTAMPDIFF(SECOND, t.tripStart, '${start}'))
       LIMIT 1
     `)
 
-    // SELECT
-    //     distanceKilometers,
-    //     fuelUsedLitres,
-    //     tripStart,
-    //     tripEnd
-    //   FROM
-    //     trips
-    //   WHERE
-    //     assetId = '${assetId}' AND
-    //     -- driverId = '${driverId}' AND
-    //     -- '${start}' BETWEEN tripStart and tripEnd
-    //     ('${start}' BETWEEN tripStart and tripEnd or
-    //     '${end}' BETWEEN tripStart and tripEnd)
+    if (consumption.length === 0) {
+      const [consumption2] = await db.raw(`
+        SELECT
+          t.id,
+          t.tripId,
+          t.distanceKilometers,
+          t.fuelUsedLitres,
+          t.tripStart,
+          t.tripEnd
+        FROM
+          trips t
+        WHERE
+          t.assetId = '${assetId}' and
+          ABS(TIMESTAMPDIFF(SECOND, t.tripEnd, '${end}')) < 600
+      `)
 
-    if (assetId === "1580749594598039552") {
-      console.log({ consumption })
+      consumption = consumption2
+    }
+
+    if (consumption.length === 0) {
+      const [consumption3] = await db.raw(`
+        SELECT
+          t.id,
+          t.tripId,
+          t.distanceKilometers,
+          t.fuelUsedLitres,
+          t.tripStart,
+          t.tripEnd
+        FROM
+          trips t
+        WHERE
+          t.assetId = '${assetId}' and
+          '${start}' BETWEEN t.tripStart AND t.tripEnd
+      `)
+
+      consumption = consumption3
     }
 
     for await (const item of consumption) {
-      // item.tripStart = format(
-      //   subHours(new Date(item.tripStart), 3),
-      //   "dd/MM/yyyy HH:mm:ss",
-      // )
-      // item.tripEnd = format(
-      //   subHours(new Date(item.tripEnd), 3),
-      //   "dd/MM/yyyy HH:mm:ss",
-      // )
-
       item.tripStart = format(new Date(item.tripStart), "dd/MM/yyyy HH:mm:ss")
       item.tripEnd = format(new Date(item.tripEnd), "dd/MM/yyyy HH:mm:ss")
     }

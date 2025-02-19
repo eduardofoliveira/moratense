@@ -16,6 +16,10 @@ const index = async (req: Request, res: Response): Promise<any> => {
     end: end as string,
   })
 
+  let temConsumo = 0
+  let naoTemConsumo = 0
+  let distanceKilometers = 0
+  let fuelUsedLitres = 0
   for await (const trip of trips) {
     const consumo = await Summary.getConsumption({
       assetId: trip.assetId,
@@ -25,6 +29,23 @@ const index = async (req: Request, res: Response): Promise<any> => {
     })
 
     trip.consumo = consumo
+
+    if (consumo.length === 1) {
+      temConsumo++
+      distanceKilometers =
+        distanceKilometers + Number.parseFloat(consumo[0].distanceKilometers)
+      fuelUsedLitres =
+        fuelUsedLitres + Number.parseFloat(consumo[0].fuelUsedLitres)
+    } else if (consumo.length > 1) {
+      temConsumo++
+      for await (const item of consumo) {
+        distanceKilometers =
+          distanceKilometers + Number.parseFloat(item.distanceKilometers)
+        fuelUsedLitres = fuelUsedLitres + Number.parseFloat(item.fuelUsedLitres)
+      }
+    } else {
+      naoTemConsumo++
+    }
 
     trip.data_saida_garagem = format(
       new Date(trip.data_saida_garagem),
@@ -41,6 +62,10 @@ const index = async (req: Request, res: Response): Promise<any> => {
 
   return res.json({
     summary: result1,
+    temConsumo,
+    naoTemConsumo,
+    distanceKilometers,
+    fuelUsedLitres,
     trips: trips,
   })
 }

@@ -11,11 +11,11 @@ import EventTypes from "./models/EventTypes"
 import Event from "./models/Event"
 
 const today = new Date()
-const start = format(subDays(today, 1), "yyyyMMdd000000")
-const end = format(subDays(today, 1), "yyyyMMdd235959")
+// const start = format(subDays(today, 1), "yyyyMMdd000000")
+// const end = format(subDays(today, 1), "yyyyMMdd235959")
 
-// const start = "20250210000000"
-// const end = "20250210235959"
+const start = "20250212090000"
+const end = "20250216235959"
 
 const syncDrivers = async () => {
   try {
@@ -529,12 +529,12 @@ const syncEvents = async () => {
 }
 
 const sync = async () => {
-  await syncDrivers()
-  await syncAssets()
+  // await syncDrivers()
+  // await syncAssets()
   await syncTrips()
-  await eventTypes()
-  await syncPositionsByAsset()
-  await syncEvents()
+  // await eventTypes()
+  // await syncPositionsByAsset()
+  // await syncEvents()
   process.exit(0)
 }
 
