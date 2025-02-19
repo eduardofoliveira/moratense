@@ -14,8 +14,8 @@ const today = new Date()
 // const start = format(subDays(today, 1), "yyyyMMdd000000")
 // const end = format(subDays(today, 1), "yyyyMMdd235959")
 
-const start = "20250215020000"
-const end = "20250218035959"
+const start = "20250216030000"
+const end = "20250218025959"
 
 const syncDrivers = async () => {
   try {
