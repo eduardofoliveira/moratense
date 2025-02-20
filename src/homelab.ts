@@ -529,11 +529,11 @@ const syncEvents = async () => {
 }
 
 const sync = async () => {
-  await syncDrivers()
-  await syncAssets()
-  await syncTrips()
-  await eventTypes()
-  await syncPositionsByAsset()
+  // await syncDrivers()
+  // await syncAssets()
+  // await syncTrips()
+  // await eventTypes()
+  // await syncPositionsByAsset()
   await syncEvents()
   process.exit(0)
 }

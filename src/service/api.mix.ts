@@ -46,55 +46,68 @@ class ApiMix {
     return ApiMix.instance
   }
 
-  public async getToken(): Promise<string> {
-    try {
-      const body = new URLSearchParams()
-      body.append("grant_type", "password")
-      body.append("username", process.env.MIX_USERNAME as string)
-      body.append("password", process.env.MIX_PASSWORD as string)
-      body.append("scope", "offline_access MiX.Integrate")
+  public async getToken(): Promise<any> {
+    const maxRetries = 20 // Número máximo de tentativas
+    const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
-      const response = await this.localAxios.post(
-        "https://identity.us.mixtelematics.com/core/connect/token",
-        body,
-        {
-          auth: {
-            username: process.env.MIX_CLIENT_ID as string,
-            password: process.env.MIX_CLIENT_SECRET as string,
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const body = new URLSearchParams()
+        body.append("grant_type", "password")
+        body.append("username", process.env.MIX_USERNAME as string)
+        body.append("password", process.env.MIX_PASSWORD as string)
+        body.append("scope", "offline_access MiX.Integrate")
+
+        const response = await this.localAxios.post(
+          "https://identity.us.mixtelematics.com/core/connect/token",
+          body,
+          {
+            auth: {
+              username: process.env.MIX_CLIENT_ID as string,
+              password: process.env.MIX_CLIENT_SECRET as string,
+            },
           },
-        },
-      )
-
-      this.token = response.data.access_token
-      this.localAxios.defaults.headers.Authorization = `Bearer ${this.token}`
-
-      if (!this.tokenRenew) {
-        this.tokenRenew = setTimeout(
-          () => {
-            this.getToken()
-          },
-          1000 * 3600 - 100,
         )
-      } else {
-        clearTimeout(this.tokenRenew)
-        this.tokenRenew = setTimeout(
-          () => {
-            this.getToken()
-          },
-          1000 * 3600 - 100,
+
+        this.token = response.data.access_token
+        this.localAxios.defaults.headers.Authorization = `Bearer ${this.token}`
+
+        if (!this.tokenRenew) {
+          this.tokenRenew = setTimeout(
+            () => {
+              this.getToken()
+            },
+            1000 * 3600 - 100,
+          )
+        } else {
+          clearTimeout(this.tokenRenew)
+          this.tokenRenew = setTimeout(
+            () => {
+              this.getToken()
+            },
+            1000 * 3600 - 100,
+          )
+        }
+
+        return this.token
+      } catch (error) {
+        console.error(`Erro na tentativa ${attempt}:`, new Date())
+
+        if (attempt === maxRetries) {
+          console.error("Número máximo de tentativas atingido. Lançando erro.")
+          if (error instanceof AxiosError) {
+            console.error("Axios Error")
+            console.error(error)
+          }
+
+          throw error
+        }
+
+        console.log(
+          `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
         )
+        await delay(60000) // Espera 2 segundos antes de tentar novamente
       }
-
-      return this.token
-    } catch (error) {
-      console.error(error)
-
-      if (error instanceof AxiosError) {
-        console.error("Axios Error")
-        console.error(error)
-      }
-
-      throw error
     }
   }
 
