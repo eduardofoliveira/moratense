@@ -12,8 +12,8 @@ const port = process.env.PORT || 3000
 
 app.use(cors())
 app.use(morgan("dev"))
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: "200mb" }))
+app.use(express.urlencoded({ extended: true, limit: "200mb" }))
 app.use(dataRoutes)
 app.use(reportRoutes)
 
