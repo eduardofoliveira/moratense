@@ -190,6 +190,7 @@ class ApiMix {
         getsincetoken,
         hasmoreitems,
         eventos: response.data,
+        status: response.status,
       }
     } catch (error) {
       console.error(error)
@@ -242,6 +243,7 @@ class ApiMix {
         getsincetoken,
         hasmoreitems,
         posicoes: response.data,
+        status: response.status,
       }
     } catch (error) {
       console.error(error)
