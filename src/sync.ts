@@ -25,15 +25,14 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
   console.log(`Posições: ${posicoes.length}`)
   console.log({ status })
 
-  const { data } = await axios.post(
-    "http://teleconsult.com.br:3000/data/posicoes",
-    {
+  axios
+    .post("http://teleconsult.com.br:3000/data/posicoes", {
       posicoes,
-    },
-  )
-
-  console.log("Posições inseridos")
-  console.log(data)
+    })
+    .then(({ data }) => {
+      console.log("Posições inseridos")
+      console.log(data)
+    })
 
   await updateDrankTelConfig({
     name: "sinceTokenPositions",
@@ -101,15 +100,14 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
   console.log(`Token: ${getsincetoken}`)
   console.log(`Eventos: ${eventos.length}`)
 
-  const { data } = await axios.post(
-    "http://teleconsult.com.br:3000/data/eventos",
-    {
+  await axios
+    .post("http://teleconsult.com.br:3000/data/eventos", {
       eventos,
-    },
-  )
-
-  console.log("Eventos inseridos")
-  console.log(data)
+    })
+    .then(({ data }) => {
+      console.log("Eventos inseridos")
+      console.log(data)
+    })
 
   await updateDrankTelConfig({
     name: "sinceTokenEvents",
