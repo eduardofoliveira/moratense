@@ -1,5 +1,6 @@
 import "dotenv/config"
 import axios from "axios"
+import lockfile from "proper-lockfile"
 
 import showTelemetriaTiposEvento from "./use-cases/telemetriaTiposEvento/showTelemetriaTiposEvento"
 import updateDrankTelConfig from "./use-cases/drankTelConfig/updateDrankTelConfig"
@@ -39,9 +40,14 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
     value: getsincetoken,
   })
 
-  // if (response.status === 206) {
-  //   await sincronizarPosicoes({ token: getsincetoken })
-  // }
+  if (response.status === 206) {
+    await new Promise<void>((localResolve) => {
+      setTimeout(async () => {
+        localResolve()
+      }, 20000)
+    })
+    await sincronizarPosicoes({ token: getsincetoken })
+  }
   // if (response.status === 200) {
   //   setTimeout(async () => {
   //     await sincronizarPosicoes({ token: getsincetoken })
@@ -110,9 +116,14 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
     value: getsincetoken,
   })
 
-  // if (response.status === 206) {
-  //   await sincronizarEventos({ token: getsincetoken })
-  // }
+  if (response.status === 206) {
+    await new Promise<void>((localResolve) => {
+      setTimeout(async () => {
+        localResolve()
+      }, 20000)
+    })
+    await sincronizarEventos({ token: getsincetoken })
+  }
   // if (response.status === 200) {
   //   setTimeout(async () => {
   //     await sincronizarEventos({ token: getsincetoken })
@@ -140,4 +151,20 @@ const executar = async () => {
   process.exit(0)
 }
 
-executar()
+lockfile
+  .lock("sync.lock")
+  .then((release: any) => {
+    console.log("Iniciando o programa...")
+
+    process.on("exit", release)
+    process.on("SIGINT", () => {
+      release()
+      process.exit()
+    })
+
+    executar()
+  })
+  .catch((err: any) => {
+    console.log("O programa já está em execução.")
+    process.exit(1)
+  })

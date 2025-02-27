@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const axios_1 = __importDefault(require("axios"));
+const proper_lockfile_1 = __importDefault(require("proper-lockfile"));
 const showTelemetriaTiposEvento_1 = __importDefault(require("./use-cases/telemetriaTiposEvento/showTelemetriaTiposEvento"));
 const updateDrankTelConfig_1 = __importDefault(require("./use-cases/drankTelConfig/updateDrankTelConfig"));
 const showDrankTelConfig_1 = __importDefault(require("./use-cases/drankTelConfig/showDrankTelConfig"));
@@ -31,9 +32,14 @@ const sincronizarPosicoes = async ({ token }) => {
         name: "sinceTokenPositions",
         value: getsincetoken,
     });
-    // if (response.status === 206) {
-    //   await sincronizarPosicoes({ token: getsincetoken })
-    // }
+    if (response.status === 206) {
+        await new Promise((localResolve) => {
+            setTimeout(async () => {
+                localResolve();
+            }, 20000);
+        });
+        await sincronizarPosicoes({ token: getsincetoken });
+    }
     // if (response.status === 200) {
     //   setTimeout(async () => {
     //     await sincronizarPosicoes({ token: getsincetoken })
@@ -87,9 +93,14 @@ const sincronizarEventos = async ({ token }) => {
         name: "sinceTokenEvents",
         value: getsincetoken,
     });
-    // if (response.status === 206) {
-    //   await sincronizarEventos({ token: getsincetoken })
-    // }
+    if (response.status === 206) {
+        await new Promise((localResolve) => {
+            setTimeout(async () => {
+                localResolve();
+            }, 20000);
+        });
+        await sincronizarEventos({ token: getsincetoken });
+    }
     // if (response.status === 200) {
     //   setTimeout(async () => {
     //     await sincronizarEventos({ token: getsincetoken })
@@ -114,4 +125,18 @@ const executar = async () => {
     await executarEventos();
     process.exit(0);
 };
-executar();
+proper_lockfile_1.default
+    .lock("sync.lock")
+    .then((release) => {
+    console.log("Iniciando o programa...");
+    process.on("exit", release);
+    process.on("SIGINT", () => {
+        release();
+        process.exit();
+    });
+    executar();
+})
+    .catch((err) => {
+    console.log("O programa já está em execução.");
+    process.exit(1);
+});
