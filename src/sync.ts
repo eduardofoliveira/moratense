@@ -39,14 +39,14 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
     value: getsincetoken,
   })
 
-  if (response.status === 206) {
-    await sincronizarPosicoes({ token: getsincetoken })
-  }
-  if (response.status === 200) {
-    setTimeout(async () => {
-      await sincronizarPosicoes({ token: getsincetoken })
-    }, 60000)
-  }
+  // if (response.status === 206) {
+  //   await sincronizarPosicoes({ token: getsincetoken })
+  // }
+  // if (response.status === 200) {
+  //   setTimeout(async () => {
+  //     await sincronizarPosicoes({ token: getsincetoken })
+  //   }, 60000)
+  // }
 }
 
 const executarPosicoes = async () => {
@@ -59,9 +59,9 @@ const executarPosicoes = async () => {
   } catch (error) {
     console.log(error)
 
-    setTimeout(async () => {
-      executarPosicoes()
-    }, 60000)
+    // setTimeout(async () => {
+    //   executarPosicoes()
+    // }, 60000)
   }
 }
 
@@ -110,14 +110,14 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
     value: getsincetoken,
   })
 
-  if (response.status === 206) {
-    await sincronizarEventos({ token: getsincetoken })
-  }
-  if (response.status === 200) {
-    setTimeout(async () => {
-      await sincronizarEventos({ token: getsincetoken })
-    }, 60000)
-  }
+  // if (response.status === 206) {
+  //   await sincronizarEventos({ token: getsincetoken })
+  // }
+  // if (response.status === 200) {
+  //   setTimeout(async () => {
+  //     await sincronizarEventos({ token: getsincetoken })
+  //   }, 60000)
+  // }
 }
 
 const executarEventos = async () => {
@@ -128,11 +128,16 @@ const executarEventos = async () => {
   } catch (error) {
     console.error(error)
 
-    setTimeout(async () => {
-      executarEventos()
-    }, 60000)
+    // setTimeout(async () => {
+    //   executarEventos()
+    // }, 60000)
   }
 }
 
-executarPosicoes()
-executarEventos()
+const executar = async () => {
+  await executarPosicoes()
+  await executarEventos()
+  process.exit(0)
+}
+
+executar()
