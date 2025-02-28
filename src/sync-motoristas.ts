@@ -20,8 +20,8 @@ const executar = async () => {
 
   try {
     const empresa = await showEmpresa({ id: 4 })
-    const apiMix = ApiMix.getInstance()
-    await apiMix.getToken()
+    const apiMix = await ApiMix.getInstance()
+    // await apiMix.getToken()
 
     const motoristasDb = await indexTelemetriaMotorista()
 

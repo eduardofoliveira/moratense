@@ -34,8 +34,8 @@ function converteDataParaTurno(data: string) {
 const sincronizarViagens = async ({ token }: { token: number }) => {
   const empresa = await showEmpresa({ id: 4 })
 
-  const apiMix = ApiMix.getInstance()
-  await apiMix.getToken()
+  const apiMix = await ApiMix.getInstance()
+  // await apiMix.getToken()
 
   const { getsincetoken, viagens } = await apiMix.carregaViagens({
     orgId: BigInt(empresa.mix_groupId),
@@ -153,8 +153,8 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
     }
   }
 
-  const apiMix = ApiMix.getInstance()
-  await apiMix.getToken()
+  const apiMix = await ApiMix.getInstance()
+  // await apiMix.getToken()
 
   const response = await apiMix.listaEventosCarroPorDataST({
     groupId: empresa.mix_groupId,

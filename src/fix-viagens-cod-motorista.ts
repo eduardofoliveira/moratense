@@ -75,8 +75,8 @@ const executar = async () => {
 const fixAssets = async () => {
   const empresa = await showEmpresa({ id: 4 })
 
-  const apiMix = ApiMix.getInstance()
-  await apiMix.getToken()
+  const apiMix = await ApiMix.getInstance()
+  // await apiMix.getToken()
 
   const carros = await apiMix.listaCarros({ groupId: empresa.mix_groupId })
   const conn = Db.getConnection()

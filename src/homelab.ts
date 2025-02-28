@@ -20,8 +20,8 @@ const end = "20250218025959"
 const syncDrivers = async () => {
   try {
     const empresa = await showEmpresa({ id: 4 })
-    const apiMix = ApiMix.getInstance()
-    await apiMix.getToken()
+    const apiMix = await ApiMix.getInstance()
+    // await apiMix.getToken()
 
     const motoristas = await apiMix.listaMotoristas({
       groupId: empresa.mix_groupId,
@@ -64,8 +64,8 @@ const syncDrivers = async () => {
 const syncAssets = async () => {
   try {
     const empresa = await showEmpresa({ id: 4 })
-    const apiMix = ApiMix.getInstance()
-    await apiMix.getToken()
+    const apiMix = await ApiMix.getInstance()
+    // await apiMix.getToken()
 
     const carros = await apiMix.listaCarros({
       groupId: empresa.mix_groupId,
@@ -174,8 +174,8 @@ const insertPositions = async (positions: any) => {
 const syncPositionsByAsset = async () => {
   try {
     const empresa = await showEmpresa({ id: 4 })
-    const apiMix = ApiMix.getInstance()
-    await apiMix.getToken()
+    const apiMix = await ApiMix.getInstance()
+    // await apiMix.getToken()
 
     const carros = await Asset.getAll()
     const listaDividida = dividirLista(carros, 5)
@@ -223,8 +223,8 @@ const syncPositionsByAsset = async () => {
 const syncTrips = async () => {
   try {
     const empresa = await showEmpresa({ id: 4 })
-    const apiMix = ApiMix.getInstance()
-    await apiMix.getToken()
+    const apiMix = await ApiMix.getInstance()
+    // await apiMix.getToken()
 
     const carros = await Asset.getAll()
     // carros = carros.filter((carro) => carro.assetId === "1580750191846305792")
@@ -368,8 +368,8 @@ const eventTypes = async () => {
   try {
     const idEmpresa = 4
     const empresa = await showEmpresa({ id: idEmpresa })
-    const apiMix = ApiMix.getInstance()
-    await apiMix.getToken()
+    const apiMix = await ApiMix.getInstance()
+    // await apiMix.getToken()
 
     const eventTypes = await apiMix.getEventTypes({
       orgId: empresa.mix_groupId,
@@ -491,8 +491,8 @@ const syncEvents = async () => {
   try {
     const idEmpresa = 4
     const empresa = await showEmpresa({ id: idEmpresa })
-    const apiMix = ApiMix.getInstance()
-    await apiMix.getToken()
+    const apiMix = await ApiMix.getInstance()
+    // await apiMix.getToken()
 
     const carros = await Asset.getAll()
     const listaDividida = dividirLista(carros, 5)
