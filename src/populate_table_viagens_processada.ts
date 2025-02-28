@@ -5,7 +5,7 @@ import Db from "./database/connectionManager"
 
 const executar = async () => {
   let dataInicial = parse(
-    format(subDays(new Date(), 5), "yyyy-MM-dd"),
+    format(subDays(new Date(), 9), "yyyy-MM-dd"),
     "yyyy-MM-dd",
     new Date(),
   )
