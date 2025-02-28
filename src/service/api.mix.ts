@@ -27,6 +27,8 @@ class ApiMix {
       ],
     })
 
+    this.getToken()
+
     this.localAxios.interceptors.request.use(async (config: any) => {
       config.metadata = { startTime: new Date() }
       return config
