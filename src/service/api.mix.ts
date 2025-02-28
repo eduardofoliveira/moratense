@@ -1,6 +1,8 @@
 import axios, { AxiosError, AxiosInstance } from "axios"
 import JSONBig from "json-bigint"
 
+import LogsMix from "../models/moratense/LogsMix"
+
 class ApiMix {
   private static instance: ApiMix
   private localAxios: AxiosInstance
@@ -25,18 +27,65 @@ class ApiMix {
       ],
     })
 
-    // this.localAxios.interceptors.request.use((request) => {
-    //   // request.transformResponse = [(data) => data]
-    //   // console.log(request.)
-    //   console.log(request.data)
-    //   return request
-    // })
+    this.localAxios.interceptors.request.use(async (config: any) => {
+      config.metadata = { startTime: new Date() }
+      return config
+    })
 
-    // this.localAxios.interceptors.response.use((response) => {
-    //   console.log(response.status)
-    //   console.log(response.data)
-    //   return response
-    // })
+    this.localAxios.interceptors.response.use(
+      async (response: any) => {
+        const endTime = new Date()
+        const duration =
+          endTime.getTime() - response.config.metadata.startTime.getTime()
+
+        console.log({
+          method: response.config.method.toUpperCase(),
+          url_request: response.config.url,
+          status_request: response.status,
+          responseTime: duration,
+          requestBody: JSON.stringify(response.config.data),
+          returned_rows: response.data.length,
+        })
+
+        LogsMix.create({
+          method: response.config.method.toUpperCase(),
+          url_request: response.config.url,
+          status_request: response.status,
+          responseTime: duration,
+          requestBody: JSON.stringify(response.config.data),
+          returned_rows: response.data.length,
+        })
+
+        return response
+      },
+      async (error) => {
+        const endTime = new Date()
+        const duration =
+          endTime.getTime() - error.config.metadata.startTime.getTime()
+
+        console.log({
+          method: error.config.method.toUpperCase(),
+          url_request: error.config.url,
+          status_request: error.status,
+          responseTime: duration,
+          requestBody: JSON.stringify(error.config.data),
+          returned_rows: 0,
+          returned_body: error.response.data,
+        })
+
+        LogsMix.create({
+          method: error.config.method.toUpperCase(),
+          url_request: error.config.url,
+          status_request: error.status,
+          responseTime: duration,
+          requestBody: JSON.stringify(error.config.data),
+          returned_rows: 0,
+          returned_body: error.response.data,
+        })
+
+        return Promise.reject(error)
+      },
+    )
   }
 
   public static getInstance(): ApiMix {
