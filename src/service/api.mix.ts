@@ -27,8 +27,6 @@ class ApiMix {
       ],
     })
 
-    this.getToken()
-
     this.localAxios.interceptors.request.use(async (config: any) => {
       config.metadata = { startTime: new Date() }
       return config
@@ -100,9 +98,10 @@ class ApiMix {
     )
   }
 
-  public static getInstance(): ApiMix {
+  public static async getInstance(): Promise<ApiMix> {
     if (!ApiMix.instance) {
       ApiMix.instance = new ApiMix()
+      await ApiMix.instance.getToken()
     }
     return ApiMix.instance
   }

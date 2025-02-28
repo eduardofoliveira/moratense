@@ -11,7 +11,7 @@ import ApiMix from "./service/api.mix"
 const sincronizarPosicoes = async ({ token }: { token: string }) => {
   const empresa = await showEmpresa({ id: 4 })
 
-  const apiMix = ApiMix.getInstance()
+  const apiMix = await ApiMix.getInstance()
   // await apiMix.getToken()
 
   const response = await apiMix.listarPosicoes({
@@ -79,7 +79,7 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
     }
   }
 
-  const apiMix = ApiMix.getInstance()
+  const apiMix = await ApiMix.getInstance()
   // await apiMix.getToken()
 
   const response = await apiMix.listaEventosCarroPorDataST({
