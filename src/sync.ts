@@ -144,8 +144,7 @@ const executarEventos = async () => {
 }
 
 const executar = async () => {
-  await executarPosicoes()
-  await executarEventos()
+  await Promise.all([executarPosicoes(), executarEventos()])
   process.exit(0)
 }
 
