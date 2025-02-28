@@ -149,7 +149,7 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
 
   setTimeout(async () => {
     return await sincronizarViagens({ token: getsincetoken })
-  }, 60000)
+  }, 120000)
 }
 
 const sincronizarEventos = async ({ token }: { token: string }) => {
@@ -270,7 +270,7 @@ const executar = async () => {
 
     setTimeout(async () => {
       executar()
-    }, 60000)
+    }, 120000)
   }
 }
 
