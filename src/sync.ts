@@ -40,11 +40,6 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
   })
 
   if (response.status === 206) {
-    await new Promise<void>((localResolve) => {
-      setTimeout(async () => {
-        localResolve()
-      }, 20000)
-    })
     await sincronizarPosicoes({ token: getsincetoken })
   }
   // if (response.status === 200) {
@@ -115,11 +110,6 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
   })
 
   if (response.status === 206) {
-    await new Promise<void>((localResolve) => {
-      setTimeout(async () => {
-        localResolve()
-      }, 20000)
-    })
     await sincronizarEventos({ token: getsincetoken })
   }
   // if (response.status === 200) {
