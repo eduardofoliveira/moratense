@@ -12,7 +12,7 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
   const empresa = await showEmpresa({ id: 4 })
 
   const apiMix = ApiMix.getInstance()
-  await apiMix.getToken()
+  // await apiMix.getToken()
 
   const response = await apiMix.listarPosicoes({
     groupId: empresa.mix_groupId,
@@ -80,7 +80,7 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
   }
 
   const apiMix = ApiMix.getInstance()
-  await apiMix.getToken()
+  // await apiMix.getToken()
 
   const response = await apiMix.listaEventosCarroPorDataST({
     groupId: empresa.mix_groupId,
