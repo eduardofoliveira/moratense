@@ -35,9 +35,9 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
   const empresa = await showEmpresa({ id: 4 })
 
   const apiMix = ApiMix.getInstance()
-  await apiMix.getToken()
+  // await apiMix.getToken()
 
-  const { getsincetoken, viagens } = await apiMix.carregaViagens({
+  const { getsincetoken, viagens, status } = await apiMix.carregaViagens({
     orgId: BigInt(empresa.mix_groupId),
     token, // 999
   })
@@ -143,7 +143,13 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
     }
   }
 
-  await sincronizarViagens({ token: getsincetoken })
+  if (status === 206) {
+    return await sincronizarViagens({ token: getsincetoken })
+  }
+
+  setTimeout(async () => {
+    return await sincronizarViagens({ token: getsincetoken })
+  }, 60000)
 }
 
 const sincronizarEventos = async ({ token }: { token: string }) => {
@@ -169,7 +175,7 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
   }
 
   const apiMix = ApiMix.getInstance()
-  await apiMix.getToken()
+  // await apiMix.getToken()
 
   const response = await apiMix.listaEventosCarroPorDataST({
     groupId: empresa.mix_groupId,
@@ -261,11 +267,11 @@ const executar = async () => {
     console.log("viagens inseridas")
   } catch (error) {
     console.error(error)
-  }
 
-  setTimeout(async () => {
-    executar()
-  }, 60000)
+    setTimeout(async () => {
+      executar()
+    }, 60000)
+  }
 }
 
 executar()

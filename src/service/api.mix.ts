@@ -83,6 +83,16 @@ class ApiMix {
           returned_body: error.response.data,
         })
 
+        if (
+          error.status === 401 &&
+          error.response.data ===
+            "No access or an invalid access token received"
+        ) {
+          const token = await this.getToken()
+          error.config.headers.Authorization = `Bearer ${token}`
+          return this.localAxios.request(error.config)
+        }
+
         return Promise.reject(error)
       },
     )
@@ -199,6 +209,7 @@ class ApiMix {
       return {
         getsincetoken,
         viagens: data,
+        status: response.status,
       }
     } catch (error) {
       console.error(error)
