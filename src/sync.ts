@@ -134,8 +134,52 @@ const executarEventos = async () => {
   }
 }
 
+const sincronizarViagens = async ({ token }: { token: number }) => {
+  const empresa = await showEmpresa({ id: 4 })
+
+  const apiMix = await ApiMix.getInstance()
+  // await apiMix.getToken()
+
+  const { getsincetoken, viagens, status } = await apiMix.carregaViagens({
+    orgId: BigInt(empresa.mix_groupId),
+    token, // 999
+  })
+
+  console.log(status)
+  console.log(`Token: ${getsincetoken}`)
+  console.log(`Eventos: ${viagens.length}`)
+
+  await axios
+    .post("http://teleconsult.com.br:3000/data/viagens", {
+      viagens,
+    })
+    .then(({ data }) => {
+      console.log("Viagens inseridas")
+      console.log(data)
+    })
+
+  await updateDrankTelConfig({
+    name: "sinceTokenTrips",
+    value: getsincetoken,
+  })
+
+  if (status === 206) {
+    await sincronizarViagens({ token: getsincetoken })
+  }
+}
+
+const executarViagens = async () => {
+  try {
+    const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
+    await sincronizarViagens({ token: Number.parseInt(config.valor) })
+    console.log("viagens inseridas")
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 const executar = async () => {
-  await Promise.all([executarPosicoes(), executarEventos()])
+  await Promise.all([executarPosicoes(), executarEventos(), executarViagens()])
   process.exit(0)
 }
 
