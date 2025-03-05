@@ -170,6 +170,7 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
 
 const executarViagens = async () => {
   try {
+    await new Promise((resolve) => setTimeout(resolve, 5000))
     const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
     await sincronizarViagens({ token: Number.parseInt(config.valor) })
     console.log("viagens inseridas")
