@@ -12,6 +12,7 @@ config.production = {
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASS,
     database: process.env.MYSQL_DATABASE,
+    timezone: "-03:00",
   },
 }
 config.development = {
@@ -21,6 +22,7 @@ config.development = {
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASS,
     database: process.env.MYSQL_DATABASE,
+    timezone: "-03:00",
   },
 }
 

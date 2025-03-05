@@ -149,6 +149,8 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
   console.log(`Token: ${getsincetoken}`)
   console.log(`Eventos: ${viagens.length}`)
 
+  console.log(viagens)
+
   await axios
     .post("http://teleconsult.com.br:3000/data/viagens", {
       viagens,
@@ -180,7 +182,11 @@ const executarViagens = async () => {
 }
 
 const executar = async () => {
-  await Promise.all([executarPosicoes(), executarEventos(), executarViagens()])
+  await Promise.all([
+    // executarPosicoes(),
+    // executarEventos(),
+    executarViagens(),
+  ])
   process.exit(0)
 }
 
