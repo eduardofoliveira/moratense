@@ -14,6 +14,7 @@
     "globus": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/syncGlobus.ts",
     "server": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/server.ts",
     "sync": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync.ts",
+    "sync-fix": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-viagens-fix-horario.ts",
     "build": "tsc"
   },
   "keywords": [],
