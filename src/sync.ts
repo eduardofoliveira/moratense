@@ -52,6 +52,7 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
 
 const executarPosicoes = async () => {
   try {
+    await new Promise((resolve) => setTimeout(resolve, 5000))
     const configEvento = await showDrankTelConfig({
       name: "sinceTokenPositions",
     })
@@ -123,7 +124,7 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
 
 const executarEventos = async () => {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 5000))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
     const configEvento = await showDrankTelConfig({ name: "sinceTokenEvents" })
     await sincronizarEventos({ token: configEvento.valor })
     console.log("eventos inseridas")
