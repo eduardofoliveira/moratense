@@ -186,8 +186,8 @@ const executarViagens = async () => {
 
 const executar = async () => {
   await Promise.all([
-    executarPosicoes(),
     executarEventos(),
+    executarPosicoes(),
     // executarViagens(),
   ])
   process.exit(0)
