@@ -1,6 +1,6 @@
 import "dotenv/config"
 import axios from "axios"
-import { format, subHours } from "date-fns"
+import { format, subHours, addHours, subMinutes } from "date-fns"
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 import ApiMix from "./service/api.mix"
@@ -18,8 +18,10 @@ const execute = async () => {
 
   let viagens = await apiMix.getTripsByAsset({
     assets: result.map((r: any) => r.assetId),
-    start: "20250306025959",
-    end: "20250306035959",
+    start: format(subMinutes(addHours(new Date(), 3), 20), "yyyyMMddHHmmss"),
+    end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
+    // start: "20250306140700",
+    // end: "20250306141800",
   })
 
   const subTripFix = (subTrip: any) => {

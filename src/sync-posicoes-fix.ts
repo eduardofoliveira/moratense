@@ -1,5 +1,6 @@
 import "dotenv/config"
 import axios from "axios"
+import { format, addHours, subMinutes } from "date-fns"
 
 import Asset from "./models/Asset"
 import ApiMix from "./service/api.mix"
@@ -18,36 +19,31 @@ const execute = async () => {
   const apiMix = await ApiMix.getInstance()
 
   const carros = await Asset.getAll()
-  const listaDivididaCarros = dividirLista(carros, 50)
+  // const listaDivididaCarros = dividirLista(carros, 50)
 
-  for await (const assets of listaDivididaCarros) {
-    const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
+  // for await (const assets of listaDivididaCarros) {
+  const tempAssets = carros.map<string>((asset) => asset.assetId.toString())
 
-    if (tempAssets.includes("1580750353616416768")) {
-      continue
-    }
-    if (tempAssets.includes("1580749423607418880")) {
-      continue
-    }
+  const posicoes = await apiMix.buscarPosicoesPorCarroData({
+    assets: tempAssets,
+    start: format(subMinutes(addHours(new Date(), 3), 20), "yyyyMMddHHmmss"),
+    end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
+    // start: "20250306140700",
+    // end: "20250306141800",
+  })
 
-    const posicoes = await apiMix.buscarPosicoesPorCarroData({
-      assets: tempAssets,
-      start: "20250306025959",
-      end: "20250306035959",
-    })
-
-    const listaDividida = dividirLista(posicoes, 1000)
-    for await (const listEnviar of listaDividida) {
-      const { data } = await axios.post(
-        "http://teleconsult.com.br:3000/data/posicoes",
-        {
-          posicoes: listEnviar,
-        },
-      )
-      console.log("Posições inseridos")
-      console.log(data)
-    }
+  const listaDividida = dividirLista(posicoes, 1000)
+  for await (const listEnviar of listaDividida) {
+    const { data } = await axios.post(
+      "http://teleconsult.com.br:3000/data/posicoes",
+      {
+        posicoes: listEnviar,
+      },
+    )
+    console.log("Posições inseridos")
+    console.log(data)
   }
+  // }
 
   console.log("FIM")
 }
