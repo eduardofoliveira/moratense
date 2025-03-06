@@ -154,13 +154,13 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
   console.log(`Eventos: ${viagens.length}`)
 
   const subTripFix = (subTrip: any) => {
-    if (subTrip.SubTripStart === null) {
+    if (subTrip?.SubTripStart) {
       subTrip.SubTripStart = format(
         subHours(new Date(subTrip.SubTripStart), 5),
         "yyyy-MM-dd HH:mm:ss",
       )
     }
-    if (subTrip.SubTripEnd === null) {
+    if (subTrip?.SubTripEnd) {
       subTrip.SubTripEnd = format(
         subHours(new Date(subTrip.SubTripEnd), 5),
         "yyyy-MM-dd HH:mm:ss",
