@@ -24,6 +24,10 @@ config.production = {
       return next()
     },
   },
+  pool: {
+    min: 0,
+    max: 5,
+  },
 }
 config.development = {
   client: "mysql2",
@@ -43,6 +47,10 @@ config.development = {
       }
       return next()
     },
+  },
+  pool: {
+    min: 0,
+    max: 5,
   },
 }
 

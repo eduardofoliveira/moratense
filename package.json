@@ -15,6 +15,8 @@
     "server": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/server.ts",
     "sync": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync.ts",
     "sync-fix": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-viagens-fix-horario.ts",
+    "sync-eventos": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-eventos-fix.ts",
+    "sync-posicoes": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-posicoes-fix.ts",
     "build": "tsc"
   },
   "keywords": [],

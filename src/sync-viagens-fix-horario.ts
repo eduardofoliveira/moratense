@@ -2,7 +2,6 @@ import "dotenv/config"
 import axios from "axios"
 import { format, subHours } from "date-fns"
 
-import DbTeleconsult from "./database/connectionManager"
 import DbMoratense from "./database/connectionManagerHomeLab"
 import ApiMix from "./service/api.mix"
 
@@ -19,11 +18,22 @@ const execute = async () => {
 
   let viagens = await apiMix.getTripsByAsset({
     assets: result.map((r: any) => r.assetId),
-    start: "20250305200000",
-    end: "20250305210000",
+    start: "20250306025959",
+    end: "20250306035959",
   })
 
-  viagens = viagens.map((viagem: any) => {
+  const subTripFix = (subTrip: any) => {
+    subTrip.SubTripStart = format(
+      subHours(new Date(subTrip.SubTripStart), 5),
+      "yyyy-MM-dd HH:mm:ss",
+    )
+    subTrip.SubTripEnd = format(
+      subHours(new Date(subTrip.SubTripEnd), 5),
+      "yyyy-MM-dd HH:mm:ss",
+    )
+    return
+  }
+  const tripFix = (viagem: any) => {
     viagem.TripStart = format(
       subHours(new Date(viagem.TripStart), 5),
       "yyyy-MM-dd HH:mm:ss",
@@ -32,20 +42,22 @@ const execute = async () => {
       subHours(new Date(viagem.TripEnd), 5),
       "yyyy-MM-dd HH:mm:ss",
     )
+    viagem.SubTrips = viagem.SubTrips.map(subTripFix)
 
     return viagem
-  })
+  }
+  viagens = viagens.map(tripFix)
 
-  console.log(JSON.stringify(viagens, null, 2))
-
-  await axios
-    .post("http://teleconsult.com.br:3000/data/viagens", {
+  const { data } = await axios.post(
+    "http://teleconsult.com.br:3000/data/viagens",
+    {
       viagens,
-    })
-    .then(({ data }) => {
-      console.log("Viagens inseridas")
-      console.log(data)
-    })
+    },
+  )
+  console.log("Viagens inseridas")
+  console.log(data)
+
+  console.log("FIM")
 }
 
 execute()

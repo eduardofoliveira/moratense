@@ -1,6 +1,7 @@
 import "dotenv/config"
 import axios from "axios"
 import lockfile from "proper-lockfile"
+import { format, subHours } from "date-fns"
 
 import showTelemetriaTiposEvento from "./use-cases/telemetriaTiposEvento/showTelemetriaTiposEvento"
 import updateDrankTelConfig from "./use-cases/drankTelConfig/updateDrankTelConfig"
@@ -152,11 +153,35 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
   console.log(`Token: ${getsincetoken}`)
   console.log(`Eventos: ${viagens.length}`)
 
-  console.log(viagens)
+  const subTripFix = (subTrip: any) => {
+    subTrip.SubTripStart = format(
+      subHours(new Date(subTrip.SubTripStart), 5),
+      "yyyy-MM-dd HH:mm:ss",
+    )
+    subTrip.SubTripEnd = format(
+      subHours(new Date(subTrip.SubTripEnd), 5),
+      "yyyy-MM-dd HH:mm:ss",
+    )
+    return
+  }
+  const tripFix = (viagem: any) => {
+    viagem.TripStart = format(
+      subHours(new Date(viagem.TripStart), 5),
+      "yyyy-MM-dd HH:mm:ss",
+    )
+    viagem.TripEnd = format(
+      subHours(new Date(viagem.TripEnd), 5),
+      "yyyy-MM-dd HH:mm:ss",
+    )
+    viagem.SubTrips = viagem.SubTrips.map(subTripFix)
+
+    return viagem
+  }
+  const viagensComHorarioCorreto = viagens.map(tripFix)
 
   await axios
     .post("http://teleconsult.com.br:3000/data/viagens", {
-      viagens,
+      viagens: viagensComHorarioCorreto,
     })
     .then(({ data }) => {
       console.log("Viagens inseridas")
@@ -186,11 +211,7 @@ const executarViagens = async () => {
 }
 
 const executar = async () => {
-  await Promise.all([
-    executarEventos(),
-    executarPosicoes(),
-    // executarViagens(),
-  ])
+  await Promise.all([executarEventos(), executarPosicoes(), executarViagens()])
   process.exit(0)
 }
 

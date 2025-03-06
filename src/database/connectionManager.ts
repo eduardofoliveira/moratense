@@ -14,6 +14,10 @@ config.production = {
     database: process.env.MYSQL_DATABASE,
     timezone: "-03:00",
   },
+  pool: {
+    min: 0,
+    max: 5,
+  },
 }
 config.development = {
   client: "mysql2",
@@ -23,6 +27,10 @@ config.development = {
     password: process.env.MYSQL_PASS,
     database: process.env.MYSQL_DATABASE,
     timezone: "-03:00",
+  },
+  pool: {
+    min: 0,
+    max: 5,
   },
 }
 
