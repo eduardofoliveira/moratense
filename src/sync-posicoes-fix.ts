@@ -26,7 +26,7 @@ const execute = async () => {
 
   const posicoes = await apiMix.buscarPosicoesPorCarroData({
     assets: tempAssets,
-    start: format(subMinutes(addHours(new Date(), 3), 20), "yyyyMMddHHmmss"),
+    start: format(subMinutes(addHours(new Date(), 3), 60), "yyyyMMddHHmmss"),
     end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
     // start: "20250306140700",
     // end: "20250306141800",
