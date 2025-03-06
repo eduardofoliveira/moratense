@@ -62,6 +62,7 @@ const execute = async () => {
   // }
 
   console.log("FIM")
+  process.exit(0)
 }
 
 execute()

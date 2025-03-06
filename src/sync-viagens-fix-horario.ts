@@ -60,6 +60,7 @@ const execute = async () => {
   console.log(data)
 
   console.log("FIM")
+  process.exit(0)
 }
 
 execute()
