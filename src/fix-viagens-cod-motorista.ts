@@ -115,7 +115,7 @@ const fixAssets = async () => {
   console.log("FIM")
 }
 
-// fixAssets()
+fixAssets()
 
 const fixColaboradoresLegado = async () => {
   try {
@@ -183,4 +183,4 @@ const fixColaboradoresLegado = async () => {
   }
 }
 
-fixColaboradoresLegado()
+// fixColaboradoresLegado()
