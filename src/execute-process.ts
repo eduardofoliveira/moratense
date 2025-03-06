@@ -30,4 +30,4 @@ setTimeout(() => {
     console.log(new Date().toLocaleString())
     console.log("Todos os comandos foram executados!")
   })
-}, 60000)
+}, 160000)
