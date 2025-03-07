@@ -18,10 +18,10 @@ const execute = async () => {
 
   let viagens = await apiMix.getTripsByAsset({
     assets: result.map((r: any) => r.assetId),
-    start: format(subMinutes(addHours(new Date(), 3), 60), "yyyyMMddHHmmss"),
+    start: format(subMinutes(addHours(new Date(), 3), 240), "yyyyMMddHHmmss"),
     end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
-    // start: "20250306150000",
-    // end: "20250306234500",
+    // start: "20250307030000",
+    // end: "20250308025959",
   })
 
   const subTripFix = (subTrip: any) => {

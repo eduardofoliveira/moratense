@@ -28,38 +28,38 @@ const execute = async () => {
   // `)
 
   const carros = await Asset.getAll()
-  // const listaDivididaCarros = dividirLista(carros, 50)
+  const listaDivididaCarros = dividirLista(carros, 100)
 
-  // for await (const assets of listaDivididaCarros) {
-  const tempAssets = carros.map<string>((asset) => asset.assetId.toString())
-  const listaEventTypesCarregar = await EventTypes.getAllActiveItensCarregar({
-    id_empresa: idEmpresa,
-  })
-  const tempEventTypes = listaEventTypesCarregar.map<string>(
-    (et) => et.eventTypeId,
-  )
-
-  const eventos = await apiMix.getEventByAssets({
-    assets: tempAssets,
-    tempEventTypes,
-    start: format(subMinutes(addHours(new Date(), 3), 60), "yyyyMMddHHmmss"),
-    end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
-    // start: "20250306140700",
-    // end: "20250306141800",
-  })
-
-  const listaDividida = dividirLista(eventos, 1000)
-  for await (const listEnviar of listaDividida) {
-    const { data } = await axios.post(
-      "http://teleconsult.com.br:3000/data/eventos",
-      {
-        eventos: listEnviar,
-      },
+  for await (const assets of listaDivididaCarros) {
+    const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
+    const listaEventTypesCarregar = await EventTypes.getAllActiveItensCarregar({
+      id_empresa: idEmpresa,
+    })
+    const tempEventTypes = listaEventTypesCarregar.map<string>(
+      (et) => et.eventTypeId,
     )
-    console.log("Eventos inseridos")
-    console.log(data)
+
+    const eventos = await apiMix.getEventByAssets({
+      assets: tempAssets,
+      tempEventTypes,
+      start: format(subMinutes(addHours(new Date(), 3), 240), "yyyyMMddHHmmss"),
+      end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
+      // start: "20250307030000",
+      // end: "20250308025959",
+    })
+
+    const listaDividida = dividirLista(eventos, 1000)
+    for await (const listEnviar of listaDividida) {
+      const { data } = await axios.post(
+        "http://teleconsult.com.br:3000/data/eventos",
+        {
+          eventos: listEnviar,
+        },
+      )
+      console.log("Eventos inseridos")
+      console.log(data)
+    }
   }
-  // }
 
   console.log("FIM")
   process.exit(0)
