@@ -8,6 +8,7 @@ export type IGetSummaryReturn = {
 }
 
 export type IGetTripsReturn = {
+  meta: any
   consumo: any
   numero_chassi: string
   chapa: string
