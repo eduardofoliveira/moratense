@@ -304,7 +304,7 @@ type ViagemGlobus = {
 
 const syncViagensGlobus = async () => {
   const today = new Date()
-  const inicio = format(startOfDay(subDays(today, 20)), "yyyy-MM-dd 00:00:00")
+  const inicio = format(startOfDay(subDays(today, 66)), "yyyy-MM-dd 00:00:00")
   const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd 23:59:59")
   // const inicio = "2025-02-15 00:00:00"
   // const termino = "2025-02-18 23:59:59"

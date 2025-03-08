@@ -3,6 +3,20 @@ import type { Request, Response } from "express"
 
 import Summary from "../models/Summary"
 
+// Função para somar números com precisão
+function sumWithPrecision(numbers: number[]): number {
+  // Define a quantidade de casas decimais (3 no seu caso)
+  const precision = 3
+  const factor = 10 ** precision
+
+  // Multiplica cada número pelo fator, soma e depois divide pelo fator
+  const sum = numbers.reduce(
+    (acc: number, num: number) => acc + Math.round(num * factor),
+    0,
+  )
+  return sum / factor
+}
+
 const index = async (req: Request, res: Response): Promise<any> => {
   const { start, end } = req.query
 
@@ -11,15 +25,13 @@ const index = async (req: Request, res: Response): Promise<any> => {
     end: end as string,
   })
 
-  const trips = await Summary.getTrips({
+  let trips = await Summary.getTrips({
     start: start as string,
     end: end as string,
   })
 
-  let temConsumo = 0
-  let naoTemConsumo = 0
-  let distanceKilometers = 0
-  let fuelUsedLitres = 0
+  const arrayKm = []
+  const arrayLitros = []
   for await (const trip of trips) {
     const consumo = await Summary.getConsumption({
       assetId: trip.assetId,
@@ -30,21 +42,11 @@ const index = async (req: Request, res: Response): Promise<any> => {
 
     trip.consumo = consumo
 
-    if (consumo.length === 1) {
-      temConsumo++
-      distanceKilometers =
-        distanceKilometers + Number.parseFloat(consumo[0].distanceKilometers)
-      fuelUsedLitres =
-        fuelUsedLitres + Number.parseFloat(consumo[0].fuelUsedLitres)
-    } else if (consumo.length > 1) {
-      temConsumo++
-      for await (const item of consumo) {
-        distanceKilometers =
-          distanceKilometers + Number.parseFloat(item.distanceKilometers)
-        fuelUsedLitres = fuelUsedLitres + Number.parseFloat(item.fuelUsedLitres)
+    if (consumo.length > 0) {
+      for (const item of consumo) {
+        arrayKm.push(item.distanceKilometers)
+        arrayLitros.push(item.fuelUsedLitres)
       }
-    } else {
-      naoTemConsumo++
     }
 
     trip.data_saida_garagem = format(
@@ -57,15 +59,13 @@ const index = async (req: Request, res: Response): Promise<any> => {
     )
   }
 
-  // const filtredTrips = trips.filter((trip) => trip.consumo.length > 0)
+  trips = trips.filter((trip) => trip.consumo.length > 0)
   const [result1] = await Promise.all([result])
 
   return res.json({
     summary: result1,
-    temConsumo,
-    naoTemConsumo,
-    distanceKilometers,
-    fuelUsedLitres,
+    distanceKilometers: sumWithPrecision(arrayKm),
+    fuelUsedLitres: sumWithPrecision(arrayLitros),
     trips: trips,
   })
 }

@@ -43,7 +43,7 @@ export default class Summary {
       FROM
         trips
       WHERE
-        tripStart BETWEEN '${start}' AND '${end}'
+        tripStart BETWEEN '${start} 03:00:00' AND '${end} 02:59:59'
     `)
 
     const consumo = db.raw(`
@@ -53,7 +53,7 @@ export default class Summary {
       FROM
         trips
       WHERE
-        tripStart BETWEEN '${start}' AND '${end}'
+        tripStart BETWEEN '${start} 03:00:00' AND '${end} 02:59:59'
     `)
 
     const result = await Promise.all([quantidade, consumo])
@@ -82,8 +82,8 @@ export default class Summary {
         gf.codigo_funcionario,
         gf.nome,
         gl.nome_linha,
-        gv.data_saida_garagem,
-        gv.data_recolhido,
+        min(gv.data_saida_garagem) AS data_saida_garagem,
+        max(gv.data_recolhido) AS data_recolhido,
         gv.assetId,
         gv.driverId,
         CONCAT(c.numero_chassi, ' - ', gl.nome_linha) AS chassi_linha
@@ -95,15 +95,20 @@ export default class Summary {
         chassi c,
         assets a
       WHERE
-        gv.data_saida_garagem BETWEEN '${start}' AND '${end}' and
+        gv.data_saida_garagem BETWEEN '${start} 03:00:00' AND '${end} 02:59:59' and
         gv.fk_id_globus_linha = gl.id and
         gv.fk_id_globus_funcionario = gf.id and
         ac.assetId = gv.assetId and
         ac.fk_id_chassi = c.id and
-        a.assetId = ac.assetId
+        a.assetId = ac.assetId and
+        gv.assetId IS NOT NULL and
+        gv.driverId IS NOT null
+      GROUP BY
+        gl.id,
+        c.id,
+        gf.id
       ORDER BY
-        gv.data_saida_garagem ASC,
-        chassi_linha asc
+        gl.nome_linha
     `)
 
     return trips
@@ -117,6 +122,26 @@ export default class Summary {
   }: IGetConsumptionReturn): Promise<any> {
     const db = Db.getConnection()
 
+    // console.log(`
+    //   SELECT
+    //     t.id,
+    //     t.tripId,
+    //     t.distanceKilometers,
+    //     t.fuelUsedLitres,
+    //     t.tripStart,
+    //     t.tripEnd
+    //   FROM
+    //     trips t
+    //   WHERE
+    //     t.assetId = '${assetId}' and
+    //     t.driverId = '${driverId}' and
+    //     DATE_ADD(t.tripStart, INTERVAL (TIMESTAMPDIFF(SECOND, t.tripStart, t.tripEnd) / 2) SECOND) between '${start}' and '${end}'
+    //   --   ABS(TIMESTAMPDIFF(SECOND, t.tripStart, '${start}')) < 900
+    //   -- ORDER BY
+    //   --   ABS(TIMESTAMPDIFF(SECOND, t.tripStart, '${start}'))
+    //   -- LIMIT 1
+    // `)
+
     let [consumption] = await db.raw(`
       SELECT
         t.id,
@@ -129,49 +154,56 @@ export default class Summary {
         trips t
       WHERE
         t.assetId = '${assetId}' and
-        ABS(TIMESTAMPDIFF(SECOND, t.tripStart, '${start}')) < 600
-      ORDER BY
-        ABS(TIMESTAMPDIFF(SECOND, t.tripStart, '${start}'))
-      LIMIT 1
+        t.driverId = '${driverId}' and
+        DATE_ADD(t.tripStart, INTERVAL (TIMESTAMPDIFF(SECOND, t.tripStart, t.tripEnd) / 2) SECOND) between '${start}' and '${end}' -- or
+        -- '${start}' BETWEEN t.tripStart AND t.tripEnd or
+        -- t.tripStart BETWEEN '${start}' AND '${end}')
+      --   ABS(TIMESTAMPDIFF(SECOND, t.tripStart, '${start}')) < 900
+      -- ORDER BY
+      --   ABS(TIMESTAMPDIFF(SECOND, t.tripStart, '${start}'))
+      -- LIMIT 1
     `)
 
-    if (consumption.length === 0) {
-      const [consumption2] = await db.raw(`
-        SELECT
-          t.id,
-          t.tripId,
-          t.distanceKilometers,
-          t.fuelUsedLitres,
-          t.tripStart,
-          t.tripEnd
-        FROM
-          trips t
-        WHERE
-          t.assetId = '${assetId}' and
-          ABS(TIMESTAMPDIFF(SECOND, t.tripEnd, '${end}')) < 600
-      `)
+    // if (consumption.length === 0) {
+    //   const [consumption2] = await db.raw(`
+    //     SELECT
+    //       t.id,
+    //       t.tripId,
+    //       t.distanceKilometers,
+    //       t.fuelUsedLitres,
+    //       t.tripStart,
+    //       t.tripEnd
+    //     FROM
+    //       trips t
+    //     WHERE
+    //       t.assetId = '${assetId}' and
+    //       ABS(TIMESTAMPDIFF(SECOND, t.tripEnd, '${end}')) < 900
+    //     ORDER BY
+    //       ABS(TIMESTAMPDIFF(SECOND, t.tripEnd, '${end}'))
+    //     LIMIT 1
+    //   `)
 
-      consumption = consumption2
-    }
+    //   consumption = consumption2
+    // }
 
-    if (consumption.length === 0) {
-      const [consumption3] = await db.raw(`
-        SELECT
-          t.id,
-          t.tripId,
-          t.distanceKilometers,
-          t.fuelUsedLitres,
-          t.tripStart,
-          t.tripEnd
-        FROM
-          trips t
-        WHERE
-          t.assetId = '${assetId}' and
-          '${start}' BETWEEN t.tripStart AND t.tripEnd
-      `)
+    // if (consumption.length === 0) {
+    //   const [consumption3] = await db.raw(`
+    //     SELECT
+    //       t.id,
+    //       t.tripId,
+    //       t.distanceKilometers,
+    //       t.fuelUsedLitres,
+    //       t.tripStart,
+    //       t.tripEnd
+    //     FROM
+    //       trips t
+    //     WHERE
+    //       t.assetId = '${assetId}' and
+    //       '${start}' BETWEEN t.tripStart AND t.tripEnd
+    //   `)
 
-      consumption = consumption3
-    }
+    //   consumption = consumption3
+    // }
 
     for await (const item of consumption) {
       item.tripStart = format(new Date(item.tripStart), "dd/MM/yyyy HH:mm:ss")

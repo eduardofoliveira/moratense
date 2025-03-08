@@ -18,6 +18,7 @@
     "sync-eventos": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-eventos-fix.ts",
     "sync-posicoes": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-posicoes-fix.ts",
     "exec-process": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/execute-process.ts",
+    "copy-metas": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/copy-meta-to-moratense.ts",
     "build": "tsc"
   },
   "keywords": [],
