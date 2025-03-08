@@ -20,6 +20,8 @@ export type IGetTripsReturn = {
   assetId: string
   driverId: string
   chassi_linha: string
+  id_linha_globus: number
+  id_chassi: number
 }
 
 export type IGetConsumptionReturn = {
@@ -86,7 +88,9 @@ export default class Summary {
         max(gv.data_recolhido) AS data_recolhido,
         gv.assetId,
         gv.driverId,
-        CONCAT(c.numero_chassi, ' - ', gl.nome_linha) AS chassi_linha
+        CONCAT(c.numero_chassi, ' - ', gl.nome_linha) AS chassi_linha,
+        gl.id as id_linha_globus,
+        c.id as id_chassi
       FROM
         globus_viagem gv,
         globus_linha gl,
@@ -142,7 +146,7 @@ export default class Summary {
     //   -- LIMIT 1
     // `)
 
-    let [consumption] = await db.raw(`
+    const [consumption] = await db.raw(`
       SELECT
         t.id,
         t.tripId,
