@@ -379,6 +379,8 @@ const syncViagensGlobus = async () => {
             "yyyy-MM-dd HH:mm:ss",
           ),
         })
+
+        continue
       }
 
       const viagemGlobusExists = await GlobusViagem.find(
