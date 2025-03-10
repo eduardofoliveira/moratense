@@ -3,6 +3,7 @@ import express from "express"
 import morgan from "morgan"
 import cors from "cors"
 
+import authRoutes from "./routes/authRoutes"
 import reportRoutes from "./routes/reportRoutes"
 import dataRoutes from "./routes/dataRoutes"
 import responseError from "./middleware/response-error"
@@ -14,6 +15,7 @@ app.use(cors())
 app.use(morgan("dev"))
 app.use(express.json({ limit: "200mb" }))
 app.use(express.urlencoded({ extended: true, limit: "200mb" }))
+app.use(authRoutes)
 app.use(dataRoutes)
 app.use(reportRoutes)
 

@@ -34,6 +34,11 @@ const index = async (req: Request, res: Response): Promise<any> => {
   const arrayKm = []
   const arrayLitros = []
   const arrayAssets = []
+  const todosEventos = await Summary.getEventsByInterval({
+    start: format(new Date(start as string), "yyyy-MM-dd 03:00:00"),
+    end: format(new Date(end as string), "yyyy-MM-dd 23:59:59"),
+  })
+
   for await (const trip of trips) {
     const consumo = await Summary.getConsumption({
       assetId: trip.assetId,
@@ -42,12 +47,24 @@ const index = async (req: Request, res: Response): Promise<any> => {
       end: format(new Date(trip.data_recolhido), "yyyy-MM-dd HH:mm:ss"),
     })
 
+    const eventos = todosEventos.filter((evento: any) => {
+      return (
+        evento.assetId === trip.assetId && evento.driverId === trip.driverId
+      )
+    })
+    // const eventos = await Summary.getEventsByAssetAndDriver({
+    //   assetId: trip.assetId,
+    //   driverId: trip.driverId,
+    //   start: format(new Date(trip.data_saida_garagem), "yyyy-MM-dd HH:mm:ss"),
+    //   end: format(new Date(trip.data_recolhido), "yyyy-MM-dd HH:mm:ss"),
+    // })
+
     const meta = await Meta.findByChassiAndLinha(
       trip.id_chassi,
       trip.id_linha_globus,
     )
+    trip.eventos = eventos
     trip.meta = meta
-
     trip.consumo = consumo
 
     arrayAssets.push(trip.assetId)
@@ -117,6 +134,31 @@ const index = async (req: Request, res: Response): Promise<any> => {
   agrupadoPorLinha = Object.keys(agrupadoPorLinha).map((key) => {
     const item = agrupadoPorLinha[key]
 
+    item[0].viagens = item[0].viagens.filter((v: any) => {
+      const kms = sumWithPrecision(
+        v.consumo.map((c: any) => c.distanceKilometers),
+      )
+      if (kms <= 0) {
+        return false
+      }
+      const lts = sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres))
+      if (lts <= 0) {
+        return false
+      }
+
+      return true
+    })
+
+    return item
+  })
+
+  agrupadoPorLinha = agrupadoPorLinha.filter((item: any) => {
+    return item[0].viagens.length > 0
+  })
+
+  agrupadoPorLinha = Object.keys(agrupadoPorLinha).map((key) => {
+    const item = agrupadoPorLinha[key]
+
     item[0].resumo = {
       ...item[0].resumo,
       veiculos: new Set(item[0].viagens.map((v: any) => v.assetId)).size,
@@ -130,12 +172,6 @@ const index = async (req: Request, res: Response): Promise<any> => {
           .map((v: any) => v.consumo.map((a: any) => a.fuelUsedLitres))
           .map((a: any) => sumWithPrecision(a)),
       ),
-      // media_values: item[0].viagens.map((v: any) => {
-      //   return (
-      //     sumWithPrecision(v.consumo.map((c: any) => c.distanceKilometers)) /
-      //     sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres))
-      //   )
-      // }),
       media: (
         item[0].viagens
           .map((v: any) => {

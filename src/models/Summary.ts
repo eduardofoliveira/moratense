@@ -8,6 +8,7 @@ export type IGetSummaryReturn = {
 }
 
 export type IGetTripsReturn = {
+  eventos: any
   meta: any
   consumo: any
   numero_chassi: string
@@ -216,5 +217,72 @@ export default class Summary {
     }
 
     return consumption
+  }
+
+  public static async getEventsByInterval({
+    start,
+    end,
+  }: { start: string; end: string }): Promise<any> {
+    const db = Db.getConnection()
+    const [eventos] = await db.raw(`
+      SELECT
+        COUNT(*) AS qtd,
+        et.description,
+        SUM(e.totalOccurances) AS totalOccurances,
+        e.eventTypeId,
+        e.driverId,
+        e.assetId,
+        (SELECT ec.code FROM events_converter ec WHERE ec.eventTypeId = e.eventTypeId) AS code
+      FROM
+        events e,
+        eventType et
+      WHERE
+        e.driverId != -9110386254540308778 and
+        e.eventTypeId = et.eventTypeId and
+        e.startDateTime BETWEEN '${start}' AND '${end}'
+      GROUP BY
+        e.driverId,
+        e.assetId,
+        e.eventTypeId
+      ORDER BY
+        e.driverId,
+        e.assetId,
+        code
+    `)
+
+    return eventos
+  }
+
+  public static async getEventsByAssetAndDriver({
+    assetId,
+    driverId,
+    start,
+    end,
+  }: IGetConsumptionReturn): Promise<any> {
+    const db = Db.getConnection()
+
+    console.log({ assetId, driverId, start, end })
+    console.time("getEventsByAssetAndDriver")
+    const [eventos] = await db.raw(`
+      SELECT
+        COUNT(*) AS qtd,
+        et.description,
+        SUM(e.totalOccurances) AS totalOccurances,
+        e.eventTypeId,
+        (SELECT ec.code FROM events_converter ec WHERE ec.eventTypeId = e.eventTypeId) AS code
+      FROM
+        events e,
+        eventType et
+      WHERE
+        e.eventTypeId = et.eventTypeId and
+        e.driverId = ${driverId} and
+        e.assetId = ${assetId} and
+        e.startDateTime BETWEEN '${start}' AND '${end}'
+      GROUP BY
+        et.eventTypeId
+    `)
+    console.timeEnd("getEventsByAssetAndDriver")
+
+    return eventos
   }
 }
