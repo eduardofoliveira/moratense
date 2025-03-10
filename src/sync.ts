@@ -153,40 +153,40 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
   console.log(`Token: ${getsincetoken}`)
   console.log(`Eventos: ${viagens.length}`)
 
-  const subTripFix = (subTrip: any) => {
-    if (subTrip?.SubTripStart) {
-      subTrip.SubTripStart = format(
-        subHours(new Date(subTrip.SubTripStart), 5),
-        "yyyy-MM-dd HH:mm:ss",
-      )
-    }
-    if (subTrip?.SubTripEnd) {
-      subTrip.SubTripEnd = format(
-        subHours(new Date(subTrip.SubTripEnd), 5),
-        "yyyy-MM-dd HH:mm:ss",
-      )
-    }
+  // const subTripFix = (subTrip: any) => {
+  //   if (subTrip?.SubTripStart) {
+  //     subTrip.SubTripStart = format(
+  //       subHours(new Date(subTrip.SubTripStart), 5),
+  //       "yyyy-MM-dd HH:mm:ss",
+  //     )
+  //   }
+  //   if (subTrip?.SubTripEnd) {
+  //     subTrip.SubTripEnd = format(
+  //       subHours(new Date(subTrip.SubTripEnd), 5),
+  //       "yyyy-MM-dd HH:mm:ss",
+  //     )
+  //   }
 
-    return
-  }
-  const tripFix = (viagem: any) => {
-    viagem.TripStart = format(
-      subHours(new Date(viagem.TripStart), 5),
-      "yyyy-MM-dd HH:mm:ss",
-    )
-    viagem.TripEnd = format(
-      subHours(new Date(viagem.TripEnd), 5),
-      "yyyy-MM-dd HH:mm:ss",
-    )
-    viagem.SubTrips = viagem.SubTrips.map(subTripFix)
+  //   return
+  // }
+  // const tripFix = (viagem: any) => {
+  //   viagem.TripStart = format(
+  //     subHours(new Date(viagem.TripStart), 5),
+  //     "yyyy-MM-dd HH:mm:ss",
+  //   )
+  //   viagem.TripEnd = format(
+  //     subHours(new Date(viagem.TripEnd), 5),
+  //     "yyyy-MM-dd HH:mm:ss",
+  //   )
+  //   viagem.SubTrips = viagem.SubTrips.map(subTripFix)
 
-    return viagem
-  }
-  const viagensComHorarioCorreto = viagens.map(tripFix)
+  //   return viagem
+  // }
+  // const viagensComHorarioCorreto = viagens.map(tripFix)
 
   await axios
     .post("http://teleconsult.com.br:3000/data/viagens", {
-      viagens: viagensComHorarioCorreto,
+      viagens,
     })
     .then(({ data }) => {
       console.log("Viagens inseridas")
