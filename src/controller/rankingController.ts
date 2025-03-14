@@ -3,6 +3,7 @@ import type { Request, Response } from "express"
 
 import Summary from "../models/Summary"
 import Meta from "../models/moratense/Meta"
+import EventTypes from "../models/EventTypes"
 
 // Função para somar números com precisão
 function sumWithPrecision(numbers: number[]): number {
@@ -34,10 +35,13 @@ const index = async (req: Request, res: Response): Promise<any> => {
   const arrayKm = []
   const arrayLitros = []
   const arrayAssets = []
-  const todosEventos = await Summary.getEventsByInterval({
-    start: format(new Date(start as string), "yyyy-MM-dd 03:00:00"),
-    end: format(new Date(end as string), "yyyy-MM-dd 23:59:59"),
-  })
+  // const eventos = []
+  // const todosEventos = await Summary.getEventsByInterval({
+  //   start: format(new Date(start as string), "yyyy-MM-dd 03:00:00"),
+  //   end: format(new Date(end as string), "yyyy-MM-dd 23:59:59"),
+  // })
+
+  const allEvents = await EventTypes.getAll()
 
   for await (const trip of trips) {
     const consumo = await Summary.getConsumption({
@@ -47,11 +51,19 @@ const index = async (req: Request, res: Response): Promise<any> => {
       end: format(new Date(trip.data_recolhido), "yyyy-MM-dd HH:mm:ss"),
     })
 
-    const eventos = todosEventos.filter((evento: any) => {
-      return (
-        evento.assetId === trip.assetId && evento.driverId === trip.driverId
-      )
-    })
+    for await (const item of consumo) {
+      const eventos = await Summary.getEventsResumeByTrip({
+        tripId: item.tripId,
+      })
+
+      trip.eventos = eventos
+    }
+
+    // const eventos = todosEventos.filter((evento: any) => {
+    //   return (
+    //     evento.assetId === trip.assetId && evento.driverId === trip.driverId
+    //   )
+    // })
     // const eventos = await Summary.getEventsByAssetAndDriver({
     //   assetId: trip.assetId,
     //   driverId: trip.driverId,
@@ -63,7 +75,7 @@ const index = async (req: Request, res: Response): Promise<any> => {
       trip.id_chassi,
       trip.id_linha_globus,
     )
-    trip.eventos = eventos
+    // trip.eventos = eventos
     trip.meta = meta
     trip.consumo = consumo
 
@@ -162,6 +174,48 @@ const index = async (req: Request, res: Response): Promise<any> => {
     item[0].resumo = {
       ...item[0].resumo,
       veiculos: new Set(item[0].viagens.map((v: any) => v.assetId)).size,
+
+      total_acima_meta: item[0].viagens.filter((v: any) => {
+        const media = (
+          sumWithPrecision(v.consumo.map((c: any) => c.distanceKilometers)) /
+          sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres))
+        ).toFixed(2)
+        if (v.meta) {
+          if (media >= v.meta.meta) {
+            return true
+          }
+        }
+        return false
+      }).length,
+      total_abaixo_meta: item[0].viagens.filter((v: any) => {
+        const media = (
+          sumWithPrecision(v.consumo.map((c: any) => c.distanceKilometers)) /
+          sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres))
+        ).toFixed(2)
+        if (v.meta) {
+          if (media < v.meta.meta) {
+            return true
+          }
+        }
+        return false
+      }).length,
+      potencial_melhoria: `${(
+        (item[0].viagens.filter((v: any) => {
+          const media = (
+            sumWithPrecision(v.consumo.map((c: any) => c.distanceKilometers)) /
+            sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres))
+          ).toFixed(2)
+          if (v.meta) {
+            if (media < v.meta.meta) {
+              return true
+            }
+          }
+          return false
+        }).length /
+          item[0].viagens.length) *
+          100
+      ).toFixed(0)}%`,
+
       kmRodados: sumWithPrecision(
         item[0].viagens
           .map((v: any) => v.consumo.map((a: any) => a.distanceKilometers))
@@ -187,9 +241,10 @@ const index = async (req: Request, res: Response): Promise<any> => {
     }
     item[0].viagens = item[0].viagens.map((v: any) => {
       let meta_atingida = "0%"
-      const media =
+      const media = (
         sumWithPrecision(v.consumo.map((c: any) => c.distanceKilometers)) /
         sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres))
+      ).toFixed(2)
 
       if (v.meta) {
         if (media >= v.meta.meta) {
@@ -200,8 +255,40 @@ const index = async (req: Request, res: Response): Promise<any> => {
         }
       }
 
+      const resumoEventos = v.eventos.reduce((acc: any, evento: any) => {
+        if (!acc.seguranca) {
+          acc.seguranca = 0
+        }
+        if (!acc.consumo) {
+          acc.consumo = 0
+        }
+
+        const detalheEvento = allEvents.find(
+          (e: any) => e.eventTypeId === evento.eventTypeId,
+        )
+        if (!acc[evento.code]) {
+          acc[evento.code] = {
+            nome: evento.description,
+            quantidade: 0,
+            eventTypeId: evento.eventTypeId,
+            seguranca: detalheEvento?.seguranca,
+            consumo: detalheEvento?.consumo,
+          }
+        }
+        if (detalheEvento?.seguranca) {
+          acc.seguranca = acc.seguranca + evento.quantity
+        }
+        if (detalheEvento?.consumo) {
+          acc.consumo = acc.consumo + evento.quantity
+        }
+        acc[evento.code].quantidade =
+          acc[evento.code].quantidade + evento.quantity
+        return acc
+      }, {})
+
       return {
         ...v,
+        resumoEventos,
         kmRodados: sumWithPrecision(
           v.consumo.map((c: any) => c.distanceKilometers),
         ),
@@ -210,13 +297,90 @@ const index = async (req: Request, res: Response): Promise<any> => {
         ),
         media,
         meta_atingida,
+        count_total_eventos_consumo: v.eventos.reduce(
+          (acc: number, evento: any) => {
+            if (evento.eventTypeId === 1) {
+              return acc + 1
+            }
+            return acc
+          },
+          0,
+        ),
+        count_total_eventos_seguranca: v.eventos.reduce(
+          (acc: number, evento: any) => {
+            if (evento.eventTypeId === 2) {
+              return acc + 1
+            }
+            return acc
+          },
+          0,
+        ),
       }
     })
 
     return item
   })
 
+  for (const item of agrupadoPorLinha) {
+    item[0].viagens = item[0].viagens.sort((a: any, b: any) => {
+      if (a.resumoEventos.seguranca > b.resumoEventos.seguranca) {
+        return -1
+      }
+      if (a.resumoEventos.seguranca < b.resumoEventos.seguranca) {
+        return 1
+      }
+      return 0
+    })
+    item[0].viagens = item[0].viagens.map((v: any, index: number) => {
+      return {
+        ...v,
+        resumoEventos: {
+          ...v.resumoEventos,
+          rank_seguranca: index + 1,
+        },
+      }
+    })
+
+    item[0].viagens = item[0].viagens.sort((a: any, b: any) => {
+      if (a.resumoEventos.consumo > b.resumoEventos.consumo) {
+        return -1
+      }
+      if (a.resumoEventos.consumo < b.resumoEventos.consumo) {
+        return 1
+      }
+      return 0
+    })
+    item[0].viagens = item[0].viagens.map((v: any, index: number) => {
+      return {
+        ...v,
+        resumoEventos: {
+          ...v.resumoEventos,
+          rank_consumo: index + 1,
+        },
+      }
+    })
+  }
+
   const [result1] = await Promise.all([result])
+
+  const resumoEventos: any = {}
+  for (const item of trips) {
+    for (const evento of item.eventos) {
+      if (!resumoEventos[evento.code]) {
+        const detalheEvento = await EventTypes.findMixCode(evento.eventTypeId)
+
+        resumoEventos[evento.code] = {
+          nome: evento.description,
+          quantidade: 0,
+          eventTypeId: evento.eventTypeId,
+          seguranca: detalheEvento.seguranca,
+          consumo: detalheEvento.consumo,
+        }
+      }
+      resumoEventos[evento.code].quantidade =
+        resumoEventos[evento.code].quantidade + 1
+    }
+  }
 
   return res.json({
     summary: result1,
@@ -224,6 +388,7 @@ const index = async (req: Request, res: Response): Promise<any> => {
     fuelUsedLitres: sumWithPrecision(arrayLitros),
     assetsQuantity: new Set(arrayAssets).size,
     agrupadoPorLinha,
+    resumoEventos,
     // arrayIndice,
   })
 }

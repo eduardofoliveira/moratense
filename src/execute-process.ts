@@ -24,10 +24,10 @@ executarComando("cd C:\\node\\moratense && node dist/sync.js", () => {
   console.log("Todos os comandos foram executados!")
 })
 
-setTimeout(() => {
+setInterval(() => {
   // Executando os comandos em sequência
   executarComando("cd C:\\node\\moratense && node dist/sync.js", () => {
     console.log(new Date().toLocaleString())
     console.log("Todos os comandos foram executados!")
   })
-}, 160000)
+}, 120000)

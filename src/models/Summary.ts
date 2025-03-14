@@ -219,6 +219,29 @@ export default class Summary {
     return consumption
   }
 
+  public static async getEventsResumeByTrip({
+    tripId,
+  }: { tripId: string }): Promise<any> {
+    const db = Db.getConnection()
+
+    const [eventos] = await db.raw(`
+      SELECT
+        r.eventTypeId,
+        r.quantity,
+        r.totalOccurances,
+        ec.descricao_exibida AS description,
+        ec.code AS code
+      FROM
+        trip_events_resume r,
+        events_converter ec
+      WHERE
+        r.eventTypeId = ec.eventTypeId and
+        r.tripId = ${tripId}
+    `)
+
+    return eventos
+  }
+
   public static async getEventsByInterval({
     start,
     end,
@@ -261,8 +284,8 @@ export default class Summary {
   }: IGetConsumptionReturn): Promise<any> {
     const db = Db.getConnection()
 
-    console.log({ assetId, driverId, start, end })
-    console.time("getEventsByAssetAndDriver")
+    // console.log({ assetId, driverId, start, end })
+    // console.time("getEventsByAssetAndDriver")
     const [eventos] = await db.raw(`
       SELECT
         COUNT(*) AS qtd,
@@ -281,7 +304,7 @@ export default class Summary {
       GROUP BY
         et.eventTypeId
     `)
-    console.timeEnd("getEventsByAssetAndDriver")
+    // console.timeEnd("getEventsByAssetAndDriver")
 
     return eventos
   }
