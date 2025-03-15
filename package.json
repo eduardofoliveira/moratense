@@ -53,5 +53,5 @@
     "@types/json-bigint": "^1.0.4",
     "@types/proper-lockfile": "^4.1.4"
   },
-  "packageManager": "pnpm"
+  "packageManager": "pnpm@9.14.2"
 }

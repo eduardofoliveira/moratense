@@ -6,8 +6,12 @@ import showTelemetriaCarro from "../use-cases/telemetriaCarro/showTelemetriaCarr
 import insertDrankTelViagem from "../use-cases/drankTelViagem/insertDrankTelViagem"
 import insertAuxViagem from "../use-cases/auxViagem/insertAuxViagem"
 
+import { syncTripsOnDatabaseMoratense } from "../homelab"
+
 const batchInsert = async (req: Request, res: Response): Promise<any> => {
   const { viagens } = req.body
+
+  await syncTripsOnDatabaseMoratense(viagens)
 
   let count = 0
   for (const viagem of viagens) {

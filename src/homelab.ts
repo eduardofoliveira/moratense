@@ -220,6 +220,124 @@ const syncPositionsByAsset = async () => {
   }
 }
 
+const syncTripsOnDatabaseMoratense = async (trips: any) => {
+  for await (const trip of trips) {
+    try {
+      const tripExists = await Trip.findMixCode(trip.TripId.toString())
+      if (tripExists) {
+        continue
+      }
+
+      if (trip.StartPosition) {
+        const startPositionExists = await Position.findMixCode(
+          trip.StartPosition.PositionId.toString(),
+        )
+        if (!startPositionExists) {
+          await Position.create({
+            positionId: trip.StartPosition.PositionId.toString(),
+            driverId: trip.StartPosition.DriverId.toString(),
+            assetId: trip.StartPosition.AssetId.toString(),
+            lat: trip.StartPosition.Latitude.toString(),
+            long: trip.StartPosition.Longitude.toString(),
+            km: trip.StartPosition.SpeedKilometresPerHour,
+            data: new Date(trip.StartPosition.Timestamp),
+          })
+        }
+      }
+
+      if (trip.EndPosition) {
+        const endPositionExists = await Position.findMixCode(
+          trip.EndPosition.PositionId.toString(),
+        )
+        if (!endPositionExists) {
+          await Position.create({
+            positionId: trip.EndPosition.PositionId.toString(),
+            driverId: trip.EndPosition.DriverId.toString(),
+            assetId: trip.EndPosition.AssetId.toString(),
+            lat: trip.EndPosition.Latitude.toString(),
+            long: trip.EndPosition.Longitude.toString(),
+            km: trip.EndPosition.SpeedKilometresPerHour,
+            data: new Date(trip.EndPosition.Timestamp),
+          })
+        }
+      }
+
+      if (trip.SubTrips) {
+        for await (const subTrip of trip.SubTrips) {
+          try {
+            if (subTrip.StartPosition) {
+              const positionExists = await Position.findMixCode(
+                subTrip.StartPosition.PositionId.toString(),
+              )
+              if (!positionExists) {
+                await Position.create({
+                  positionId: subTrip.StartPosition.PositionId.toString(),
+                  driverId: subTrip.StartPosition.DriverId.toString(),
+                  assetId: subTrip.StartPosition.AssetId.toString(),
+                  lat: subTrip.StartPosition.Latitude.toString(),
+                  long: subTrip.StartPosition.Longitude.toString(),
+                  km: subTrip.StartPosition.SpeedKilometresPerHour,
+                  data: new Date(subTrip.StartPosition.Timestamp),
+                })
+              }
+            }
+            if (subTrip.EndPosition) {
+              const positionExists = await Position.findMixCode(
+                subTrip.EndPosition.PositionId.toString(),
+              )
+
+              if (!positionExists) {
+                await Position.create({
+                  positionId: subTrip.EndPosition.PositionId.toString(),
+                  driverId: subTrip.EndPosition.DriverId.toString(),
+                  assetId: subTrip.EndPosition.AssetId.toString(),
+                  lat: subTrip.EndPosition.Latitude.toString(),
+                  long: subTrip.EndPosition.Longitude.toString(),
+                  km: subTrip.EndPosition.SpeedKilometresPerHour,
+                  data: new Date(subTrip.EndPosition.Timestamp),
+                })
+              }
+            }
+          } catch (error) {
+            console.error(error)
+          }
+        }
+      }
+
+      await Trip.create({
+        assetId: trip.AssetId.toString(),
+        driverId: trip.DriverId.toString(),
+        tripId: trip.TripId.toString(),
+        startPositionId: trip?.StartPositionId?.toString(),
+        endPositionId: trip?.EndPositionId?.toString(),
+        distanceKilometers: trip.DistanceKilometers,
+        duration: trip.Duration,
+        drivingTime: trip.DrivingTime,
+        maxRpm: trip.MaxRpm,
+        lastHalt: new Date(trip.LastHalt),
+        firstDepart: new Date(trip.FirstDepart),
+        endEngineSeconds: trip.EndEngineSeconds,
+        endOdometerKilometers: trip.EndOdometerKilometers,
+        engineSeconds: trip.EngineSeconds,
+        fuelUsedLitres: trip.FuelUsedLitres,
+        maxAccelerationKilometersPerHourPerSecond:
+          trip.MaxAccelerationKilometersPerHourPerSecond,
+        maxDecelerationKilometersPerHourPerSecond:
+          trip.MaxDecelerationKilometersPerHourPerSecond,
+        maxSpeedKilometersPerHour: trip.MaxSpeedKilometersPerHour,
+        standingTime: trip.StandingTime,
+        startEngineSeconds: trip.StartEngineSeconds,
+        startOdometerKilometers: trip.StartOdometerKilometers,
+        tripEnd: new Date(trip.TripEnd),
+        tripStart: new Date(trip.TripStart),
+      })
+    } catch (error) {
+      console.log(trip)
+      console.error(error)
+    }
+  }
+}
+
 const syncTrips = async () => {
   try {
     const empresa = await showEmpresa({ id: 4 })
@@ -545,3 +663,5 @@ sync()
 // syncTrips()
 // syncPositionsByAsset()
 // syncEvents()
+
+export { syncTripsOnDatabaseMoratense }
