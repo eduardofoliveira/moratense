@@ -57,16 +57,24 @@ const execute = async () => {
         end: format(subHours(endOfDay(data), 3), "yyyyMMddHHmmss"),
       })
 
+      let cont = 0
       const listaDividida = dividirLista(eventos, 100)
       for await (const listEnviar of listaDividida) {
-        const { data: wsResult } = await axios.post(
-          "http://teleconsult.com.br:3000/data/eventos",
-          {
-            eventos: listEnviar,
-          },
-        )
-        console.log("Eventos inseridos")
-        console.log(wsResult)
+        console.log(`Enviando ${cont++} de ${listaDividida.length}`)
+
+        try {
+          const { data: wsResult } = await axios.post(
+            "http://teleconsult.com.br:3000/data/eventos",
+            {
+              eventos: listEnviar,
+            },
+          )
+          console.log("Eventos inseridos")
+          console.log(wsResult)
+        } catch (error) {
+          console.log("Erro ao inserir eventos")
+          console.log(error)
+        }
       }
     }
 
