@@ -59,8 +59,9 @@ const execute = async () => {
 
       let cont = 0
       const listaDividida = dividirLista(eventos, 100)
+      const total = listaDividida.length
       for await (const listEnviar of listaDividida) {
-        console.log(`Enviando ${cont++} de ${listaDividida.length}`)
+        console.log(`Enviando ${cont++} de ${total}`)
 
         try {
           const { data: wsResult } = await axios.post(
