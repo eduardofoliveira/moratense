@@ -27,7 +27,7 @@ function converteDataParaTurno(data: string) {
 const batchInsert = async (req: Request, res: Response): Promise<any> => {
   const { posicoes } = req.body
 
-  insertPositions(posicoes)
+  await insertPositions(posicoes)
 
   const empresa = await showEmpresa({ id: 4 })
 

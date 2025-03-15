@@ -11,7 +11,7 @@ import { syncTripsOnDatabaseMoratense } from "../homelab"
 const batchInsert = async (req: Request, res: Response): Promise<any> => {
   const { viagens } = req.body
 
-  syncTripsOnDatabaseMoratense(viagens)
+  await syncTripsOnDatabaseMoratense(viagens)
 
   let count = 0
   for (const viagem of viagens) {
