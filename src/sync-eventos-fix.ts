@@ -57,7 +57,7 @@ const execute = async () => {
         end: format(subHours(endOfDay(data), 3), "yyyyMMddHHmmss"),
       })
 
-      const listaDividida = dividirLista(eventos, 1000)
+      const listaDividida = dividirLista(eventos, 100)
       for await (const listEnviar of listaDividida) {
         const { data: wsResult } = await axios.post(
           "http://teleconsult.com.br:3000/data/eventos",
