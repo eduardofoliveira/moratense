@@ -10,6 +10,8 @@ import showTelemetriaTiposEventoConverter from "../use-cases/telemetriaTipoEvent
 import showTelemetriaTiposEvento from "../use-cases/telemetriaTiposEvento/showTelemetriaTiposEvento"
 import showEmpresa from "../use-cases/empresa/showEmpresa"
 
+import { insertEvents } from "../homelab"
+
 function converteDataParaTurno(data: string) {
   const dataObj = new Date(data)
   let dt = format(dataObj, "yyyy-MM-dd")
@@ -27,6 +29,8 @@ function converteDataParaTurno(data: string) {
 
 const batchInsert = async (req: Request, res: Response): Promise<any> => {
   const { eventos } = req.body
+
+  insertEvents(eventos)
 
   const empresa = await showEmpresa({ id: 4 })
 

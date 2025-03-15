@@ -664,4 +664,4 @@ sync()
 // syncPositionsByAsset()
 // syncEvents()
 
-export { syncTripsOnDatabaseMoratense }
+export { syncTripsOnDatabaseMoratense, insertPositions, insertEvents }

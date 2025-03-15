@@ -7,6 +7,8 @@ import insertDrankTelViagemPonto from "../use-cases/drankTelViagensPonto/insertD
 import insertAuxPosition from "../use-cases/auxPosition/insertAuxPosition"
 import showEmpresa from "../use-cases/empresa/showEmpresa"
 
+import { insertPositions } from "../homelab"
+
 function converteDataParaTurno(data: string) {
   const dataObj = new Date(data)
   let dt = format(dataObj, "yyyy-MM-dd")
@@ -24,6 +26,8 @@ function converteDataParaTurno(data: string) {
 
 const batchInsert = async (req: Request, res: Response): Promise<any> => {
   const { posicoes } = req.body
+
+  insertPositions(posicoes)
 
   const empresa = await showEmpresa({ id: 4 })
 
