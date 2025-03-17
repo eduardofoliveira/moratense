@@ -35,6 +35,7 @@ const index = async (req: Request, res: Response): Promise<any> => {
   const arrayKm = []
   const arrayLitros = []
   const arrayAssets = []
+  const valorDiesel = 5.51728
   // const eventos = []
   // const todosEventos = await Summary.getEventsByInterval({
   //   start: format(new Date(start as string), "yyyy-MM-dd 03:00:00"),
@@ -286,6 +287,33 @@ const index = async (req: Request, res: Response): Promise<any> => {
         return acc
       }, {})
 
+      let combustivel_economizado_meta = 0
+      let combustivel_economizado_media = 0
+      let premiacao = 0
+      if (v.meta) {
+        combustivel_economizado_meta =
+          (sumWithPrecision(v.consumo.map((c: any) => c.distanceKilometers)) /
+            v.meta.meta -
+            sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres))) *
+          valorDiesel
+
+        combustivel_economizado_media =
+          (sumWithPrecision(v.consumo.map((c: any) => c.distanceKilometers)) /
+            Number.parseFloat(media) -
+            sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres))) *
+          valorDiesel
+
+        if (media <= v.meta.meta) {
+          premiacao = combustivel_economizado_meta * v.meta.premiacao_meta
+        }
+        if (media >= v.meta.meta) {
+          premiacao = combustivel_economizado_meta * v.meta.premiacao_meta
+        }
+        if (media >= v.meta.supermeta) {
+          premiacao = combustivel_economizado_meta * v.meta.premiacao_supermeta
+        }
+      }
+
       return {
         ...v,
         resumoEventos,
@@ -297,6 +325,9 @@ const index = async (req: Request, res: Response): Promise<any> => {
         ),
         media,
         meta_atingida,
+        combustivel_economizado_meta: combustivel_economizado_meta.toFixed(2),
+        combustivel_economizado_media: combustivel_economizado_media.toFixed(2),
+        premiacao: premiacao.toFixed(2),
         count_total_eventos_consumo: v.eventos.reduce(
           (acc: number, evento: any) => {
             if (evento.eventTypeId === 1) {
