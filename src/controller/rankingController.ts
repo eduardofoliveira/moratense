@@ -36,6 +36,9 @@ const index = async (req: Request, res: Response): Promise<any> => {
   const arrayLitros = []
   const arrayAssets = []
   const valorDiesel = 5.51728
+  const fator = 2.671 // Cada 1 litro de diesel gera 2.671 kg de CO2
+  const arvore = 163 // Cada árvore absorve 163 kg de CO2 por ano
+
   // const eventos = []
   // const todosEventos = await Summary.getEventsByInterval({
   //   start: format(new Date(start as string), "yyyy-MM-dd 03:00:00"),

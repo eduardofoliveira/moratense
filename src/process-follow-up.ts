@@ -321,61 +321,75 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
               totalSeguranca += dataThisWeekEvento.quantidades_ocorrencias
             }
 
+            const mkbeLastWeek = (
+              kmLastWeek.km / dataLastWeekEvento.quantidades_ocorrencias
+            ).toFixed(2)
             const mkbe = (
               kmThisWeek.km / dataThisWeekEvento.quantidades_ocorrencias
             ).toFixed(2)
+
             const porcentagem = (
               (dataThisWeekEvento.tempo / kmThisWeek.tempo_total_segundos) *
               100
             ).toFixed(2)
             const qtdLastWeek = dataLastWeekEvento.quantidades_ocorrencias
             const qtdThisWeek = dataThisWeekEvento.quantidades_ocorrencias
+
+            // Alterar o progresso em vez de quantidade calcular o tempo
             const progresso = `${((qtdLastWeek / qtdThisWeek) * 100).toFixed(0)}%`
 
+            const progressoUltimos4 = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+
+            // Calculo baseado em tempo, progresso e porcentagem
+            if (IdEvento === "1255") {
+              // (RT) Inércia M.Benz
+              insert.inercia_mkbe = mkbe ?? 0
+              insert.inercia_progresso = progresso ?? 0
+              insert.inercia_progresso_mkbe = progressoUltimos4 ?? 0
+              insert.inercia_porcentagem = porcentagem ?? 0
+            }
             if (IdEvento === "1124") {
               // (RT) Fora da Faixa Verde
               insert.fora_faixa_verde_mkbe = mkbe ?? 0
               insert.fora_faixa_verde_progresso = progresso ?? 0
+              insert.fora_faixa_verde_progresso_mkbe = progressoUltimos4 ?? 0
               insert.fora_faixa_verde_porcentagem = porcentagem ?? 0
             }
-            if (IdEvento === "1153") {
-              // (RT) Marcha Lenta Excessiva
-              insert.marcha_lenta_excessiva_mkbe = mkbe ?? 0
-              insert.marcha_lenta_excessiva_progresso = progresso ?? 0
-            }
-            if (IdEvento === "1156") {
-              // (RT) Aceleração Brusca
-              insert.aceleracao_brusca_mkbe = mkbe ?? 0
-              insert.aceleracao_brusca_progresso = progresso ?? 0
-            }
-            // if(IdEvento === '1246') { // (RT) Uso indevido pedal acelerador 85%
-            // }
             if (IdEvento === "1250") {
               // (RT) Excesso de Rotação
               insert.excesso_rotacao_mkbe = mkbe ?? 0
               insert.excesso_rotacao_progresso = progresso ?? 0
+              insert.excesso_rotacao_progresso_mbke = progressoUltimos4 ?? 0
               insert.excesso_rotacao_porcentagem = porcentagem ?? 0
-            }
-            if (IdEvento === "1252") {
-              // (RT) Curva Brusca
-              insert.curva_brusca_mkbe = mkbe ?? 0
-              insert.curva_brusca_progresso = progresso ?? 0
             }
             if (IdEvento === "1253") {
               // (RT) Freada Brusca
               insert.freada_brusca_mkbe = mkbe ?? 0
               insert.freada_brusca_progresso = progresso ?? 0
+              insert.freada_brusca_progresso_mkbe = progressoUltimos4 ?? 0
+              insert.freada_brusca_porcentagem = porcentagem ?? 0
             }
-            if (IdEvento === "1255") {
-              // (RT) Inércia M.Benz
-              insert.inercia_mkbe = mkbe ?? 0
-              insert.inercia_progresso = progresso ?? 0
-              insert.inercia_porcentagem = porcentagem ?? 0
+
+            // Calcular o progresso com base no mbke
+            if (IdEvento === "1153") {
+              // (RT) Marcha Lenta Excessiva
+              insert.marcha_lenta_excessiva_mkbe = mkbe ?? 0
+              insert.marcha_lenta_excessiva_progresso = progressoUltimos4 ?? 0
+            }
+            if (IdEvento === "1156") {
+              // (RT) Aceleração Brusca
+              insert.aceleracao_brusca_mkbe = mkbe ?? 0
+              insert.aceleracao_brusca_progresso = progressoUltimos4 ?? 0
+            }
+            if (IdEvento === "1252") {
+              // (RT) Curva Brusca
+              insert.curva_brusca_mkbe = mkbe ?? 0
+              insert.curva_brusca_progresso = progressoUltimos4 ?? 0
             }
             if (IdEvento === "1136") {
               // (RT) Excesso de Velocidade
               insert.excesso_velocidade_mkbe = mkbe ?? 0
-              insert.excesso_velocidade_progresso = progresso ?? 0
+              insert.excesso_velocidade_progresso = progressoUltimos4 ?? 0
             }
 
             // console.log({

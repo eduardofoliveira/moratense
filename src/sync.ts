@@ -41,7 +41,7 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
   })
 
   if (response.status === 206) {
-    await new Promise((resolve) => setTimeout(resolve, 20000))
+    await new Promise((resolve) => setTimeout(resolve, 5000))
     await sincronizarPosicoes({ token: getsincetoken })
   }
   // if (response.status === 200) {
@@ -113,7 +113,7 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
   })
 
   if (response.status === 206) {
-    await new Promise((resolve) => setTimeout(resolve, 20000))
+    await new Promise((resolve) => setTimeout(resolve, 5000))
     await sincronizarEventos({ token: getsincetoken })
   }
   // if (response.status === 200) {
@@ -199,7 +199,7 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
   })
 
   if (status === 206) {
-    await new Promise((resolve) => setTimeout(resolve, 20000))
+    await new Promise((resolve) => setTimeout(resolve, 5000))
     await sincronizarViagens({ token: getsincetoken })
   }
 }
