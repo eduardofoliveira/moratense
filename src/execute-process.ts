@@ -19,14 +19,16 @@ function executarComando(comando: any, callback: any) {
 }
 
 // Executando os comandos em sequência
-executarComando("cd C:\\node\\moratense && node dist/sync.js", () => {
+// executarComando("cd C:\\node\\moratense && node dist/sync.js", () => {
+executarComando("cd C:\\nodejs\\moratense\\auth && node dist/sync.js", () => {
   console.log(new Date().toLocaleString())
   console.log("Todos os comandos foram executados!")
 })
 
 setInterval(() => {
   // Executando os comandos em sequência
-  executarComando("cd C:\\node\\moratense && node dist/sync.js", () => {
+  // executarComando("cd C:\\node\\moratense && node dist/sync.js", () => {
+  executarComando("cd C:\\nodejs\\moratense\\auth && node dist/sync.js", () => {
     console.log(new Date().toLocaleString())
     console.log("Todos os comandos foram executados!")
   })

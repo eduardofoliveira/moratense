@@ -38,6 +38,7 @@ const index = async (req: Request, res: Response): Promise<any> => {
   const valorDiesel = 5.51728
   const fator = 2.671 // Cada 1 litro de diesel gera 2.671 kg de CO2
   const arvore = 163 // Cada árvore absorve 163 kg de CO2 por ano
+  const media_calc_co2 = 1.91
 
   // const eventos = []
   // const todosEventos = await Summary.getEventsByInterval({
@@ -317,8 +318,27 @@ const index = async (req: Request, res: Response): Promise<any> => {
         }
       }
 
+      const kg_co2 =
+        sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres)) * fator
+      const kg_co2_km =
+        (sumWithPrecision(v.consumo.map((c: any) => c.fuelUsedLitres)) *
+          fator) /
+        sumWithPrecision(v.consumo.map((c: any) => c.distanceKilometers))
+      const lt2 =
+        sumWithPrecision(v.consumo.map((c: any) => c.distanceKilometers)) /
+        media_calc_co2
+      const kg_co2_2 = lt2 * fator
+      const reducao_co2 = kg_co2 - kg_co2_2
+      const arvores_preservadas = (reducao_co2 / arvore) * -1
+
       return {
         ...v,
+        kg_co2,
+        kg_co2_km,
+        lt2,
+        kg_co2_2,
+        reducao_co2,
+        arvores_preservadas,
         resumoEventos,
         kmRodados: sumWithPrecision(
           v.consumo.map((c: any) => c.distanceKilometers),
