@@ -1,13 +1,25 @@
 import "dotenv/config"
-import { subDays, format, parse } from "date-fns"
+import { subDays, format, parse, addDays } from "date-fns"
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 import DbTeleconsult from "./database/connectionManager"
 
+type ListProcessar = {
+  fk_id_follow_up_type: string
+  horario: string
+  chapa_motorista: number
+  driverId: string
+  chapa_monitor: number
+  monitorId: string
+  driver: string
+  monitor: string
+  priority: number
+}
+
 type Params = {
   start: string
   end: string
-  idsMotoristas: number[]
+  listaProcessar: ListProcessar[]
 }
 
 type IbuscarKilometragePeriodo = {
@@ -110,7 +122,7 @@ const buscarDadosPerido = async ({
   return dataThisWeek
 }
 
-const execute = async ({ start, end, idsMotoristas }: Params) => {
+const execute = async ({ start, end, listaProcessar }: Params) => {
   const dbMoratense = DbMoratense.getConnection()
   const dbTeleconsult = DbTeleconsult.getConnection()
 
@@ -130,14 +142,14 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
     endLastWeek,
   })
 
-  for await (const idMotorista of idsMotoristas) {
+  for await (const item of listaProcessar) {
     const [motorista] = await dbMoratense.raw(`
       SELECT
         driverId
       FROM
         drivers
       WHERE
-        employeeNumber = ${idMotorista}
+        employeeNumber = ${item.chapa_motorista}
     `)
 
     if (!motorista) {
@@ -149,19 +161,19 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
     const kmLastWeek = await buscarKilometragePeriodo({
       start: startLastWeek,
       end: endLastWeek,
-      idMotorista,
+      idMotorista: item.chapa_motorista,
     })
 
     const kmThisWeek = await buscarKilometragePeriodo({
       start,
       end,
-      idMotorista,
+      idMotorista: item.chapa_motorista,
     })
 
     const dataLastWeek = await buscarDadosPerido({
       start: startLastWeek,
       end: endLastWeek,
-      idMotorista,
+      idMotorista: item.chapa_motorista,
     })
 
     if (!dataLastWeek) {
@@ -171,7 +183,7 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
     const dataThisWeek = await buscarDadosPerido({
       start,
       end,
-      idMotorista,
+      idMotorista: item.chapa_motorista,
     })
 
     if (!dataThisWeek) {
@@ -247,25 +259,6 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
       {},
     )
 
-    // console.log(
-    //   JSON.stringify(
-    //     {
-    //       dataLastWeek: dataLastWeekGroupedSum.length,
-    //       dataThisWeek: dataThisWeekGroupedSum.length,
-    //       dataLastWeekGroupedSum: dataLastWeekGroupedSum["1722"],
-    //       dataThisWeekGroupedSum: dataThisWeekGroupedSum["1722"],
-    //     },
-    //     null,
-    //     2,
-    //   ),
-    // )
-
-    // console.log({
-    //   idMotorista,
-    //   kmLastWeek,
-    //   kmThisWeek,
-    // })
-
     for (const chassi of Object.keys(dataThisWeekGroupedSum)) {
       const dataLastWeek = dataLastWeekGroupedSum[chassi]
       const dataThisWeek = dataThisWeekGroupedSum[chassi]
@@ -303,9 +296,9 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
 
           if (dataLastWeekEvento && dataThisWeekEvento) {
             insert.fk_id_follow_up_type = 1
-            insert.follow_up_date = "2025-03-10 08:00:00"
-            insert.driverId = driverId
-            insert.monitorId = "1598105950770192384"
+            insert.follow_up_date = start.replace("00:00:00", "08:00:00")
+            insert.driverId = item.driverId
+            insert.monitorId = item.monitorId
             insert.chassi = chassi
 
             if (dataLastWeekEvento.rank_consumo === 1) {
@@ -335,8 +328,12 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
             const qtdLastWeek = dataLastWeekEvento.quantidades_ocorrencias
             const qtdThisWeek = dataThisWeekEvento.quantidades_ocorrencias
 
+            const tempoLastWeek = dataLastWeekEvento.tempo
+            const tempoThisWeek = dataThisWeekEvento.tempo
+
             // Alterar o progresso em vez de quantidade calcular o tempo
             const progresso = `${((qtdLastWeek / qtdThisWeek) * 100).toFixed(0)}%`
+            const progressoTempo = `${((tempoLastWeek / tempoThisWeek) * 100).toFixed(0)}%`
 
             const progressoUltimos4 = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
 
@@ -344,28 +341,28 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
             if (IdEvento === "1255") {
               // (RT) Inércia M.Benz
               insert.inercia_mkbe = mkbe ?? 0
-              insert.inercia_progresso = progresso ?? 0
+              insert.inercia_progresso = progressoTempo ?? 0
               insert.inercia_progresso_mkbe = progressoUltimos4 ?? 0
               insert.inercia_porcentagem = porcentagem ?? 0
             }
             if (IdEvento === "1124") {
               // (RT) Fora da Faixa Verde
               insert.fora_faixa_verde_mkbe = mkbe ?? 0
-              insert.fora_faixa_verde_progresso = progresso ?? 0
+              insert.fora_faixa_verde_progresso = progressoTempo ?? 0
               insert.fora_faixa_verde_progresso_mkbe = progressoUltimos4 ?? 0
               insert.fora_faixa_verde_porcentagem = porcentagem ?? 0
             }
             if (IdEvento === "1250") {
               // (RT) Excesso de Rotação
               insert.excesso_rotacao_mkbe = mkbe ?? 0
-              insert.excesso_rotacao_progresso = progresso ?? 0
+              insert.excesso_rotacao_progresso = progressoTempo ?? 0
               insert.excesso_rotacao_progresso_mbke = progressoUltimos4 ?? 0
               insert.excesso_rotacao_porcentagem = porcentagem ?? 0
             }
             if (IdEvento === "1253") {
               // (RT) Freada Brusca
               insert.freada_brusca_mkbe = mkbe ?? 0
-              insert.freada_brusca_progresso = progresso ?? 0
+              insert.freada_brusca_progresso = progressoTempo ?? 0
               insert.freada_brusca_progresso_mkbe = progressoUltimos4 ?? 0
               insert.freada_brusca_porcentagem = porcentagem ?? 0
             }
@@ -379,7 +376,9 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
             if (IdEvento === "1156") {
               // (RT) Aceleração Brusca
               insert.aceleracao_brusca_mkbe = mkbe ?? 0
-              insert.aceleracao_brusca_progresso = progressoUltimos4 ?? 0
+              insert.aceleracao_brusca_progresso = progressoTempo ?? 0
+              insert.aceleracao_brusca_progresso_mkbe = progressoUltimos4 ?? 0
+              insert.aceleracao_brusca_porcentagem = porcentagem ?? 0
             }
             if (IdEvento === "1252") {
               // (RT) Curva Brusca
@@ -391,6 +390,12 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
               insert.excesso_velocidade_mkbe = mkbe ?? 0
               insert.excesso_velocidade_progresso = progressoUltimos4 ?? 0
             }
+
+            // Ranking calcular pela quantidade.
+            // Adicionar coluna ultima orientação
+            // Adicionar no banco este dois campos:
+            // aceleracao_brusca_progresso_mkbe
+            // aceleracao_brusca_porcentagem
 
             // console.log({
             //   chassi,
@@ -439,6 +444,11 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
           insert.ranking_seguranca_mkbe = 0
         }
 
+        insert.last_orientation = format(
+          new Date(item.horario),
+          "yyyy-MM-dd HH:mm:ss",
+        )
+
         console.log(insert)
 
         await dbMoratense("follow_up_driver").insert(insert)
@@ -446,29 +456,58 @@ const execute = async ({ start, end, idsMotoristas }: Params) => {
     }
   }
 
+  await dbMoratense.raw(`
+    UPDATE
+      follow_up
+    SET
+      processado = 1
+    WHERE
+      horario BETWEEN '${start}' AND '${end}'
+  `)
+
   console.log("FIM")
 }
 
 const test = async () => {
-  const connTeleconsult = DbTeleconsult.getConnection()
-  let [listaMotoristas] = await connTeleconsult.raw(`
-      SELECT
-        distinct motorista_cod
-      FROM
-        drank_tel_viagens
-      WHERE
-        data_ini BETWEEN '2025-03-02 03:00:00' AND '2025-03-09 02:59:59' and
-        motorista_cod > 0
-      ORDER BY
-        motorista_cod
+  // const hoje = new Date()
+  // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
+  // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
+
+  const start = "2025-03-24 00:00:00"
+  const end = "2025-03-30 23:59:59"
+
+  const connMoratense = DbMoratense.getConnection()
+  const [listaProcessar] = await connMoratense.raw(`
+    SELECT
+      min(f.fk_id_follow_up_type) AS fk_id_follow_up_type,
+      max(f.horario) AS horario,
+      f.chapa_motorista,
+      d.driverId AS driverId,
+      f.chapa_monitor,
+      m.driverId AS monitorId,
+      d.name AS driver,
+      m.name AS monitor,
+      min(ft.priority) AS priority
+    FROM
+      follow_up f,
+      drivers d,
+      drivers m,
+      follow_up_type ft
+    WHERE
+      f.chapa_motorista = d.employeeNumber and
+      f.chapa_monitor = m.employeeNumber and
+      f.fk_id_follow_up_type = ft.id and
+      horario BETWEEN '${start}' AND '${end}' and
+      f.processado = 0
+    GROUP BY
+      f.chapa_motorista,
+      f.chapa_monitor
   `)
 
-  listaMotoristas = listaMotoristas.map((item: any) => item.motorista_cod)
-
   await execute({
-    start: "2025-03-02 03:00:00",
-    end: "2025-03-09 02:59:59",
-    idsMotoristas: listaMotoristas,
+    start,
+    end,
+    listaProcessar,
   })
 }
 
