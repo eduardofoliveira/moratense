@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { format } from "date-fns"
+import { format, differenceInSeconds } from "date-fns"
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 
@@ -20,6 +20,19 @@ type IParamsBuscarEventos = {
   end: string
   driverId: string
   assetId: string
+}
+
+function sumWithPrecision(numbers: number[]): number {
+  // Define a quantidade de casas decimais (3 no seu caso)
+  const precision = 3
+  const factor = 10 ** precision
+
+  // Multiplica cada número pelo fator, soma e depois divide pelo fator
+  const sum = numbers.reduce(
+    (acc: number, num: number) => acc + Math.round(num * factor),
+    0,
+  )
+  return sum / factor
 }
 
 const buscarDriverIdMonitor = async (monitorId: string) => {
@@ -90,7 +103,17 @@ const buscarCorridas = async ({
 
 const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
   let intTotalMotoristas = 0
-  let totalPorCode = {}
+  type TotalPorCode = {
+    [key: string]: {
+      code: string
+      totalOccurances: number
+      totalTimeSeconds: number
+    }
+  }
+
+  let totalPorCode: TotalPorCode = {}
+  let totalTimeSecondsRides = 0
+  let totalKmRides = 0
   const listaEventosMotorista = []
 
   const connMoratense = DbMoratense.getConnection()
@@ -110,7 +133,7 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
   const IdsMotoristasUnicos = [...new Set(IdsMotoristas)]
   intTotalMotoristas = IdsMotoristasUnicos.length
 
-  console.log({ intTotalMotoristas })
+  // console.log({ intTotalMotoristas })
 
   const [listMotoristas] = await connMoratense.raw(`
     SELECT
@@ -128,11 +151,20 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
       motoristaId: motorista.driverId,
     })
 
-    console.log({
-      corridas: corridas.length,
-    })
+    // console.log({
+    //   corridas: corridas.length,
+    // })
 
     for await (const corrida of corridas) {
+      totalTimeSecondsRides += differenceInSeconds(
+        new Date(corrida.tripEnd),
+        new Date(corrida.tripStart),
+      )
+      totalKmRides = sumWithPrecision([
+        totalKmRides,
+        corrida.distanceKilometers,
+      ])
+
       const eventos = await buscarEventos({
         start: corrida.tripStart,
         end: corrida.tripEnd,
@@ -140,9 +172,9 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
         assetId: corrida.assetId,
       })
 
-      console.log({
-        eventos: eventos.length,
-      })
+      // console.log({
+      //   eventos: eventos.length,
+      // })
 
       listaEventosMotorista.push(eventos)
     }
@@ -175,10 +207,84 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
   // console.log(listMotoristas.length, "motoristas encontrados")
   // console.log("")
 
+  const databaseMonitorId = await buscarDriverIdMonitor(monitorId)
+
+  const insert = Object.keys(totalPorCode).map((key: any) => {
+    const { code, totalOccurances, totalTimeSeconds } = totalPorCode[key]
+    const insert: any = {}
+
+    const mkbe = (totalKmRides / totalOccurances).toFixed(2)
+    const porcentagem = (
+      (totalTimeSecondsRides / totalTimeSeconds) *
+      100
+    ).toFixed(2)
+
+    if (code === "1255") {
+      // (RT) Inércia M.Benz
+      insert.inercia_mkbe = mkbe ?? 0
+      // insert.inercia_progresso = progressoTempo ?? 0
+      // insert.inercia_progresso_mkbe = progressoUltimos4 ?? 0
+      insert.inercia_porcentagem = porcentagem ?? 0
+    }
+    if (code === "1124") {
+      // (RT) Fora da Faixa Verde
+      insert.fora_faixa_verde_mkbe = mkbe ?? 0
+      // insert.fora_faixa_verde_progresso = progressoTempo ?? 0
+      // insert.fora_faixa_verde_progresso_mkbe = progressoUltimos4 ?? 0
+      insert.fora_faixa_verde_porcentagem = porcentagem ?? 0
+    }
+    if (code === "1250") {
+      // (RT) Excesso de Rotação
+      insert.excesso_rotacao_mkbe = mkbe ?? 0
+      // insert.excesso_rotacao_progresso = progressoTempo ?? 0
+      // insert.excesso_rotacao_progresso_mbke = progressoUltimos4 ?? 0
+      insert.excesso_rotacao_porcentagem = porcentagem ?? 0
+    }
+    if (code === "1253") {
+      // (RT) Freada Brusca
+      insert.freada_brusca_mkbe = mkbe ?? 0
+      // insert.freada_brusca_progresso = progressoTempo ?? 0
+      // insert.freada_brusca_progresso_mkbe = progressoUltimos4 ?? 0
+      insert.freada_brusca_porcentagem = porcentagem ?? 0
+    }
+
+    // Calcular o progresso com base no mbke
+    if (code === "1153") {
+      // (RT) Marcha Lenta Excessiva
+      insert.marcha_lenta_excessiva_mkbe = mkbe ?? 0
+      // insert.marcha_lenta_excessiva_progresso = progressoUltimos4 ?? 0
+    }
+    if (code === "1156") {
+      // (RT) Aceleração Brusca
+      insert.aceleracao_brusca_mkbe = mkbe ?? 0
+      // insert.aceleracao_brusca_progresso = progressoTempo ?? 0
+      // insert.aceleracao_brusca_progresso_mkbe = progressoUltimos4 ?? 0
+      insert.aceleracao_brusca_porcentagem = porcentagem ?? 0
+    }
+    if (code === "1252") {
+      // (RT) Curva Brusca
+      insert.curva_brusca_mkbe = mkbe ?? 0
+      // insert.curva_brusca_progresso = progressoUltimos4 ?? 0
+    }
+    if (code === "1136") {
+      // (RT) Excesso de Velocidade
+      insert.excesso_velocidade_mkbe = mkbe ?? 0
+      // insert.excesso_velocidade_progresso = progressoUltimos4 ?? 0
+    }
+
+    insert.fk_id_follow_up_type = 1
+    insert.follow_up_date = format(new Date(start), "yyyy-MM-dd 08:00:00")
+    insert.monitorId = databaseMonitorId
+
+    return insert
+  })
+
   return {
     intTotalMotoristas,
-    monitorId: await buscarDriverIdMonitor(monitorId),
+    monitorId: databaseMonitorId,
     totalPorCode,
+    totalTimeSecondsRides,
+    insert,
   }
 }
 
@@ -208,6 +314,8 @@ const execute = async () => {
       end,
       monitorId: chapa_monitor,
     })
+
+    // await connMoratense("follow_up_monitor").insert(result.insert)
 
     console.log(JSON.stringify(result, null, 2))
   }
