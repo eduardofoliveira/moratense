@@ -298,8 +298,8 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
       excesso_rotacao_porcentagem: 0,
 
       freada_brusca_mkbe: 0,
-      freada_brusca_mkbe_progresso: 0,
-      freada_brusca_mkbe_progresso_mkbe: 0,
+      freada_brusca_progresso: 0,
+      freada_brusca_progresso_mkbe: 0,
       freada_brusca_porcentagem: 0,
 
       marcha_lenta_excessiva_mkbe: 0,
