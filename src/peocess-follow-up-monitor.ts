@@ -217,6 +217,7 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
   })
 
   const insert: any = Object.keys(totalPorCode).map((key: any) => {
+    const obj: any = {}
     const { code, totalOccurances, totalTimeSeconds } = totalPorCode[key]
 
     const mkbe = (totalKmRides / totalOccurances).toFixed(2)
@@ -225,64 +226,64 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
       100
     ).toFixed(2)
 
-    if (code === "1255") {
+    if (Number.parseInt(code, 10) === 1255) {
       // (RT) Inércia M.Benz
-      insert.inercia_mkbe = mkbe ?? 0
+      obj.inercia_mkbe = mkbe ?? 0
       // insert.inercia_progresso = progressoTempo ?? 0
       // insert.inercia_progresso_mkbe = progressoUltimos4 ?? 0
-      insert.inercia_porcentagem = porcentagem ?? 0
+      obj.inercia_porcentagem = porcentagem ?? 0
     }
-    if (code === "1124") {
+    if (Number.parseInt(code, 10) === 1124) {
       // (RT) Fora da Faixa Verde
-      insert.fora_faixa_verde_mkbe = mkbe ?? 0
+      obj.fora_faixa_verde_mkbe = mkbe ?? 0
       // insert.fora_faixa_verde_progresso = progressoTempo ?? 0
       // insert.fora_faixa_verde_progresso_mkbe = progressoUltimos4 ?? 0
-      insert.fora_faixa_verde_porcentagem = porcentagem ?? 0
+      obj.fora_faixa_verde_porcentagem = porcentagem ?? 0
     }
-    if (code === "1250") {
+    if (Number.parseInt(code, 10) === 1250) {
       // (RT) Excesso de Rotação
-      insert.excesso_rotacao_mkbe = mkbe ?? 0
+      obj.excesso_rotacao_mkbe = mkbe ?? 0
       // insert.excesso_rotacao_progresso = progressoTempo ?? 0
       // insert.excesso_rotacao_progresso_mbke = progressoUltimos4 ?? 0
-      insert.excesso_rotacao_porcentagem = porcentagem ?? 0
+      obj.excesso_rotacao_porcentagem = porcentagem ?? 0
     }
-    if (code === "1253") {
+    if (Number.parseInt(code, 10) === 1253) {
       // (RT) Freada Brusca
-      insert.freada_brusca_mkbe = mkbe ?? 0
+      obj.freada_brusca_mkbe = mkbe ?? 0
       // insert.freada_brusca_progresso = progressoTempo ?? 0
       // insert.freada_brusca_progresso_mkbe = progressoUltimos4 ?? 0
-      insert.freada_brusca_porcentagem = porcentagem ?? 0
+      obj.freada_brusca_porcentagem = porcentagem ?? 0
     }
 
     // Calcular o progresso com base no mbke
-    if (code === "1153") {
+    if (Number.parseInt(code, 10) === 1153) {
       // (RT) Marcha Lenta Excessiva
-      insert.marcha_lenta_excessiva_mkbe = mkbe ?? 0
+      obj.marcha_lenta_excessiva_mkbe = mkbe ?? 0
       // insert.marcha_lenta_excessiva_progresso = progressoUltimos4 ?? 0
     }
-    if (code === "1156") {
+    if (Number.parseInt(code, 10) === 1156) {
       // (RT) Aceleração Brusca
-      insert.aceleracao_brusca_mkbe = mkbe ?? 0
+      obj.aceleracao_brusca_mkbe = mkbe ?? 0
       // insert.aceleracao_brusca_progresso = progressoTempo ?? 0
       // insert.aceleracao_brusca_progresso_mkbe = progressoUltimos4 ?? 0
-      insert.aceleracao_brusca_porcentagem = porcentagem ?? 0
+      obj.aceleracao_brusca_porcentagem = porcentagem ?? 0
     }
-    if (code === "1252") {
+    if (Number.parseInt(code, 10) === 1252) {
       // (RT) Curva Brusca
-      insert.curva_brusca_mkbe = mkbe ?? 0
+      obj.curva_brusca_mkbe = mkbe ?? 0
       // insert.curva_brusca_progresso = progressoUltimos4 ?? 0
     }
-    if (code === "1136") {
+    if (Number.parseInt(code, 10) === 1136) {
       // (RT) Excesso de Velocidade
-      insert.excesso_velocidade_mkbe = mkbe ?? 0
+      obj.excesso_velocidade_mkbe = mkbe ?? 0
       // insert.excesso_velocidade_progresso = progressoUltimos4 ?? 0
     }
 
-    insert.fk_id_follow_up_type = 1
-    insert.follow_up_date = format(new Date(start), "yyyy-MM-dd 08:00:00")
-    insert.monitorId = databaseMonitorId
+    obj.fk_id_follow_up_type = 1
+    obj.follow_up_date = format(new Date(start), "yyyy-MM-dd 08:00:00")
+    obj.monitorId = databaseMonitorId
 
-    return insert
+    return obj
   })
 
   return {
