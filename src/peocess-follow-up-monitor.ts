@@ -216,9 +216,8 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
     console.log({ code, totalOccurances, totalTimeSeconds })
   })
 
-  const insert = Object.keys(totalPorCode).map((key: any) => {
+  const insert: any = Object.keys(totalPorCode).map((key: any) => {
     const { code, totalOccurances, totalTimeSeconds } = totalPorCode[key]
-    const insert: any = {}
 
     const mkbe = (totalKmRides / totalOccurances).toFixed(2)
     const porcentagem = (
