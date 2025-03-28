@@ -9,15 +9,7 @@ import updateDrankTelMotoristaByCodMix from "./use-cases/drankTelMotorista/updat
 import showDrankTelMotorista from "./use-cases/drankTelMotorista/showDrankTelMotorista"
 import insertDrankTelMotorista from "./use-cases/drankTelMotorista/insertDrankTelMotorista"
 
-let executando = false
-
 const executar = async () => {
-  if (executando) {
-    return
-  }
-
-  executando = true
-
   try {
     const empresa = await showEmpresa({ id: 4 })
     const apiMix = await ApiMix.getInstance()
@@ -99,15 +91,8 @@ const executar = async () => {
       }
     }
   } catch (error) {
-    executando = false
     console.log(error)
   }
-
-  executando = false
 }
-
-setInterval(() => {
-  executar()
-}, 60000)
 
 executar()

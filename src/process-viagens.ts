@@ -22,7 +22,7 @@ const execute = async () => {
         from
           trip_events_resume
       ) and
-      tripStart >= CURDATE() - INTERVAL 7 DAY
+      tripStart between CURDATE() - INTERVAL 8 DAY AND CURDATE() - INTERVAL 1 DAY
     ORDER BY
       tripStart desc
   `)
