@@ -370,11 +370,10 @@ const execute = async () => {
 
     if (!result.monitorId) {
       console.log(`Monitor ${chapa_monitor} não encontrado!`)
+      console.log(JSON.stringify(result, null, 2))
     } else {
       await connMoratense("follow_up_monitor").insert(result.insert)
     }
-
-    console.log(JSON.stringify(result, null, 2))
   }
 
   console.log("Processo finalizado com sucesso!")
