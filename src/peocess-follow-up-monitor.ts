@@ -217,7 +217,27 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
   })
 
   const insert: any = Object.keys(totalPorCode).map((key: any) => {
-    const obj: any = {}
+    const obj: any = {
+      inercia_mkbe: 0,
+      inercia_porcentagem: 0,
+      fora_faixa_verde_mkbe: 0,
+      fora_faixa_verde_porcentagem: 0,
+      excesso_rotacao_mkbe: 0,
+      excesso_rotacao_porcentagem: 0,
+      freada_brusca_mkbe: 0,
+      freada_brusca_porcentagem: 0,
+      marcha_lenta_excessiva_mkbe: 0,
+      marcha_lenta_excessiva_porcentagem: 0,
+      aceleracao_brusca_mkbe: 0,
+      aceleracao_brusca_porcentagem: 0,
+      curva_brusca_mkbe: 0,
+      curva_brusca_porcentagem: 0,
+      excesso_velocidade_mkbe: 0,
+      excesso_velocidade_porcentagem: 0,
+      fk_id_follow_up_type: 1,
+      follow_up_date: format(new Date(start), "yyyy-MM-dd 08:00:00"),
+      monitorId: databaseMonitorId,
+    }
     const { code, totalOccurances, totalTimeSeconds } = totalPorCode[key]
 
     const mkbe = (totalKmRides / totalOccurances).toFixed(2)
@@ -278,10 +298,6 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
       obj.excesso_velocidade_mkbe = mkbe ?? 0
       // insert.excesso_velocidade_progresso = progressoUltimos4 ?? 0
     }
-
-    obj.fk_id_follow_up_type = 1
-    obj.follow_up_date = format(new Date(start), "yyyy-MM-dd 08:00:00")
-    obj.monitorId = databaseMonitorId
 
     return obj
   })
