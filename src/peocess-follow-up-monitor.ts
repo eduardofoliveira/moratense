@@ -303,7 +303,7 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
       freada_brusca_porcentagem: 0,
 
       marcha_lenta_excessiva_mkbe: 0,
-      marcha_lenta_excessiva_porcentagem: 0,
+      marcha_lenta_excessiva_progresso: 0,
 
       aceleracao_brusca_mkbe: 0,
       aceleracao_brusca_progresso: 0,
@@ -311,10 +311,10 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
       aceleracao_brusca_porcentagem: 0,
 
       curva_brusca_mkbe: 0,
-      curva_brusca_porcentagem: 0,
+      curva_brusca_progresso: 0,
 
       excesso_velocidade_mkbe: 0,
-      excesso_velocidade_porcentagem: 0,
+      excesso_velocidade_progresso: 0,
 
       ranking_consumo_mkbe: 0,
       ranking_consumo_progresso: 0,
