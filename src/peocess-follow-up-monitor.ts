@@ -46,6 +46,10 @@ const buscarDriverIdMonitor = async (monitorId: string) => {
       employeeNumber = ${monitorId}
   `)
 
+  if (listMotoristas.length === 0) {
+    return false
+  }
+
   return listMotoristas[0].driverId
 }
 
@@ -364,7 +368,11 @@ const execute = async () => {
       monitorId: chapa_monitor,
     })
 
-    await connMoratense("follow_up_monitor").insert(result.insert)
+    if (!result.monitorId) {
+      console.log(`Monitor ${chapa_monitor} não encontrado!`)
+    } else {
+      await connMoratense("follow_up_monitor").insert(result.insert)
+    }
 
     console.log(JSON.stringify(result, null, 2))
   }
