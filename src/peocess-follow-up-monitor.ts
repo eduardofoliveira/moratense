@@ -209,6 +209,13 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
 
   const databaseMonitorId = await buscarDriverIdMonitor(monitorId)
 
+  console.log(Object.keys(totalPorCode))
+  Object.keys(totalPorCode).map((key: any) => {
+    console.log(totalPorCode[key])
+    const { code, totalOccurances, totalTimeSeconds } = totalPorCode[key]
+    console.log({ code, totalOccurances, totalTimeSeconds })
+  })
+
   const insert = Object.keys(totalPorCode).map((key: any) => {
     const { code, totalOccurances, totalTimeSeconds } = totalPorCode[key]
     const insert: any = {}
