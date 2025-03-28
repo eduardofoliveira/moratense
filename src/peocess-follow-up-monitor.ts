@@ -216,91 +216,117 @@ const gerar = async ({ start, end, monitorId }: IParamsGerar) => {
     console.log({ code, totalOccurances, totalTimeSeconds })
   })
 
-  const insert: any = Object.keys(totalPorCode).map((key: any) => {
-    const obj: any = {
+  const insert: any = Object.keys(totalPorCode).reduce(
+    (acc: any, key: any) => {
+      const { code, totalOccurances, totalTimeSeconds } = totalPorCode[key]
+
+      const mkbe = (totalKmRides / totalOccurances).toFixed(2)
+      const porcentagem = (
+        (totalTimeSeconds / totalTimeSecondsRides) *
+        100
+      ).toFixed(2)
+
+      if (Number.parseInt(code, 10) === 1255) {
+        // (RT) Inércia M.Benz
+        acc.inercia_mkbe = mkbe ?? 0
+        // insert.inercia_progresso = progressoTempo ?? 0
+        // insert.inercia_progresso_mkbe = progressoUltimos4 ?? 0
+        acc.inercia_porcentagem = porcentagem ?? 0
+      }
+      if (Number.parseInt(code, 10) === 1124) {
+        // (RT) Fora da Faixa Verde
+        acc.fora_faixa_verde_mkbe = mkbe ?? 0
+        // insert.fora_faixa_verde_progresso = progressoTempo ?? 0
+        // insert.fora_faixa_verde_progresso_mkbe = progressoUltimos4 ?? 0
+        acc.fora_faixa_verde_porcentagem = porcentagem ?? 0
+      }
+      if (Number.parseInt(code, 10) === 1250) {
+        // (RT) Excesso de Rotação
+        acc.excesso_rotacao_mkbe = mkbe ?? 0
+        // insert.excesso_rotacao_progresso = progressoTempo ?? 0
+        // insert.excesso_rotacao_progresso_mbke = progressoUltimos4 ?? 0
+        acc.excesso_rotacao_porcentagem = porcentagem ?? 0
+      }
+      if (Number.parseInt(code, 10) === 1253) {
+        // (RT) Freada Brusca
+        acc.freada_brusca_mkbe = mkbe ?? 0
+        // insert.freada_brusca_progresso = progressoTempo ?? 0
+        // insert.freada_brusca_progresso_mkbe = progressoUltimos4 ?? 0
+        acc.freada_brusca_porcentagem = porcentagem ?? 0
+      }
+
+      // Calcular o progresso com base no mbke
+      if (Number.parseInt(code, 10) === 1153) {
+        // (RT) Marcha Lenta Excessiva
+        acc.marcha_lenta_excessiva_mkbe = mkbe ?? 0
+        // insert.marcha_lenta_excessiva_progresso = progressoUltimos4 ?? 0
+      }
+      if (Number.parseInt(code, 10) === 1156) {
+        // (RT) Aceleração Brusca
+        acc.aceleracao_brusca_mkbe = mkbe ?? 0
+        // insert.aceleracao_brusca_progresso = progressoTempo ?? 0
+        // insert.aceleracao_brusca_progresso_mkbe = progressoUltimos4 ?? 0
+        acc.aceleracao_brusca_porcentagem = porcentagem ?? 0
+      }
+      if (Number.parseInt(code, 10) === 1252) {
+        // (RT) Curva Brusca
+        acc.curva_brusca_mkbe = mkbe ?? 0
+        // insert.curva_brusca_progresso = progressoUltimos4 ?? 0
+      }
+      if (Number.parseInt(code, 10) === 1136) {
+        // (RT) Excesso de Velocidade
+        acc.excesso_velocidade_mkbe = mkbe ?? 0
+        // insert.excesso_velocidade_progresso = progressoUltimos4 ?? 0
+      }
+
+      return acc
+    },
+    {
       inercia_mkbe: 0,
+      inercia_progresso: 0,
+      inercia_progresso_mkbe: 0,
       inercia_porcentagem: 0,
+
       fora_faixa_verde_mkbe: 0,
+      fora_faixa_verde_progresso: 0,
+      fora_faixa_verde_progresso_mkbe: 0,
       fora_faixa_verde_porcentagem: 0,
+
       excesso_rotacao_mkbe: 0,
+      excesso_rotacao_progresso: 0,
+      excesso_rotacao_progresso_mkbe: 0,
       excesso_rotacao_porcentagem: 0,
+
       freada_brusca_mkbe: 0,
+      freada_brusca_mkbe_progresso: 0,
+      freada_brusca_mkbe_progresso_mkbe: 0,
       freada_brusca_porcentagem: 0,
+
       marcha_lenta_excessiva_mkbe: 0,
       marcha_lenta_excessiva_porcentagem: 0,
+
       aceleracao_brusca_mkbe: 0,
+      aceleracao_brusca_progresso: 0,
+      aceleracao_brusca_progresso_mkbe: 0,
       aceleracao_brusca_porcentagem: 0,
+
       curva_brusca_mkbe: 0,
       curva_brusca_porcentagem: 0,
+
       excesso_velocidade_mkbe: 0,
       excesso_velocidade_porcentagem: 0,
+
+      ranking_consumo_mkbe: 0,
+      ranking_consumo_progresso: 0,
+
+      ranking_seguranca_mkbe: 0,
+      ranking_seguranca_progresso: 0,
+
       fk_id_follow_up_type: 1,
       follow_up_date: format(new Date(start), "yyyy-MM-dd 08:00:00"),
       monitorId: databaseMonitorId,
-    }
-    const { code, totalOccurances, totalTimeSeconds } = totalPorCode[key]
-
-    const mkbe = (totalKmRides / totalOccurances).toFixed(2)
-    const porcentagem = (
-      (totalTimeSecondsRides / totalTimeSeconds) *
-      100
-    ).toFixed(2)
-
-    if (Number.parseInt(code, 10) === 1255) {
-      // (RT) Inércia M.Benz
-      obj.inercia_mkbe = mkbe ?? 0
-      // insert.inercia_progresso = progressoTempo ?? 0
-      // insert.inercia_progresso_mkbe = progressoUltimos4 ?? 0
-      obj.inercia_porcentagem = porcentagem ?? 0
-    }
-    if (Number.parseInt(code, 10) === 1124) {
-      // (RT) Fora da Faixa Verde
-      obj.fora_faixa_verde_mkbe = mkbe ?? 0
-      // insert.fora_faixa_verde_progresso = progressoTempo ?? 0
-      // insert.fora_faixa_verde_progresso_mkbe = progressoUltimos4 ?? 0
-      obj.fora_faixa_verde_porcentagem = porcentagem ?? 0
-    }
-    if (Number.parseInt(code, 10) === 1250) {
-      // (RT) Excesso de Rotação
-      obj.excesso_rotacao_mkbe = mkbe ?? 0
-      // insert.excesso_rotacao_progresso = progressoTempo ?? 0
-      // insert.excesso_rotacao_progresso_mbke = progressoUltimos4 ?? 0
-      obj.excesso_rotacao_porcentagem = porcentagem ?? 0
-    }
-    if (Number.parseInt(code, 10) === 1253) {
-      // (RT) Freada Brusca
-      obj.freada_brusca_mkbe = mkbe ?? 0
-      // insert.freada_brusca_progresso = progressoTempo ?? 0
-      // insert.freada_brusca_progresso_mkbe = progressoUltimos4 ?? 0
-      obj.freada_brusca_porcentagem = porcentagem ?? 0
-    }
-
-    // Calcular o progresso com base no mbke
-    if (Number.parseInt(code, 10) === 1153) {
-      // (RT) Marcha Lenta Excessiva
-      obj.marcha_lenta_excessiva_mkbe = mkbe ?? 0
-      // insert.marcha_lenta_excessiva_progresso = progressoUltimos4 ?? 0
-    }
-    if (Number.parseInt(code, 10) === 1156) {
-      // (RT) Aceleração Brusca
-      obj.aceleracao_brusca_mkbe = mkbe ?? 0
-      // insert.aceleracao_brusca_progresso = progressoTempo ?? 0
-      // insert.aceleracao_brusca_progresso_mkbe = progressoUltimos4 ?? 0
-      obj.aceleracao_brusca_porcentagem = porcentagem ?? 0
-    }
-    if (Number.parseInt(code, 10) === 1252) {
-      // (RT) Curva Brusca
-      obj.curva_brusca_mkbe = mkbe ?? 0
-      // insert.curva_brusca_progresso = progressoUltimos4 ?? 0
-    }
-    if (Number.parseInt(code, 10) === 1136) {
-      // (RT) Excesso de Velocidade
-      obj.excesso_velocidade_mkbe = mkbe ?? 0
-      // insert.excesso_velocidade_progresso = progressoUltimos4 ?? 0
-    }
-
-    return obj
-  })
+    },
+  )
 
   return {
     intTotalMotoristas,
