@@ -113,7 +113,7 @@ const gerarIndicadores = async () => {
           t.tripStart BETWEEN '${inicio} 03:00:00' AND '${termino} 02:59:59'
       `)
 
-      if (!trip.driverId || trip.driverId === "-9110386254540308778") {
+      if (trip.driverId && trip.driverId === "-9110386254540308778") {
         continue
       }
 
@@ -132,7 +132,7 @@ const gerarIndicadores = async () => {
         WHERE
           e.eventTypeId = et.eventTypeId and
           e.eventTypeId = ec.eventTypeId and
-          e.driverId = ${trip.driverId} and
+          ${!trip.driverId ? "" : `e.driverId = ${trip.driverId} and`}
           e.assetId = ${trip.assetId} and
           e.startDateTime BETWEEN '${format(trip.tripStart, "yyyy-MM-dd HH:mm:ss")}' AND '${format(trip.tripEnd, "yyyy-MM-dd HH:mm:ss")}'
         GROUP BY
