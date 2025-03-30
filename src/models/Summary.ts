@@ -8,6 +8,7 @@ export type IGetSummaryReturn = {
 }
 
 export type IGetTripsReturn = {
+  id: number
   eventos: any
   meta: any
   consumo: any
@@ -79,6 +80,7 @@ export default class Summary {
 
     const [trips] = await db.raw(`
       SELECT
+        gv.id,
         c.numero_chassi,
         a.description,
         gf.chapa,

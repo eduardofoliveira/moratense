@@ -22,6 +22,7 @@
     "process-viagens": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/process-viagens.ts",
     "process-follow": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/process-follow-up.ts",
     "process-monitor": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/peocess-follow-up-monitor.ts",
+    "vinculo": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/vinculo.ts",
     "build": "tsc"
   },
   "keywords": [],
