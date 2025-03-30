@@ -1,14 +1,17 @@
 import "dotenv/config"
-import { format, parse, subDays, endOfDay, startOfDay } from "date-fns"
+import { addDays, format, parse, subDays, endOfDay, startOfDay } from "date-fns"
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 
-const inserirViagensRelacionadas = async () => {
-  const today = new Date()
+const inserirViagensRelacionadas = async ({
+  inicio,
+  termino,
+}: { inicio: string; termino: string }) => {
+  // const today = new Date()
   // const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd")
   // const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd")
-  const inicio = "2025-03-24"
-  const termino = "2025-03-25"
+  // const inicio = "2025-03-24"
+  // const termino = "2025-03-25"
 
   const connMoratense = DbMoratense.getConnection()
   const [resumoViagensGlobus] = await connMoratense.raw(`
@@ -68,12 +71,15 @@ const inserirViagensRelacionadas = async () => {
   }
 }
 
-const gerarIndicadores = async () => {
-  const today = new Date()
+const gerarIndicadores = async ({
+  inicio,
+  termino,
+}: { inicio: string; termino: string }) => {
+  // const today = new Date()
   // const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd")
   // const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd")
-  const inicio = "2025-03-24"
-  const termino = "2025-03-25"
+  // const inicio = "2025-03-24"
+  // const termino = "2025-03-25"
 
   const connMoratense = DbMoratense.getConnection()
   const [linhaChassi] = await connMoratense.raw(`
@@ -172,6 +178,13 @@ const gerarIndicadores = async () => {
       }
     }
 
+    await connMoratense.raw(`
+      DELETE FROM
+        eventos_viagens_globus_processadas
+      WHERE
+        fk_id_viagens_globus_processadas = ${viagem.id}
+    `)
+
     for await (const evento of Object.values(resumo)) {
       await connMoratense.raw(`
         INSERT INTO
@@ -195,8 +208,29 @@ const gerarIndicadores = async () => {
 }
 
 const executar = async () => {
-  // await inserirViagensRelacionadas()
-  await gerarIndicadores()
+  // const today = new Date()
+  // const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd")
+  // const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd")
+  const inicio = "2025-03-01"
+  const termino = "2025-03-02"
+
+  let start = inicio
+  let endDate = termino
+  while (start !== format(subDays(new Date(), 1), "yyyy-MM-dd")) {
+    console.log({ start, endDate })
+
+    // await inserirViagensRelacionadas({ inicio: start, termino: endDate })
+    // await gerarIndicadores({ inicio: start, termino: endDate })
+
+    start = format(
+      addDays(parse(start, "yyyy-MM-dd", new Date()), 1),
+      "yyyy-MM-dd",
+    )
+    endDate = format(
+      addDays(parse(endDate, "yyyy-MM-dd", new Date()), 1),
+      "yyyy-MM-dd",
+    )
+  }
 }
 
 executar()
