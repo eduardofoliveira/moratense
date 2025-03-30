@@ -113,7 +113,7 @@ const gerarIndicadores = async () => {
           t.tripStart BETWEEN '${inicio} 03:00:00' AND '${termino} 02:59:59'
       `)
 
-      if (trip.driverId === "-9110386254540308778") {
+      if (!trip.driverId || trip.driverId === "-9110386254540308778") {
         continue
       }
 
