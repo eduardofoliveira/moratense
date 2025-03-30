@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { addDays, format, parse } from "date-fns"
+import { addDays, format, parse, subDays, endOfDay, startOfDay } from "date-fns"
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 
@@ -274,10 +274,13 @@ const vinculoPorCarro = async ({
 const executar = async () => {
   const connMoratense = DbMoratense.getConnection()
 
-  // executar as funções entre os dias 01-03 até 28-03 executando dia por dia
-  let start = "2025-03-01"
-  let endDate = "2025-03-02"
-  while (start !== "2025-03-28") {
+  const today = new Date()
+  const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd")
+  const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd")
+
+  let start = inicio
+  let endDate = termino
+  while (start !== termino) {
     await connMoratense.raw(`
       DELETE FROM
         trips_globus_viagem
@@ -305,6 +308,8 @@ const executar = async () => {
       "yyyy-MM-dd",
     )
   }
+
+  process.exit(0)
 }
 
 executar()
