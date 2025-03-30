@@ -19,10 +19,8 @@ const vinculoPorMotorista = async ({
       max(g.data_recolhido) AS data_recolhido
     FROM
       globus_viagem g,
-      -- assets a,
       globus_linha l
     WHERE
-      -- g.assetId = a.assetId and
       g.fk_id_globus_linha = l.id and
       g.data_saida_garagem BETWEEN '${start} 03:00:00' AND '${end} 02:59:59' and
       g.driverId IS NOT NULL and
@@ -274,12 +272,28 @@ const vinculoPorCarro = async ({
 }
 
 const executar = async () => {
+  const connMoratense = DbMoratense.getConnection()
+
   // executar as funções entre os dias 01-03 até 28-03 executando dia por dia
   let start = "2025-03-01"
   let endDate = "2025-03-02"
   while (start !== "2025-03-28") {
+    await connMoratense.raw(`
+      DELETE FROM
+        trips_globus_viagem
+      WHERE
+        fk_id_trip IN (
+          SELECT
+            id
+          FROM
+            trips
+          WHERE
+            tripStart BETWEEN '${start} 03:00:00' AND '${endDate} 02:59:59'
+        )
+    `)
+
     console.log({ start, endDate })
-    // await vinculoPorMotorista({ start, end: endDate })
+    await vinculoPorMotorista({ start, end: endDate })
     await vinculoPorCarro({ start, end: endDate })
 
     start = format(
