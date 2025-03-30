@@ -219,8 +219,8 @@ const executar = async () => {
   while (start !== format(subDays(new Date(), 1), "yyyy-MM-dd")) {
     console.log({ start, endDate })
 
-    // await inserirViagensRelacionadas({ inicio: start, termino: endDate })
-    // await gerarIndicadores({ inicio: start, termino: endDate })
+    await inserirViagensRelacionadas({ inicio: start, termino: endDate })
+    await gerarIndicadores({ inicio: start, termino: endDate })
 
     start = format(
       addDays(parse(start, "yyyy-MM-dd", new Date()), 1),
