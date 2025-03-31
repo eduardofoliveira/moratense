@@ -58,6 +58,15 @@ const inserirViagensRelacionadas = async ({
   `)
 
   await connMoratense.raw(`
+    DELETE FROM
+      eventos_viagens_globus_processadas
+    WHERE
+      fk_id_viagens_globus_processadas in (
+        SELECT id FROM viagens_globus_processadas WHERE data_saida_garagem BETWEEN '${inicio} 03:00:00' AND '${termino} 02:59:59'
+      )
+  `)
+
+  await connMoratense.raw(`
     DELETE FROM viagens_globus_processadas WHERE data_saida_garagem BETWEEN '${inicio} 03:00:00' AND '${termino} 02:59:59'
   `)
 
