@@ -31,6 +31,14 @@ cron.schedule("0 3 * * *", async () => {
     executarComando(path.resolve("./dist/vinculo.js"), () => {
       console.log(new Date().toLocaleString())
       console.log(path.resolve("./dist/vinculo.js"))
+
+      executarComando(
+        path.resolve("./dist/gerar_tabela_trip_globus.js"),
+        () => {
+          console.log(new Date().toLocaleString())
+          console.log(path.resolve("./dist/gerar_tabela_trip_globus.js"))
+        },
+      )
     })
   })
 })
