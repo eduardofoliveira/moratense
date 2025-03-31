@@ -211,8 +211,8 @@ const executar = async () => {
   // const today = new Date()
   // const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd")
   // const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd")
-  const inicio = "2025-03-01"
-  const termino = "2025-03-02"
+  const inicio = "2025-03-25"
+  const termino = "2025-03-26"
 
   let start = inicio
   let endDate = termino
