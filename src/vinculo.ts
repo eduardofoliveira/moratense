@@ -275,8 +275,8 @@ const executar = async () => {
   const connMoratense = DbMoratense.getConnection()
 
   const today = new Date()
-  const inicio = format(startOfDay(subDays(today, 3)), "yyyy-MM-dd")
-  const termino = format(endOfDay(subDays(today, 2)), "yyyy-MM-dd")
+  const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd")
+  const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd")
 
   let start = inicio
   let endDate = termino
