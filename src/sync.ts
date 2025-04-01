@@ -9,6 +9,10 @@ import showDrankTelConfig from "./use-cases/drankTelConfig/showDrankTelConfig"
 import showEmpresa from "./use-cases/empresa/showEmpresa"
 import ApiMix from "./service/api.mix"
 
+let syncViagensRunning = false
+let syncEventosRunning = false
+let syncPosicoesRunning = false
+
 const sincronizarPosicoes = async ({ token }: { token: string }) => {
   const empresa = await showEmpresa({ id: 4 })
 
@@ -52,6 +56,7 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
 }
 
 const executarPosicoes = async () => {
+  syncPosicoesRunning = true
   try {
     await new Promise((resolve) => setTimeout(resolve, 5000))
     const configEvento = await showDrankTelConfig({
@@ -60,12 +65,14 @@ const executarPosicoes = async () => {
     await sincronizarPosicoes({ token: configEvento.valor })
     console.log("posições inseridas")
   } catch (error) {
+    syncPosicoesRunning = false
     console.log(error)
 
     // setTimeout(async () => {
     //   executarPosicoes()
     // }, 60000)
   }
+  syncPosicoesRunning = false
 }
 
 const sincronizarEventos = async ({ token }: { token: string }) => {
@@ -124,18 +131,21 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
 }
 
 const executarEventos = async () => {
+  syncEventosRunning = true
   try {
     await new Promise((resolve) => setTimeout(resolve, 1000))
     const configEvento = await showDrankTelConfig({ name: "sinceTokenEvents" })
     await sincronizarEventos({ token: configEvento.valor })
     console.log("eventos inseridas")
   } catch (error) {
+    syncEventosRunning = false
     console.error(error)
 
     // setTimeout(async () => {
     //   executarEventos()
     // }, 60000)
   }
+  syncEventosRunning = false
 }
 
 const sincronizarViagens = async ({ token }: { token: number }) => {
@@ -205,20 +215,35 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
 }
 
 const executarViagens = async () => {
+  syncViagensRunning = true
   try {
     await new Promise((resolve) => setTimeout(resolve, 5000))
     const config = await showDrankTelConfig({ name: "sinceTokenTrips" })
     await sincronizarViagens({ token: Number.parseInt(config.valor) })
     console.log("viagens inseridas")
   } catch (error) {
+    syncViagensRunning = false
     console.error(error)
   }
+  syncViagensRunning = false
 }
 
 const executar = async () => {
   await Promise.all([executarEventos(), executarPosicoes(), executarViagens()])
   process.exit(0)
 }
+
+setInterval(() => {
+  if (!syncEventosRunning) {
+    executarEventos()
+  }
+  if (!syncPosicoesRunning) {
+    executarPosicoes()
+  }
+  if (!syncViagensRunning) {
+    executarViagens()
+  }
+}, 120000)
 
 lockfile
   .lock("sync.lock")
