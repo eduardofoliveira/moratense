@@ -489,6 +489,8 @@ const eventTypes = async () => {
     const apiMix = await ApiMix.getInstance()
     // await apiMix.getToken()
 
+    await new Promise((resolve) => setTimeout(resolve, 5000))
+
     const eventTypes = await apiMix.getEventTypes({
       orgId: empresa.mix_groupId,
     })
