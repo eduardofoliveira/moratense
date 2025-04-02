@@ -657,9 +657,9 @@ const syncEvents = async () => {
 // }
 
 // sync()
-// syncDrivers()
-// syncAssets()
-// eventTypes()
+syncDrivers()
+syncAssets()
+eventTypes()
 // syncTrips()
 // syncPositionsByAsset()
 // syncEvents()

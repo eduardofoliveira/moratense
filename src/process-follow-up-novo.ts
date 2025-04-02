@@ -148,7 +148,7 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
       insert.aceleracao_brusca_porcentagem = 0
 
       insert.fk_id_follow_up_type = item.fk_id_follow_up_type
-      insert.follow_up_date = start.replace("03:00:00", "08:00:00")
+      insert.follow_up_date = end.replace("02:59:59", "08:00:00")
       insert.driverId = item.driverId
       insert.monitorId = item.monitorId
       insert.chassi = numeroChassi
@@ -199,7 +199,26 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
           Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) &&
           Number.parseInt(evento.totalTimeSeconds, 10)
         ) {
-          progressoTempo = `${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+          if (evento.code === 1255) {
+            // somente na Ineria se o numero da semana passada for maior que o atual é positivo
+            if (
+              Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) >
+              Number.parseInt(evento.totalTimeSeconds, 10)
+            ) {
+              progressoTempo = `-${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+            } else {
+              progressoTempo = `${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+            }
+          } else {
+            if (
+              Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) >
+              Number.parseInt(evento.totalTimeSeconds, 10)
+            ) {
+              progressoTempo = `${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+            } else {
+              progressoTempo = `-${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+            }
+          }
         } else {
           progressoTempo = "0%"
         }
@@ -207,7 +226,20 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         const mkbe = (distanceKilometers / evento.totalOccurances).toFixed(2)
         let progressoMkbe = ""
         if (Number.parseFloat(mkbeLastWeek) && Number.parseFloat(mkbe)) {
-          progressoMkbe = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+          if (evento.code === 1255) {
+            // somente na Ineria se o numero da semana passada for maior que o atual é positivo
+            if (Number.parseFloat(mkbeLastWeek) < Number.parseFloat(mkbe)) {
+              progressoMkbe = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+            } else {
+              progressoMkbe = `-${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+            }
+          } else {
+            if (Number.parseFloat(mkbeLastWeek) > Number.parseFloat(mkbe)) {
+              progressoMkbe = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+            } else {
+              progressoMkbe = `-${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+            }
+          }
         } else {
           progressoMkbe = "0%"
         }
@@ -272,7 +304,11 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
       if (lastTotalConsumo !== 0 && totalConsumo !== 0) {
         insert.ranking_consumo_mkbe =
           (distanceKilometers / totalConsumo).toFixed(2) ?? 0
-        insert.ranking_consumo_progresso = `${((lastTotalConsumo / totalConsumo) * 100).toFixed(0)}%`
+        if (lastTotalConsumo > totalConsumo) {
+          insert.ranking_consumo_progresso = `${((lastTotalConsumo / totalConsumo) * 100).toFixed(0)}%`
+        } else {
+          insert.ranking_consumo_progresso = `-${((lastTotalConsumo / totalConsumo) * 100).toFixed(0)}%`
+        }
       } else {
         insert.ranking_consumo_progresso = "0%"
       }
@@ -283,7 +319,11 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         insert.ranking_consumo_mkbe = 0
       }
       if (lastTotalSeguranca !== 0 && totalSeguranca !== 0) {
-        insert.ranking_seguranca_progresso = `${((lastTotalSeguranca / totalSeguranca) * 100).toFixed(0)}%`
+        if (lastTotalSeguranca > totalSeguranca) {
+          insert.ranking_seguranca_progresso = `${((lastTotalSeguranca / totalSeguranca) * 100).toFixed(0)}%`
+        } else {
+          insert.ranking_seguranca_progresso = `-${((lastTotalSeguranca / totalSeguranca) * 100).toFixed(0)}%`
+        }
       } else {
         insert.ranking_seguranca_progresso = "0%"
       }

@@ -134,14 +134,17 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
     return
   }
 
-  const [[sumarizacaoCorridasLastWeek]] = await connMoratense.raw(`
+  const [sumarizacaoCorridasLastWeek] = await connMoratense.raw(`
     SELECT
+      c.numero_chassi,
       sum(v.fuelUsedLitres) AS fuelUsedLitres,
       sum(v.distanceKilometers) AS distanceKilometers,
       sum(v.duracao_viagens_segundos) AS duracao_viagens_segundos
     FROM
-      viagens_globus_processadas v
+      viagens_globus_processadas v,
+      chassi c
     WHERE
+      v.fk_id_chassi = c.id and
       v.driverId IN (
         SELECT
           distinct d.driverId
@@ -159,16 +162,21 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
           )
       ) and
       v.data_saida_garagem BETWEEN '${startLastWeek}' AND '${endLastWeek}'
+    GROUP BY
+	    c.numero_chassi
   `)
 
-  const [[sumarizacaoCorridas]] = await connMoratense.raw(`
+  const [sumarizacaoCorridas] = await connMoratense.raw(`
     SELECT
+      c.numero_chassi,
       sum(v.fuelUsedLitres) AS fuelUsedLitres,
       sum(v.distanceKilometers) AS distanceKilometers,
       sum(v.duracao_viagens_segundos) AS duracao_viagens_segundos
     FROM
-      viagens_globus_processadas v
+      viagens_globus_processadas v,
+      chassi c
     WHERE
+      v.fk_id_chassi = c.id and
       v.driverId IN (
         SELECT
           distinct d.driverId
@@ -186,30 +194,35 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
           )
       ) and
       v.data_saida_garagem BETWEEN '${start}' AND '${end}'
+    GROUP BY
+	    c.numero_chassi
   `)
 
-  const {
-    fuelUsedLitres: fuelUsedLitresLastWeek,
-    distanceKilometers: distanceKilometersLastWeek,
-    duracao_viagens_segundos: duracao_viagens_segundosLastWeek,
-  } = sumarizacaoCorridasLastWeek
+  // const {
+  //   fuelUsedLitres: fuelUsedLitresLastWeek,
+  //   distanceKilometers: distanceKilometersLastWeek,
+  //   duracao_viagens_segundos: duracao_viagens_segundosLastWeek,
+  // } = sumarizacaoCorridasLastWeek
 
-  const { fuelUsedLitres, distanceKilometers, duracao_viagens_segundos } =
-    sumarizacaoCorridas
+  // const { fuelUsedLitres, distanceKilometers, duracao_viagens_segundos } =
+  //   sumarizacaoCorridas
 
   const [eventosLastWeek] = await connMoratense.raw(`
       SELECT
-        e.code,
-        e.descricao_exibida,
-        SUM(e.totalOccurances) AS totalOccurances,
-        SUM(e.totalTimeSeconds) AS totalTimeSeconds,
-        e.seguranca,
-        e.consumo
+          c.numero_chassi,
+          e.code,
+          e.descricao_exibida,
+          SUM(e.totalOccurances) AS totalOccurances,
+          SUM(e.totalTimeSeconds) AS totalTimeSeconds,
+          e.seguranca,
+          e.consumo
       FROM
         viagens_globus_processadas v,
-        eventos_viagens_globus_processadas e
+        eventos_viagens_globus_processadas e,
+        chassi c
       WHERE
         v.id = e.fk_id_viagens_globus_processadas and
+        v.fk_id_chassi = c.id and
         v.driverId IN (
           SELECT
             distinct d.driverId
@@ -228,22 +241,26 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
         ) and
         v.data_saida_garagem BETWEEN '${startLastWeek}' AND '${endLastWeek}'
       GROUP BY
-        e.code
+        e.code,
+        c.numero_chassi
   `)
 
   const [eventos] = await connMoratense.raw(`
       SELECT
-        e.code,
-        e.descricao_exibida,
-        SUM(e.totalOccurances) AS totalOccurances,
-        SUM(e.totalTimeSeconds) AS totalTimeSeconds,
-        e.seguranca,
-        e.consumo
+          c.numero_chassi,
+          e.code,
+          e.descricao_exibida,
+          SUM(e.totalOccurances) AS totalOccurances,
+          SUM(e.totalTimeSeconds) AS totalTimeSeconds,
+          e.seguranca,
+          e.consumo
       FROM
         viagens_globus_processadas v,
-        eventos_viagens_globus_processadas e
+        eventos_viagens_globus_processadas e,
+        chassi c
       WHERE
         v.id = e.fk_id_viagens_globus_processadas and
+        v.fk_id_chassi = c.id and
         v.driverId IN (
           SELECT
             distinct d.driverId
@@ -262,16 +279,22 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
         ) and
         v.data_saida_garagem BETWEEN '${start}' AND '${end}'
       GROUP BY
-        e.code
+        e.code,
+        c.numero_chassi
   `)
 
-  const [[quantidadeMotoristas]] = await connMoratense.raw(`
+  const [quantidadeMotoristas] = await connMoratense.raw(`
     SELECT
+      c.numero_chassi,
       count(distinct d.driverId) AS qtd_orientados,
       (SELECT COUNT(*) FROM drivers) AS total
     FROM
-      drivers d
+      drivers d,
+      viagens_globus_processadas v,
+      chassi c
     WHERE
+      d.driverId = v.driverId and
+      c.id = v.fk_id_chassi and
       d.employeeNumber IN (
         SELECT
           f.chapa_motorista
@@ -281,181 +304,265 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
           f.chapa_monitor = ${monitor.chapa_monitor} and
           f.horario BETWEEN '${start}' AND '${end}'
       )
+    GROUP BY
+      c.numero_chassi
   `)
 
-  const { qtd_orientados, total } = quantidadeMotoristas
-  const porcentagemMotoristas = `${((quantidadeMotoristas.qtd_orientados / total) * 100).toFixed(2)}%`
+  const { qtd_orientados, total } = quantidadeMotoristas[0]
 
-  let totalConsumo = 0
-  let totalSeguranca = 0
-  const insert: any = {}
-  insert.fk_id_follow_up_type = monitor.follow_up_type
-  insert.follow_up_date = start.replace("03:00:00", "08:00:00")
-  insert.monitorId = driverMonitor.driverId
-  insert.motorista_porcentagem = porcentagemMotoristas
+  const listaChassis = new Set(
+    eventos.map((e: any) => e.numero_chassi),
+  ).values()
+  for await (const chassiAtual of listaChassis) {
+    const qtdOrientadoChassi = quantidadeMotoristas.find(
+      (e: any) => e.numero_chassi === chassiAtual,
+    )
+    const porcentagemMotoristas = `${((qtdOrientadoChassi.qtd_orientados / total) * 100).toFixed(2)}%`
 
-  insert.inercia_mkbe = 0
-  insert.inercia_progresso = "0%"
-  insert.inercia_progresso_mkbe = "0%"
-  insert.inercia_porcentagem = "0%"
-  insert.fora_faixa_verde_mkbe = 0
-  insert.fora_faixa_verde_progresso = "0%"
-  insert.fora_faixa_verde_progresso_mkbe = "0%"
-  insert.fora_faixa_verde_porcentagem = "0%"
-  insert.excesso_rotacao_mkbe = 0
-  insert.excesso_rotacao_progresso = "0%"
-  insert.excesso_rotacao_progresso_mkbe = 0
-  insert.excesso_rotacao_porcentagem = "0%"
-  insert.freada_brusca_mkbe = 0
-  insert.freada_brusca_progresso = "0%"
-  insert.freada_brusca_progresso_mkbe = "0%"
-  insert.freada_brusca_porcentagem = "0%"
-  insert.marcha_lenta_excessiva_mkbe = 0
-  insert.marcha_lenta_excessiva_progresso = "0%"
-  insert.aceleracao_brusca_mkbe = 0
-  insert.aceleracao_brusca_progresso = "0%"
-  insert.aceleracao_brusca_progresso_mkbe = "0%"
-  insert.aceleracao_brusca_porcentagem = "0%"
-  insert.curva_brusca_mkbe = 0
-  insert.curva_brusca_progresso = "0%"
-  insert.excesso_velocidade_mkbe = 0
-  insert.excesso_velocidade_progresso = "0%"
+    let totalConsumo = 0
+    let totalSeguranca = 0
+    const insert: any = {}
+    insert.fk_id_follow_up_type = monitor.follow_up_type
+    insert.follow_up_date = end.replace("02:59:59", "08:00:00")
+    insert.monitorId = driverMonitor.driverId
+    insert.motorista_porcentagem = porcentagemMotoristas
 
-  for await (const evento of eventos) {
-    console.log(evento)
+    insert.inercia_mkbe = 0
+    insert.inercia_progresso = "0%"
+    insert.inercia_progresso_mkbe = "0%"
+    insert.inercia_porcentagem = "0%"
+    insert.fora_faixa_verde_mkbe = 0
+    insert.fora_faixa_verde_progresso = "0%"
+    insert.fora_faixa_verde_progresso_mkbe = "0%"
+    insert.fora_faixa_verde_porcentagem = "0%"
+    insert.excesso_rotacao_mkbe = 0
+    insert.excesso_rotacao_progresso = "0%"
+    insert.excesso_rotacao_progresso_mkbe = 0
+    insert.excesso_rotacao_porcentagem = "0%"
+    insert.freada_brusca_mkbe = 0
+    insert.freada_brusca_progresso = "0%"
+    insert.freada_brusca_progresso_mkbe = "0%"
+    insert.freada_brusca_porcentagem = "0%"
+    insert.marcha_lenta_excessiva_mkbe = 0
+    insert.marcha_lenta_excessiva_progresso = "0%"
+    insert.aceleracao_brusca_mkbe = 0
+    insert.aceleracao_brusca_progresso = "0%"
+    insert.aceleracao_brusca_progresso_mkbe = "0%"
+    insert.aceleracao_brusca_porcentagem = "0%"
+    insert.curva_brusca_mkbe = 0
+    insert.curva_brusca_progresso = "0%"
+    insert.excesso_velocidade_mkbe = 0
+    insert.excesso_velocidade_progresso = "0%"
+    insert.chassi = chassiAtual
 
-    const eventoLastWeek = eventosLastWeek.find(
-      (e: any) => e.code === evento.code,
+    const eventosChassi = eventos.filter(
+      (e: any) => e.numero_chassi === chassiAtual,
+    )
+    const eventosLastWeekChassi = eventosLastWeek.filter(
+      (e: any) => e.numero_chassi === chassiAtual,
     )
 
-    let mkbeLastWeek = "0"
-    let progressoTempo = "0%"
-    if (distanceKilometersLastWeek && eventoLastWeek) {
-      mkbeLastWeek = (
-        distanceKilometersLastWeek / eventoLastWeek.totalOccurances
-      ).toFixed(2)
+    // console.log(chassiAtual)
+    // console.log(eventosChassi[0])
+    // console.log(eventosLastWeekChassi[0])
+
+    const {
+      fuelUsedLitres: fuelUsedLitresLastWeek,
+      distanceKilometers: distanceKilometersLastWeek,
+      duracao_viagens_segundos: duracao_viagens_segundosLastWeek,
+    } = sumarizacaoCorridasLastWeek.find(
+      (c: any) => c.numero_chassi === chassiAtual,
+    )
+
+    // console.log({
+    //   fuelUsedLitresLastWeek,
+    //   distanceKilometersLastWeek,
+    //   duracao_viagens_segundosLastWeek,
+    // })
+
+    const { fuelUsedLitres, distanceKilometers, duracao_viagens_segundos } =
+      sumarizacaoCorridas.find((c: any) => c.numero_chassi === chassiAtual)
+
+    // console.log({
+    //   fuelUsedLitres,
+    //   distanceKilometers,
+    //   duracao_viagens_segundos,
+    // })
+
+    for await (const evento of eventosChassi) {
+      const eventoLastWeek = eventosLastWeekChassi.find(
+        (e: any) => e.code === evento.code,
+      )
+
+      let mkbeLastWeek = "0"
+      let progressoTempo = "0%"
+      if (distanceKilometersLastWeek && eventoLastWeek) {
+        mkbeLastWeek = (
+          distanceKilometersLastWeek / eventoLastWeek.totalOccurances
+        ).toFixed(2)
+      } else {
+        mkbeLastWeek = "0"
+      }
+      if (
+        eventoLastWeek &&
+        Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) &&
+        Number.parseInt(evento.totalTimeSeconds, 10)
+      ) {
+        if (evento.code === 1255) {
+          // somente na Ineria se o numero da semana passada for maior que o atual é positivo
+          if (
+            Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) >
+            Number.parseInt(evento.totalTimeSeconds, 10)
+          ) {
+            progressoTempo = `-${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+          } else {
+            progressoTempo = `${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+          }
+        } else {
+          if (
+            Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) >
+            Number.parseInt(evento.totalTimeSeconds, 10)
+          ) {
+            progressoTempo = `${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+          } else {
+            progressoTempo = `-${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+          }
+        }
+      }
+
+      const mkbe = (distanceKilometers / evento.totalOccurances).toFixed(2)
+      let progressoMkbe = "0%"
+      if (Number.parseFloat(mkbeLastWeek) && Number.parseFloat(mkbe)) {
+        if (evento.code === 1255) {
+          // somente na Ineria se o numero da semana passada for maior que o atual é positivo
+          if (Number.parseFloat(mkbeLastWeek) < Number.parseFloat(mkbe)) {
+            progressoMkbe = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+          } else {
+            progressoMkbe = `-${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+          }
+        } else {
+          if (Number.parseFloat(mkbeLastWeek) > Number.parseFloat(mkbe)) {
+            progressoMkbe = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+          } else {
+            progressoMkbe = `-${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+          }
+        }
+      }
+
+      const porcentagem = `${(
+        (evento.totalTimeSeconds / duracao_viagens_segundos) * 100
+      ).toFixed(2)}%`
+
+      if (evento.consumo === 1) {
+        totalConsumo += Number.parseInt(evento.totalOccurances, 10)
+      }
+      if (evento.seguranca === 1) {
+        totalSeguranca += Number.parseInt(evento.totalOccurances, 10)
+      }
+
+      if (evento.code === 1255) {
+        // (RT) Inércia M.Benz
+        insert.inercia_mkbe = mkbe ?? 0
+        insert.inercia_progresso = progressoTempo ?? "0%"
+        insert.inercia_progresso_mkbe = progressoMkbe ?? "0%"
+        insert.inercia_porcentagem = porcentagem ?? "0%"
+      }
+      if (evento.code === 1124) {
+        // (RT) Fora da Faixa Verde
+        insert.fora_faixa_verde_mkbe = mkbe ?? 0
+        insert.fora_faixa_verde_progresso = progressoTempo ?? "0%"
+        insert.fora_faixa_verde_progresso_mkbe = progressoMkbe ?? "0%"
+        insert.fora_faixa_verde_porcentagem = porcentagem ?? "0%"
+      }
+      if (evento.code === 1250) {
+        // (RT) Excesso de Rotação
+        insert.excesso_rotacao_mkbe = mkbe ?? 0
+        insert.excesso_rotacao_progresso = progressoTempo ?? "0%"
+        insert.excesso_rotacao_progresso_mkbe = progressoMkbe ?? "0%"
+        insert.excesso_rotacao_porcentagem = porcentagem ?? "0%"
+      }
+      if (evento.code === 1253) {
+        // (RT) Freada Brusca
+        insert.freada_brusca_mkbe = mkbe ?? 0
+        insert.freada_brusca_progresso = progressoTempo ?? "0%"
+        insert.freada_brusca_progresso_mkbe = progressoMkbe ?? "0%"
+        insert.freada_brusca_porcentagem = porcentagem ?? "0%"
+      }
+      // Calcular o progresso com base no mbke
+      if (evento.code === 1153) {
+        // (RT) Marcha Lenta Excessiva
+        insert.marcha_lenta_excessiva_mkbe = mkbe ?? 0
+        insert.marcha_lenta_excessiva_progresso = progressoMkbe ?? "0%"
+      }
+      if (evento.code === 1156) {
+        // (RT) Aceleração Brusca
+        insert.aceleracao_brusca_mkbe = mkbe ?? 0
+        insert.aceleracao_brusca_progresso = progressoTempo ?? "0%"
+        insert.aceleracao_brusca_progresso_mkbe = progressoMkbe ?? "0%"
+        insert.aceleracao_brusca_porcentagem = porcentagem ?? "0%"
+      }
+      if (evento.code === 1252) {
+        // (RT) Curva Brusca
+        insert.curva_brusca_mkbe = mkbe ?? 0
+        insert.curva_brusca_progresso = progressoMkbe ?? "0%"
+      }
+      if (evento.code === 1136) {
+        // (RT) Excesso de Velocidade
+        insert.excesso_velocidade_mkbe = mkbe ?? 0
+        insert.excesso_velocidade_progresso = progressoMkbe ?? "0%"
+      }
+    }
+
+    let lastTotalConsumo = 0
+    let lastTotalSeguranca = 0
+    if (eventosLastWeek.length > 0) {
+      lastTotalConsumo = sumWithPrecision(
+        eventosLastWeek
+          .filter((e: any) => e.consumo === 1)
+          .map((e: any) => Number.parseInt(e.totalOccurances, 10)),
+      )
+      lastTotalSeguranca = sumWithPrecision(
+        eventosLastWeek
+          .filter((e: any) => e.seguranca === 1)
+          .map((e: any) => Number.parseInt(e.totalOccurances, 10)),
+      )
+    }
+
+    if (lastTotalConsumo !== 0 && totalConsumo !== 0) {
+      insert.ranking_consumo_mkbe =
+        (distanceKilometers / totalConsumo).toFixed(2) ?? 0
+      if (lastTotalConsumo > totalConsumo) {
+        insert.ranking_consumo_progresso = `${((lastTotalConsumo / totalConsumo) * 100).toFixed(0)}%`
+      } else {
+        insert.ranking_consumo_progresso = `-${((lastTotalConsumo / totalConsumo) * 100).toFixed(0)}%`
+      }
     } else {
-      mkbeLastWeek = "0"
+      insert.ranking_consumo_progresso = "0%"
     }
-    if (
-      eventoLastWeek &&
-      Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) &&
-      Number.parseInt(evento.totalTimeSeconds, 10)
-    ) {
-      progressoTempo = `${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+    if (distanceKilometers !== 0 && totalConsumo !== 0) {
+      insert.ranking_consumo_mkbe =
+        (distanceKilometers / totalConsumo).toFixed(2) ?? 0
+    } else {
+      insert.ranking_consumo_mkbe = 0
     }
-
-    const mkbe = (distanceKilometers / evento.totalOccurances).toFixed(2)
-    let progressoMkbe = "0%"
-    if (Number.parseFloat(mkbeLastWeek) && Number.parseFloat(mkbe)) {
-      progressoMkbe = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+    if (lastTotalSeguranca !== 0 && totalSeguranca !== 0) {
+      if (lastTotalSeguranca > totalSeguranca) {
+        insert.ranking_seguranca_progresso = `${((lastTotalSeguranca / totalSeguranca) * 100).toFixed(0)}%`
+      } else {
+        insert.ranking_seguranca_progresso = `-${((lastTotalSeguranca / totalSeguranca) * 100).toFixed(0)}%`
+      }
+    } else {
+      insert.ranking_seguranca_progresso = "0%"
     }
-
-    const porcentagem = `${(
-      (evento.totalTimeSeconds / duracao_viagens_segundos) * 100
-    ).toFixed(2)}%`
-
-    if (evento.consumo === 1) {
-      totalConsumo += Number.parseInt(evento.totalOccurances, 10)
-    }
-    if (evento.seguranca === 1) {
-      totalSeguranca += Number.parseInt(evento.totalOccurances, 10)
+    if (distanceKilometers !== 0 && totalSeguranca !== 0) {
+      insert.ranking_seguranca_mkbe =
+        (distanceKilometers / totalSeguranca).toFixed(2) ?? 0
+    } else {
+      insert.ranking_seguranca_mkbe = 0
     }
 
-    if (evento.code === 1255) {
-      // (RT) Inércia M.Benz
-      insert.inercia_mkbe = mkbe ?? 0
-      insert.inercia_progresso = progressoTempo ?? "0%"
-      insert.inercia_progresso_mkbe = progressoMkbe ?? "0%"
-      insert.inercia_porcentagem = porcentagem ?? "0%"
-    }
-    if (evento.code === 1124) {
-      // (RT) Fora da Faixa Verde
-      insert.fora_faixa_verde_mkbe = mkbe ?? 0
-      insert.fora_faixa_verde_progresso = progressoTempo ?? "0%"
-      insert.fora_faixa_verde_progresso_mkbe = progressoMkbe ?? "0%"
-      insert.fora_faixa_verde_porcentagem = porcentagem ?? "0%"
-    }
-    if (evento.code === 1250) {
-      // (RT) Excesso de Rotação
-      insert.excesso_rotacao_mkbe = mkbe ?? 0
-      insert.excesso_rotacao_progresso = progressoTempo ?? "0%"
-      insert.excesso_rotacao_progresso_mkbe = progressoMkbe ?? "0%"
-      insert.excesso_rotacao_porcentagem = porcentagem ?? "0%"
-    }
-    if (evento.code === 1253) {
-      // (RT) Freada Brusca
-      insert.freada_brusca_mkbe = mkbe ?? 0
-      insert.freada_brusca_progresso = progressoTempo ?? "0%"
-      insert.freada_brusca_progresso_mkbe = progressoMkbe ?? "0%"
-      insert.freada_brusca_porcentagem = porcentagem ?? "0%"
-    }
-    // Calcular o progresso com base no mbke
-    if (evento.code === 1153) {
-      // (RT) Marcha Lenta Excessiva
-      insert.marcha_lenta_excessiva_mkbe = mkbe ?? 0
-      insert.marcha_lenta_excessiva_progresso = progressoMkbe ?? "0%"
-    }
-    if (evento.code === 1156) {
-      // (RT) Aceleração Brusca
-      insert.aceleracao_brusca_mkbe = mkbe ?? 0
-      insert.aceleracao_brusca_progresso = progressoTempo ?? "0%"
-      insert.aceleracao_brusca_progresso_mkbe = progressoMkbe ?? "0%"
-      insert.aceleracao_brusca_porcentagem = porcentagem ?? "0%"
-    }
-    if (evento.code === 1252) {
-      // (RT) Curva Brusca
-      insert.curva_brusca_mkbe = mkbe ?? 0
-      insert.curva_brusca_progresso = progressoMkbe ?? "0%"
-    }
-    if (evento.code === 1136) {
-      // (RT) Excesso de Velocidade
-      insert.excesso_velocidade_mkbe = mkbe ?? 0
-      insert.excesso_velocidade_progresso = progressoMkbe ?? "0%"
-    }
+    await connMoratense("follow_up_monitor").insert(insert)
   }
-
-  let lastTotalConsumo = 0
-  let lastTotalSeguranca = 0
-  if (eventosLastWeek.length > 0) {
-    lastTotalConsumo = sumWithPrecision(
-      eventosLastWeek
-        .filter((e: any) => e.consumo === 1)
-        .map((e: any) => Number.parseInt(e.totalOccurances, 10)),
-    )
-    lastTotalSeguranca = sumWithPrecision(
-      eventosLastWeek
-        .filter((e: any) => e.seguranca === 1)
-        .map((e: any) => Number.parseInt(e.totalOccurances, 10)),
-    )
-  }
-
-  if (lastTotalConsumo !== 0 && totalConsumo !== 0) {
-    insert.ranking_consumo_mkbe =
-      (distanceKilometers / totalConsumo).toFixed(2) ?? 0
-    insert.ranking_consumo_progresso = `${((lastTotalConsumo / totalConsumo) * 100).toFixed(0)}%`
-  } else {
-    insert.ranking_consumo_progresso = "0%"
-  }
-  if (distanceKilometers !== 0 && totalConsumo !== 0) {
-    insert.ranking_consumo_mkbe =
-      (distanceKilometers / totalConsumo).toFixed(2) ?? 0
-  } else {
-    insert.ranking_consumo_mkbe = 0
-  }
-  if (lastTotalSeguranca !== 0 && totalSeguranca !== 0) {
-    insert.ranking_seguranca_progresso = `${((lastTotalSeguranca / totalSeguranca) * 100).toFixed(0)}%`
-  } else {
-    insert.ranking_seguranca_progresso = "0%"
-  }
-  if (distanceKilometers !== 0 && totalSeguranca !== 0) {
-    insert.ranking_seguranca_mkbe =
-      (distanceKilometers / totalSeguranca).toFixed(2) ?? 0
-  } else {
-    insert.ranking_seguranca_mkbe = 0
-  }
-
-  await connMoratense("follow_up_monitor").insert(insert)
 }
 
 const execute = async () => {
