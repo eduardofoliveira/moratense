@@ -9,6 +9,7 @@ import Position from "./models/Position"
 import Trip from "./models/Trip"
 import EventTypes from "./models/EventTypes"
 import Event from "./models/Event"
+// import dbTeleconsult from "./database/connectionManager"
 
 const today = new Date()
 // const start = format(subDays(today, 1), "yyyyMMdd000000")
@@ -72,6 +73,25 @@ const syncAssets = async () => {
     })
 
     for await (const carro of carros) {
+      // const connTeleconstult = await dbTeleconsult.getConnection()
+      // await connTeleconstult.raw(`
+      //   UPDATE
+      //     telemetria_carros
+      //   SET
+      //     carro = ${carro.Description}
+      //   WHERE
+      //     codigo_mix = ${carro.AssetId}
+      // `)
+
+      // await connTeleconstult.raw(`
+      //   UPDATE
+      //     carros
+      //   SET
+      //     codigo = ${carro.Description}
+      //   WHERE
+      //     codigo_mix = ${carro.AssetId}
+      // `)
+
       const asset = await Asset.findMixCode(carro.AssetId.toString())
       if (asset) {
         await Asset.update(asset.id, {
