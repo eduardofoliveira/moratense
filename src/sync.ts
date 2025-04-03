@@ -56,6 +56,10 @@ const sincronizarPosicoes = async ({ token }: { token: string }) => {
 }
 
 const executarPosicoes = async () => {
+  if (syncPosicoesRunning) {
+    return
+  }
+
   syncPosicoesRunning = true
   try {
     await new Promise((resolve) => setTimeout(resolve, 5000))
@@ -131,6 +135,10 @@ const sincronizarEventos = async ({ token }: { token: string }) => {
 }
 
 const executarEventos = async () => {
+  if (syncEventosRunning) {
+    return
+  }
+
   syncEventosRunning = true
   try {
     await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -215,6 +223,10 @@ const sincronizarViagens = async ({ token }: { token: number }) => {
 }
 
 const executarViagens = async () => {
+  if (syncViagensRunning) {
+    return
+  }
+
   syncViagensRunning = true
   try {
     await new Promise((resolve) => setTimeout(resolve, 5000))

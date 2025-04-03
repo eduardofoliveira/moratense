@@ -59,6 +59,12 @@ class ApiMix {
         return response
       },
       async (error) => {
+        if (error.status === 429) {
+          console.log("Aguardando 60 segundos devido ao erro 429")
+          await new Promise((resolve) => setTimeout(resolve, 60000))
+          return this.localAxios.request(error.config)
+        }
+
         const endTime = new Date()
         const duration =
           endTime.getTime() - error.config.metadata.startTime.getTime()
