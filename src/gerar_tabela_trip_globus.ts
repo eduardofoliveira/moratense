@@ -70,7 +70,12 @@ const inserirViagensRelacionadas = async ({
     DELETE FROM viagens_globus_processadas WHERE data_saida_garagem BETWEEN '${inicio} 03:00:00' AND '${termino} 02:59:59'
   `)
 
+  const total = resumoViagensGlobus.length
+  let cont = 0
   for await (const viagem of resumoViagensGlobus) {
+    cont++
+    console.log(`Inserindo ${cont} de ${total}`)
+
     await connMoratense.raw(`
         INSERT INTO viagens_globus_processadas
           (fk_id_linha_globus, fk_id_chassi, driverId, assetId, fuelUsedLitres, distanceKilometers, media, duracao_viagens_segundos, quantidade_viagens, tripsIds, data_saida_garagem)
@@ -100,7 +105,12 @@ const gerarIndicadores = async ({
       eventos_processados = false
   `)
 
+  const total = linhaChassi.length
+  let cont = 0
   for await (const viagem of linhaChassi) {
+    cont++
+    console.log(`Gerando indicadores ${cont} de ${total}`)
+
     const tripsIds = viagem.tripsIds.split(",")
 
     const resumo: Record<
@@ -115,7 +125,13 @@ const gerarIndicadores = async ({
       }
     > = {}
 
+    const totalTrips = tripsIds.length
+    let contTrip = 0
     for await (const tripId of tripsIds) {
+      contTrip++
+      console.log(
+        `Gerando indicadores ${cont} de ${total} - ${contTrip} de ${totalTrips}`,
+      )
       console.log("tripId", tripId)
 
       const [[trip]] = await connMoratense.raw(`
@@ -162,7 +178,7 @@ const gerarIndicadores = async ({
           ec.descricao_exibida asc
       `)
 
-      console.log(resumoEventos)
+      // console.log(resumoEventos)
 
       for await (const evento of resumoEventos) {
         if (!resumo[evento.code]) {
@@ -240,6 +256,9 @@ const executar = async () => {
       "yyyy-MM-dd",
     )
   }
+
+  console.log("FIM")
+  process.exit(0)
 }
 
 executar()
