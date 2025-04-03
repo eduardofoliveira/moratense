@@ -26,101 +26,94 @@ function dividirLista<T>(lista: T[], tamanho: number): T[][] {
 }
 
 const execute = async () => {
-  const inicio = parse("01-03-2025 00:00:00", "dd-MM-yyyy HH:mm:ss", new Date())
-  const fim = parse("15-03-2025 23:59:59", "dd-MM-yyyy HH:mm:ss", new Date())
+  // const inicio = parse("01-03-2025 00:00:00", "dd-MM-yyyy HH:mm:ss", new Date())
+  // const fim = parse("15-03-2025 23:59:59", "dd-MM-yyyy HH:mm:ss", new Date())
+
+  // const idEmpresa = 4
+  // const apiMix = await ApiMix.getInstance()
+  // const carros = await Asset.getAll()
+  // const listaDivididaCarros = dividirLista(carros, 100)
+
+  // let data = inicio
+  // while (isBefore(data, fim)) {
+  //   console.log({
+  //     start: format(subHours(startOfDay(data), 3), "yyyyMMddHHmmss"),
+  //     end: format(subHours(endOfDay(data), 3), "yyyyMMddHHmmss"),
+  //   })
+
+  //   for await (const assets of listaDivididaCarros) {
+  //     const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
+  //     const listaEventTypesCarregar =
+  //       await EventTypes.getAllActiveItensCarregar({
+  //         id_empresa: idEmpresa,
+  //       })
+  //     const tempEventTypes = listaEventTypesCarregar.map<string>(
+  //       (et) => et.eventTypeId,
+  //     )
+  //     const eventos = await apiMix.getEventByAssets({
+  //       assets: tempAssets,
+  //       tempEventTypes,
+  //       start: format(subHours(startOfDay(data), 3), "yyyyMMddHHmmss"),
+  //       end: format(subHours(endOfDay(data), 3), "yyyyMMddHHmmss"),
+  //     })
+
+  //     let cont = 0
+  //     const listaDividida = dividirLista(eventos, 100)
+  //     const total = listaDividida.length
+  //     for await (const listEnviar of listaDividida) {
+  //       console.log(`Enviando ${cont++} de ${total}`)
+
+  //       try {
+  //         const { data: wsResult } = await axios.post(
+  //           "http://teleconsult.com.br:3000/data/eventos",
+  //           {
+  //             eventos: listEnviar,
+  //           },
+  //         )
+  //         console.log("Eventos inseridos")
+  //         console.log(wsResult)
+  //       } catch (error) {
+  //         console.log("Erro ao inserir eventos")
+  //         console.log(error)
+  //       }
+  //     }
+  //   }
+
+  //   data = addDays(data, 1)
+  // }
 
   const idEmpresa = 4
   const apiMix = await ApiMix.getInstance()
   const carros = await Asset.getAll()
   const listaDivididaCarros = dividirLista(carros, 100)
-
-  let data = inicio
-  while (isBefore(data, fim)) {
-    console.log({
-      start: format(subHours(startOfDay(data), 3), "yyyyMMddHHmmss"),
-      end: format(subHours(endOfDay(data), 3), "yyyyMMddHHmmss"),
+  for await (const assets of listaDivididaCarros) {
+    const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
+    const listaEventTypesCarregar = await EventTypes.getAllActiveItensCarregar({
+      id_empresa: idEmpresa,
     })
-
-    for await (const assets of listaDivididaCarros) {
-      const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
-      const listaEventTypesCarregar =
-        await EventTypes.getAllActiveItensCarregar({
-          id_empresa: idEmpresa,
-        })
-      const tempEventTypes = listaEventTypesCarregar.map<string>(
-        (et) => et.eventTypeId,
+    const tempEventTypes = listaEventTypesCarregar.map<string>(
+      (et) => et.eventTypeId,
+    )
+    const eventos = await apiMix.getEventByAssets({
+      assets: tempAssets,
+      tempEventTypes,
+      // start: format(subMinutes(addHours(new Date(), 3), 240), "yyyyMMddHHmmss"),
+      // end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
+      start: "20250401210000",
+      end: "20250402205959",
+    })
+    const listaDividida = dividirLista(eventos, 1000)
+    for await (const listEnviar of listaDividida) {
+      const { data } = await axios.post(
+        "http://teleconsult.com.br:3000/data/eventos",
+        {
+          eventos: listEnviar,
+        },
       )
-      const eventos = await apiMix.getEventByAssets({
-        assets: tempAssets,
-        tempEventTypes,
-        start: format(subHours(startOfDay(data), 3), "yyyyMMddHHmmss"),
-        end: format(subHours(endOfDay(data), 3), "yyyyMMddHHmmss"),
-      })
-
-      let cont = 0
-      const listaDividida = dividirLista(eventos, 100)
-      const total = listaDividida.length
-      for await (const listEnviar of listaDividida) {
-        console.log(`Enviando ${cont++} de ${total}`)
-
-        try {
-          const { data: wsResult } = await axios.post(
-            "http://teleconsult.com.br:3000/data/eventos",
-            {
-              eventos: listEnviar,
-            },
-          )
-          console.log("Eventos inseridos")
-          console.log(wsResult)
-        } catch (error) {
-          console.log("Erro ao inserir eventos")
-          console.log(error)
-        }
-      }
+      console.log("Eventos inseridos")
+      console.log(data)
     }
-
-    data = addDays(data, 1)
   }
-
-  // const idEmpresa = 4
-  // const apiMix = await ApiMix.getInstance()
-  // // const dbMoratense = DbMoratense.getConnection()
-  // // const [result] = await dbMoratense.raw(`
-  // //   SELECT
-  // //     assetId
-  // //   FROM
-  // //     assets
-  // // `)
-  // const carros = await Asset.getAll()
-  // const listaDivididaCarros = dividirLista(carros, 100)
-  // for await (const assets of listaDivididaCarros) {
-  //   const tempAssets = assets.map<string>((asset) => asset.assetId.toString())
-  //   const listaEventTypesCarregar = await EventTypes.getAllActiveItensCarregar({
-  //     id_empresa: idEmpresa,
-  //   })
-  //   const tempEventTypes = listaEventTypesCarregar.map<string>(
-  //     (et) => et.eventTypeId,
-  //   )
-  //   const eventos = await apiMix.getEventByAssets({
-  //     assets: tempAssets,
-  //     tempEventTypes,
-  //     start: format(subMinutes(addHours(new Date(), 3), 240), "yyyyMMddHHmmss"),
-  //     end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
-  //     // start: "20250307030000",
-  //     // end: "20250308025959",
-  //   })
-  //   const listaDividida = dividirLista(eventos, 1000)
-  //   for await (const listEnviar of listaDividida) {
-  //     const { data } = await axios.post(
-  //       "http://teleconsult.com.br:3000/data/eventos",
-  //       {
-  //         eventos: listEnviar,
-  //       },
-  //     )
-  //     console.log("Eventos inseridos")
-  //     console.log(data)
-  //   }
-  // }
   console.log("FIM")
   process.exit(0)
 }

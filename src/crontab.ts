@@ -21,7 +21,7 @@ function executarComando(comando: any, callback: any) {
   )
 }
 
-cron.schedule("0 3 * * *", async () => {
+const executarRotina = async () => {
   console.log("Executando tarefa programada todos os dias às 03:00")
 
   executarComando(path.resolve("./dist/syncGlobus.js"), () => {
@@ -41,4 +41,14 @@ cron.schedule("0 3 * * *", async () => {
       )
     })
   })
+}
+
+executarRotina()
+
+cron.schedule("* * * * *", async () => {
+  console.log(new Date().toLocaleString())
 })
+
+// cron.schedule("0 3 * * *", async () => {
+
+// })
