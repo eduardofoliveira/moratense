@@ -8,6 +8,30 @@ class ApiMix {
   private localAxios: AxiosInstance
   private token = ""
   private tokenRenew: NodeJS.Timeout | null = null
+  private qtdRequisicoes = 0
+  private requisicoesPorMinuto = 18
+  private intervaloInicio = Date.now()
+
+  private async controlarRequisicoes(): Promise<void> {
+    const agora = Date.now()
+    const umMinuto = 60000
+
+    // Verifica se o intervalo de 1 minuto já passou
+    if (agora - this.intervaloInicio > umMinuto) {
+      this.qtdRequisicoes = 0
+      this.intervaloInicio = agora
+    }
+
+    // Se exceder o limite, aguarda 1 minuto
+    if (this.qtdRequisicoes >= this.requisicoesPorMinuto) {
+      console.log("Limite de requisições atingido. Aguardando 1 minuto...")
+      await new Promise((resolve) => setTimeout(resolve, umMinuto))
+      this.qtdRequisicoes = 0
+      this.intervaloInicio = Date.now()
+    }
+
+    this.qtdRequisicoes++
+  }
 
   private constructor() {
     this.localAxios = axios.create({
@@ -28,6 +52,7 @@ class ApiMix {
     })
 
     this.localAxios.interceptors.request.use(async (config: any) => {
+      await this.controlarRequisicoes() // Controla as requisições antes de enviar
       config.metadata = { startTime: new Date() }
       return config
     })
