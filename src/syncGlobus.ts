@@ -441,10 +441,10 @@ const syncViagensGlobus = async () => {
 }
 
 const sync = async () => {
-  await syncCarrosGlobus()
-  await syncLinhasGlobus()
-  await syncFuncionariosGlobus()
-  await syncViagensGlobus()
+  // await syncCarrosGlobus()
+  // await syncLinhasGlobus()
+  // await syncFuncionariosGlobus()
+  // await syncViagensGlobus()
   process.exit(0)
 }
 
