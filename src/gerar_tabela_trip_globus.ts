@@ -234,8 +234,8 @@ const gerarIndicadores = async ({
 
 const executar = async () => {
   const today = new Date()
-  const inicio = format(startOfDay(subDays(today, 3)), "yyyy-MM-dd")
-  const termino = format(endOfDay(subDays(today, 2)), "yyyy-MM-dd")
+  const inicio = format(startOfDay(subDays(today, 4)), "yyyy-MM-dd")
+  const termino = format(endOfDay(subDays(today, 3)), "yyyy-MM-dd")
   // const inicio = "2025-03-28"
   // const termino = "2025-03-29"
 
