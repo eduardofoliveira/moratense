@@ -45,12 +45,10 @@ const executarRotina = async () => {
   })
 }
 
-executarRotina()
-
-cron.schedule("* * * * *", async () => {
-  console.log(new Date().toLocaleString())
-})
-
-// cron.schedule("0 3 * * *", async () => {
-
+// cron.schedule("* * * * *", async () => {
+//   console.log(new Date().toLocaleString())
 // })
+
+cron.schedule("0 4 * * *", async () => {
+  executarRotina()
+})
