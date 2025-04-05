@@ -99,19 +99,31 @@ const execute = async () => {
       tempEventTypes,
       // start: format(subMinutes(addHours(new Date(), 3), 240), "yyyyMMddHHmmss"),
       // end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
-      start: "20250401210000",
-      end: "20250402205959",
+      start: "20250403200000",
+      end: "20250404022100",
     })
-    const listaDividida = dividirLista(eventos, 1000)
+    const listaDividida = dividirLista(eventos, 100)
+
+    const total = listaDividida.length
+    let cont = 0
     for await (const listEnviar of listaDividida) {
-      const { data } = await axios.post(
-        "http://teleconsult.com.br:3000/data/eventos",
-        {
-          eventos: listEnviar,
-        },
-      )
-      console.log("Eventos inseridos")
-      console.log(data)
+      console.log(`Enviando ${cont++} de ${total}`)
+
+      try {
+        const { data } = await axios.post(
+          "http://teleconsult.com.br:3000/data/eventos",
+          {
+            eventos: listEnviar,
+          },
+          {
+            timeout: 30000,
+          },
+        )
+        console.log("Eventos inseridos")
+        console.log(data)
+      } catch (error) {
+        console.error("Erro ao inserir eventos")
+      }
     }
   }
   console.log("FIM")

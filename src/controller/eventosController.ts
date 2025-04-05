@@ -108,6 +108,7 @@ const batchInsert = async (req: Request, res: Response): Promise<any> => {
           ? evento.TotalOccurances
           : 1,
         data_turno_tel: converteDataParaTurno(evento.StartDateTime),
+        valor_evento: evento?.Value?.toString(),
         data: new Date(),
         long,
         lat,

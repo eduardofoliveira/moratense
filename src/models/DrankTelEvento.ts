@@ -13,6 +13,7 @@ export type IDrankTelEvento = {
   data_ini: Date | string
   data_fim: Date | string
   tempo: number
+  valor_evento?: string
   quantidades_ocorrencias: number
   id_endereco?: number
   long: string

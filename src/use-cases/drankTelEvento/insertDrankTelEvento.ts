@@ -14,6 +14,7 @@ type Params = {
   data: Date
   long: string
   lat: string
+  valor_evento?: string
   codigo_motorista_gb?: number
   codigo_motorista_db_teste?: number
   id_endereco?: number
