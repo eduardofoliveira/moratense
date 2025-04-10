@@ -1,27 +1,11 @@
 import "dotenv/config"
 import { subDays, format, parse, addDays } from "date-fns"
-import fs from "node:fs"
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 
-const arquivo = fs.createWriteStream("log.txt", { flags: "a" })
-
-type ListProcessar = {
-  fk_id_follow_up_type: string
-  horario: string
-  chapa_motorista: number
-  driverId: string
-  chapa_monitor: number
-  monitorId: string
-  driver: string
-  monitor: string
-  priority: number
-}
-
-type Params = {
+type InputParams = {
   start: string
   end: string
-  listaProcessar: ListProcessar[]
 }
 
 function calcularVariacaoPercentual(valorAnterior: number, valorAtual: number) {
@@ -32,7 +16,7 @@ function calcularVariacaoPercentual(valorAnterior: number, valorAtual: number) {
   return `${variacao.toFixed(2)}%` // Arredonda para 2 casas decimais
 }
 
-const execute = async ({ start, end, listaProcessar }: Params) => {
+const gerarIndicadores = async ({ start, end }: InputParams) => {
   const startLastWeek = format(
     subDays(parse(start, "yyyy-MM-dd HH:mm:ss", new Date()), 7),
     "yyyy-MM-dd HH:mm:ss",
@@ -42,94 +26,131 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
     "yyyy-MM-dd HH:mm:ss",
   )
 
-  let count = 0
-  for await (const item of listaProcessar) {
-    console.log(`Processando ${count} de ${listaProcessar.length}`)
-    count++
+  const connMoratense = DbMoratense.getConnection()
+  const [motoristasNaoMonitorados] = await connMoratense.raw(`
+    SELECT
+      *
+    FROM
+      drivers
+    WHERE
+      driverId NOT IN (
+        SELECT
+          distinct d.driverId
+        FROM
+          follow_up f,
+          drivers d
+        WHERE
+          f.chapa_motorista = d.employeeNumber and
+          f.horario BETWEEN '${start}' AND '${end}'
+      ) and
+      employeeNumber > 0
+  `)
 
-    const dbMoratense = DbMoratense.getConnection()
-    const [viagensChassi] = await dbMoratense.raw(`
+  for await (const motorista of motoristasNaoMonitorados) {
+    const { driverId, employeeNumber } = motorista
+    const chapa = employeeNumber
+
+    const [sumarizacaoCorridasLastWeek] = await connMoratense.raw(`
       SELECT
-        SUM(v.duracao_viagens_segundos) AS duracao_viagens_segundos,
-        SUM(distanceKilometers) AS distanceKilometers,
-        c.numero_chassi
+        c.numero_chassi,
+        sum(v.fuelUsedLitres) AS fuelUsedLitres,
+        sum(v.distanceKilometers) AS distanceKilometers,
+        sum(v.duracao_viagens_segundos) AS duracao_viagens_segundos
       FROM
         viagens_globus_processadas v,
         chassi c
       WHERE
         v.fk_id_chassi = c.id and
-        v.driverId = ${item.driverId} and
-        v.data_saida_garagem BETWEEN '${start}' AND '${end}'
+        v.driverId = ${driverId} and
+        v.data_saida_garagem BETWEEN '${startLastWeek}' AND '${endLastWeek}'
       GROUP BY
-	      c.numero_chassi
+        c.numero_chassi
     `)
 
-    for await (const chassi of viagensChassi) {
-      const [[viagensLastWeek]] = await dbMoratense.raw(`
-        SELECT
-          SUM(v.duracao_viagens_segundos) AS duracao_viagens_segundos,
-          SUM(distanceKilometers) AS distanceKilometers,
-          c.numero_chassi
-        FROM
-          viagens_globus_processadas v,
-          chassi c
-        WHERE
-          v.fk_id_chassi = c.id and
-          v.driverId = ${item.driverId} and
-          v.data_saida_garagem BETWEEN '${startLastWeek}' AND '${endLastWeek}' and
-          c.numero_chassi = ${chassi.numero_chassi}
-        GROUP BY
-          c.numero_chassi
-      `)
+    if (sumarizacaoCorridasLastWeek.length === 0) {
+      continue
+    }
 
-      const duracao_viagens_segundos = chassi.duracao_viagens_segundos
-      const distanceKilometers = chassi.distanceKilometers
-      const numeroChassi = chassi.numero_chassi
+    const [sumarizacaoCorridas] = await connMoratense.raw(`
+      SELECT
+        c.numero_chassi,
+        sum(v.fuelUsedLitres) AS fuelUsedLitres,
+        sum(v.distanceKilometers) AS distanceKilometers,
+        sum(v.duracao_viagens_segundos) AS duracao_viagens_segundos
+      FROM
+        viagens_globus_processadas v,
+        chassi c
+      WHERE
+        v.fk_id_chassi = c.id and
+        v.driverId = ${driverId} and
+        v.data_saida_garagem BETWEEN '${start}' AND '${end}'
+      GROUP BY
+        c.numero_chassi
+    `)
 
-      const [eventosLastWeek] = await dbMoratense.raw(`
-        SELECT
+    if (sumarizacaoCorridas.length === 0) {
+      continue
+    }
+
+    const [eventosLastWeek] = await connMoratense.raw(`
+      SELECT
+          c.numero_chassi,
           e.code,
           e.descricao_exibida,
           SUM(e.totalOccurances) AS totalOccurances,
           SUM(e.totalTimeSeconds) AS totalTimeSeconds,
           e.seguranca,
           e.consumo
-        FROM
-          viagens_globus_processadas v,
-          eventos_viagens_globus_processadas e,
-          chassi c
-        WHERE
-          v.fk_id_chassi = c.id and
-          v.id = e.fk_id_viagens_globus_processadas and
-          driverId = ${item.driverId} and
-          data_saida_garagem BETWEEN '${startLastWeek}' AND '${endLastWeek}' and
-          c.numero_chassi = ${numeroChassi}
-        GROUP BY
-          e.code
-      `)
+      FROM
+        viagens_globus_processadas v,
+        eventos_viagens_globus_processadas e,
+        chassi c
+      WHERE
+        v.id = e.fk_id_viagens_globus_processadas and
+        v.fk_id_chassi = c.id and
+        v.driverId = ${driverId} and
+        v.data_saida_garagem BETWEEN '${startLastWeek}' AND '${endLastWeek}'
+      GROUP BY
+        e.code,
+        c.numero_chassi
+    `)
 
-      const [eventos] = await dbMoratense.raw(`
-        SELECT
-          e.code,
-          e.descricao_exibida,
-          SUM(e.totalOccurances) AS totalOccurances,
-          SUM(e.totalTimeSeconds) AS totalTimeSeconds,
-          e.seguranca,
-          e.consumo
-        FROM
-          viagens_globus_processadas v,
-          eventos_viagens_globus_processadas e,
-          chassi c
-        WHERE
-          v.fk_id_chassi = c.id and
-          v.id = e.fk_id_viagens_globus_processadas and
-          driverId = ${item.driverId} and
-          data_saida_garagem BETWEEN '${start}' AND '${end}' and
-          c.numero_chassi = ${numeroChassi}
-        GROUP BY
-          e.code
-      `)
+    if (eventosLastWeek.length === 0) {
+      continue
+    }
 
+    const [eventos] = await connMoratense.raw(`
+      SELECT
+        c.numero_chassi,
+        e.code,
+        e.descricao_exibida,
+        SUM(e.totalOccurances) AS totalOccurances,
+        SUM(e.totalTimeSeconds) AS totalTimeSeconds,
+        e.seguranca,
+        e.consumo
+    FROM
+      viagens_globus_processadas v,
+      eventos_viagens_globus_processadas e,
+      chassi c
+    WHERE
+      v.id = e.fk_id_viagens_globus_processadas and
+      v.fk_id_chassi = c.id and
+      v.driverId = ${driverId} and
+      v.data_saida_garagem BETWEEN '${start}' AND '${end}'
+    GROUP BY
+      e.code,
+      c.numero_chassi
+    `)
+
+    if (eventos.length === 0) {
+      continue
+    }
+
+    const listaChassis = new Set(
+      eventos.map((e: any) => e.numero_chassi),
+    ).values()
+
+    for await (const chassiAtual of listaChassis) {
       const insert: any = {}
       insert.fora_faixa_verde_mkbe = 0
       insert.fora_faixa_verde_progresso = "0%"
@@ -158,11 +179,36 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
       insert.aceleracao_brusca_progresso_mkbe = 0
       insert.aceleracao_brusca_porcentagem = 0
 
-      insert.fk_id_follow_up_type = item.fk_id_follow_up_type
+      insert.fk_id_follow_up_type = 5
       insert.follow_up_date = end.replace("02:59:59", "08:00:00")
-      insert.driverId = item.driverId
-      insert.monitorId = item.monitorId
-      insert.chassi = numeroChassi
+      insert.driverId = driverId
+      insert.monitorId = null
+      insert.chassi = chassiAtual
+
+      if (
+        !sumarizacaoCorridasLastWeek.find(
+          (c: any) => c.numero_chassi === chassiAtual,
+        )
+      ) {
+        continue
+      }
+
+      const {
+        fuelUsedLitres: fuelUsedLitresLastWeek,
+        distanceKilometers: distanceKilometersLastWeek,
+        duracao_viagens_segundos: duracao_viagens_segundosLastWeek,
+      } = sumarizacaoCorridasLastWeek.find(
+        (c: any) => c.numero_chassi === chassiAtual,
+      )
+
+      if (
+        !sumarizacaoCorridas.find((c: any) => c.numero_chassi === chassiAtual)
+      ) {
+        continue
+      }
+
+      const { fuelUsedLitres, distanceKilometers, duracao_viagens_segundos } =
+        sumarizacaoCorridas.find((c: any) => c.numero_chassi === chassiAtual)
 
       let lastTotalConsumo = 0
       let lastTotalSeguranca = 0
@@ -195,43 +241,18 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         const eventoLastWeek = eventosLastWeek.find(
           (e: any) => e.code === evento.code,
         )
+        const eventosLastWeekChassi = eventosLastWeek.filter(
+          (e: any) => e.numero_chassi === chassiAtual,
+        )
 
         let mkbeLastWeek = ""
         let progressoTempo = ""
-        if (viagensLastWeek && eventoLastWeek) {
+        if (distanceKilometersLastWeek && eventoLastWeek) {
           mkbeLastWeek = (
-            viagensLastWeek.distanceKilometers / eventoLastWeek.totalOccurances
+            distanceKilometersLastWeek / eventoLastWeek.totalOccurances
           ).toFixed(2)
         } else {
           mkbeLastWeek = "0"
-        }
-
-        if (viagensLastWeek && eventoLastWeek) {
-          arquivo.write("INICIO EVENTO\r\n")
-          arquivo.write(`${evento.code}\r\n`)
-          arquivo.write("mkbeLastWeek\r\n")
-          arquivo.write(
-            `viagensLastWeek.distanceKilometers ${viagensLastWeek.distanceKilometers}\r\n`,
-          )
-          arquivo.write(
-            `eventoLastWeek.totalOccurances ${eventoLastWeek.totalOccurances}\r\n`,
-          )
-          arquivo.write(`${mkbeLastWeek}\r\n`)
-          arquivo.write("\r\n")
-
-          // console.log("INICIO EVENTO")
-          // console.log(evento.code)
-          // console.log("mkbeLastWeek")
-          // console.log(
-          //   "viagensLastWeek.distanceKilometers",
-          //   viagensLastWeek.distanceKilometers,
-          // )
-          // console.log(
-          //   "eventoLastWeek.totalOccurances",
-          //   eventoLastWeek.totalOccurances,
-          // )
-          // console.log(mkbeLastWeek)
-          // console.log("")
         }
 
         if (
@@ -261,38 +282,7 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
           progressoTempo = "0%"
         }
 
-        if (
-          eventoLastWeek &&
-          Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) &&
-          Number.parseInt(evento.totalTimeSeconds, 10)
-        ) {
-          arquivo.write("progressoTempo\r\n")
-          arquivo.write(`eventoLastWeek ${eventoLastWeek.totalTimeSeconds}\r\n`)
-          arquivo.write(`evento ${evento.totalTimeSeconds}\r\n`)
-          arquivo.write(`${progressoTempo}\r\n`)
-          arquivo.write(`${progressoTempo}\r\n`)
-          arquivo.write("\r\n")
-          arquivo.write("mkbe\r\n")
-          arquivo.write(`distanceKilometers ${distanceKilometers}\r\n`)
-          arquivo.write(`totalOccurances ${evento.totalOccurances}\r\n`)
-          arquivo.write("\r\n")
-
-          // console.log("progressoTempo")
-          // console.log("eventoLastWeek", eventoLastWeek.totalTimeSeconds)
-          // console.log("evento", evento.totalTimeSeconds)
-          // console.log(progressoTempo)
-          // console.log("")
-
-          // console.log("mkbe")
-          // console.log("distanceKilometers", distanceKilometers)
-          // console.log("totalOccurances", evento.totalOccurances)
-          // console.log("")
-        }
-
         const mkbe = (distanceKilometers / evento.totalOccurances).toFixed(2)
-        arquivo.write(`mkbe ${mkbe}\r\n`)
-        // console.log("mkbe", mkbe)
-
         let progressoMkbe = ""
         if (Number.parseFloat(mkbeLastWeek) && Number.parseFloat(mkbe)) {
           if (evento.code === 1255) {
@@ -316,18 +306,6 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         } else {
           progressoMkbe = "0%"
         }
-
-        arquivo.write("progressoMkbe\r\n")
-        arquivo.write(`mkbeLastWeek ${mkbeLastWeek}\r\n`)
-        arquivo.write(`mkbe ${mkbe}\r\n`)
-        arquivo.write(`${progressoMkbe}\r\n`)
-        arquivo.write("\r\n")
-
-        // console.log("progressoMkbe")
-        // console.log("mkbeLastWeek", mkbeLastWeek)
-        // console.log("mkbe", mkbe)
-        // console.log(progressoMkbe)
-        // console.log("")
 
         const porcentagem = (
           (evento.totalTimeSeconds / duracao_viagens_segundos) *
@@ -390,6 +368,13 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
       if (lastTotalConsumo !== 0 && totalConsumo !== 0) {
         insert.ranking_consumo_mkbe =
           (distanceKilometers / totalConsumo).toFixed(2) ?? 0
+
+        // console.log("ranking_consumo_progresso")
+        // console.log(lastTotalConsumo)
+        // console.log(totalConsumo)
+        // console.log(calcularVariacaoPercentual(lastTotalConsumo, totalConsumo))
+        // console.log("")
+
         insert.ranking_consumo_progresso = calcularVariacaoPercentual(
           lastTotalConsumo,
           totalConsumo,
@@ -404,6 +389,14 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         insert.ranking_consumo_mkbe = 0
       }
       if (lastTotalSeguranca !== 0 && totalSeguranca !== 0) {
+        // console.log("ranking_seguranca_progresso")
+        // console.log(lastTotalSeguranca)
+        // console.log(totalSeguranca)
+        // console.log(
+        //   calcularVariacaoPercentual(lastTotalSeguranca, totalSeguranca),
+        // )
+        // console.log("")
+
         insert.ranking_seguranca_progresso = calcularVariacaoPercentual(
           lastTotalSeguranca,
           totalSeguranca,
@@ -425,30 +418,14 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         insert.ranking_seguranca_mkbe = 0
       }
 
-      const [[lastOrientation]] = await dbMoratense.raw(`
-        SELECT
-          horario
-        FROM
-          follow_up
-        WHERE
-          chapa_motorista = ${item.chapa_motorista} and
-          chapa_monitor = ${item.chapa_monitor}
-        ORDER BY
-          horario desc
-        LIMIT 1
-      `)
+      insert.last_orientation = "0000-00-00 00:00:00"
 
-      insert.last_orientation = format(
-        new Date(lastOrientation.horario),
-        "yyyy-MM-dd HH:mm:ss",
-      )
-
-      await dbMoratense("follow_up_driver").insert(insert)
+      await connMoratense("follow_up_driver").insert(insert)
     }
   }
 }
 
-const test = async () => {
+const execute = async () => {
   // const hoje = new Date()
   // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
@@ -456,39 +433,18 @@ const test = async () => {
   const start = "2025-03-31 03:00:00"
   const end = "2025-04-07 02:59:59"
 
-  const connMoratense = DbMoratense.getConnection()
-  const [listaProcessar] = await connMoratense.raw(`
-    SELECT
-      min(f.fk_id_follow_up_type) AS fk_id_follow_up_type,
-      max(f.horario) AS horario,
-      f.chapa_motorista,
-      d.driverId AS driverId,
-      f.chapa_monitor,
-      m.driverId AS monitorId,
-      d.name AS driver,
-      m.name AS monitor,
-      min(ft.priority) AS priority
-    FROM
-      follow_up f,
-      drivers d,
-      drivers m,
-      follow_up_type ft
-    WHERE
-      f.chapa_motorista = d.employeeNumber and
-      f.chapa_monitor = m.employeeNumber and
-      f.fk_id_follow_up_type = ft.id and
-      horario BETWEEN '${start}' AND '${end}' and
-      f.processado = 0
-    GROUP BY
-      f.chapa_motorista,
-      f.chapa_monitor
-  `)
-
-  await execute({
+  await gerarIndicadores({
     start,
     end,
-    listaProcessar,
   })
 }
 
-test()
+execute()
+  .catch((error) => {
+    console.error("Erro ao executar o script:", error)
+    process.exit(1)
+  })
+  .finally(() => {
+    console.log("Finalizando o processo")
+    process.exit(0)
+  })

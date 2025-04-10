@@ -25,6 +25,8 @@
     "process-plataform": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/process-follow-up-plataform.ts",
     "process-garage": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/process-follow-up-garage.ts",
     "process-cross": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/process-follow-up-cross-reference.ts",
+    "process-unmonitored": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/process-follow-up-nao-monitorados.ts",
+    "process-monitor-geral": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/process-follow-up-monitor-geral.ts",
     "vinculo": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/vinculo.ts",
     "gerar_tabela_trip_globus": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/gerar_tabela_trip_globus.ts",
     "crontab": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/crontab.ts",

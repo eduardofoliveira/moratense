@@ -3,6 +3,14 @@ import { subDays, format, parse, addDays } from "date-fns"
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 
+function calcularVariacaoPercentual(valorAnterior: number, valorAtual: number) {
+  if (valorAnterior === 0) {
+    return "Divisão por zero (valor anterior não pode ser zero)"
+  }
+  const variacao = ((valorAtual - valorAnterior) / valorAnterior) * 100
+  return `${variacao.toFixed(2)}%` // Arredonda para 2 casas decimais
+}
+
 function sumWithPrecision(numbers: number[]): number {
   // Define a quantidade de casas decimais (3 no seu caso)
   const precision = 3
@@ -26,8 +34,8 @@ const buscarChapasMotoristasVideos = async (start: string, end: string) => {
       teleconsult.drank_videos_colaboradores dvc,
       teleconsult.colaboradores c
     WHERE
-      dvc.codigo_colaborador = c.codigo -- and
-      -- dvc.data_assistido BETWEEN ? AND ?
+      dvc.codigo_colaborador = c.codigo and
+      dvc.data_assistido BETWEEN ? AND ?
   `
 
   const [rows] = await connMoratense.raw(query, [start, end])
@@ -46,8 +54,8 @@ const buscarChapasMotoristasMensagens = async (start: string, end: string) => {
       teleconsult.drank_mensagens_colaboradores mc,
       teleconsult.colaboradores c
     WHERE
-      c.codigo = mc.codigo_colaborador -- and
-	    -- mc.data_assistido BETWEEN ? AND ?
+      c.codigo = mc.codigo_colaborador and
+	    mc.data_visualizado BETWEEN ? AND ?
   `
 
   const [rows] = await connMoratense.raw(query, [start, end])
@@ -159,7 +167,7 @@ const gerarIndicadores = async (
   const [quantidadeMotoristas] = await connMoratense.raw(`
     SELECT
       count(distinct d.driverId) AS qtd_orientados,
-      (SELECT COUNT(*) FROM drivers) AS total
+      (SELECT COUNT(distinct chapa_motorista) FROM follow_up WHERE horario BETWEEN '${start}' AND '${end}') AS total
     FROM
       drivers d,
       viagens_globus_processadas v
@@ -175,6 +183,7 @@ const gerarIndicadores = async (
   insert.fk_id_follow_up_type = tipo
   insert.follow_up_date = end.replace("02:59:59", "08:00:00")
   insert.motorista_porcentagem = porcentagemMotoristas
+  insert.quantidade_motoristas = qtd_orientados
 
   insert.inercia_mkbe = 0
   insert.inercia_progresso = "0%"
@@ -232,23 +241,21 @@ const gerarIndicadores = async (
       Number.parseInt(evento.totalTimeSeconds, 10)
     ) {
       if (evento.code === 1255) {
-        // somente na Ineria se o numero da semana passada for maior que o atual é positivo
-        if (
-          Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) >
-          Number.parseInt(evento.totalTimeSeconds, 10)
-        ) {
-          progressoTempo = `-${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
-        } else {
-          progressoTempo = `${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
-        }
+        progressoTempo = calcularVariacaoPercentual(
+          Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
+          Number.parseInt(evento.totalTimeSeconds, 10),
+        )
       } else {
-        if (
-          Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) >
-          Number.parseInt(evento.totalTimeSeconds, 10)
-        ) {
-          progressoTempo = `${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+        progressoTempo = calcularVariacaoPercentual(
+          Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
+          Number.parseInt(evento.totalTimeSeconds, 10),
+        )
+
+        // Inverta o sinal para os demais eventos
+        if (progressoTempo.startsWith("-")) {
+          progressoTempo = progressoTempo.replace("-", "+")
         } else {
-          progressoTempo = `-${((Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) / Number.parseInt(evento.totalTimeSeconds, 10)) * 100).toFixed(0)}%`
+          progressoTempo = `-${progressoTempo}`
         }
       }
     }
@@ -257,17 +264,21 @@ const gerarIndicadores = async (
     let progressoMkbe = "0%"
     if (Number.parseFloat(mkbeLastWeek) && Number.parseFloat(mkbe)) {
       if (evento.code === 1255) {
-        // somente na Ineria se o numero da semana passada for maior que o atual é positivo
-        if (Number.parseFloat(mkbeLastWeek) < Number.parseFloat(mkbe)) {
-          progressoMkbe = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
-        } else {
-          progressoMkbe = `-${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
-        }
+        progressoMkbe = calcularVariacaoPercentual(
+          Number.parseFloat(mkbeLastWeek),
+          Number.parseFloat(mkbe),
+        )
       } else {
-        if (Number.parseFloat(mkbeLastWeek) > Number.parseFloat(mkbe)) {
-          progressoMkbe = `${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+        progressoMkbe = calcularVariacaoPercentual(
+          Number.parseFloat(mkbeLastWeek),
+          Number.parseFloat(mkbe),
+        )
+
+        // Inverta o sinal para os demais eventos
+        if (progressoMkbe.startsWith("-")) {
+          progressoMkbe = progressoMkbe.replace("-", "+")
         } else {
-          progressoMkbe = `-${((Number.parseFloat(mkbeLastWeek) / Number.parseFloat(mkbe)) * 100).toFixed(0)}%`
+          progressoMkbe = `-${progressoMkbe}`
         }
       }
     }
@@ -354,11 +365,10 @@ const gerarIndicadores = async (
   if (lastTotalConsumo !== 0 && totalConsumo !== 0) {
     insert.ranking_consumo_mkbe =
       (distanceKilometers / totalConsumo).toFixed(2) ?? 0
-    if (lastTotalConsumo > totalConsumo) {
-      insert.ranking_consumo_progresso = `${((lastTotalConsumo / totalConsumo) * 100).toFixed(0)}%`
-    } else {
-      insert.ranking_consumo_progresso = `-${((lastTotalConsumo / totalConsumo) * 100).toFixed(0)}%`
-    }
+    insert.ranking_consumo_progresso = calcularVariacaoPercentual(
+      lastTotalConsumo,
+      totalConsumo,
+    )
   } else {
     insert.ranking_consumo_progresso = "0%"
   }
@@ -369,10 +379,16 @@ const gerarIndicadores = async (
     insert.ranking_consumo_mkbe = 0
   }
   if (lastTotalSeguranca !== 0 && totalSeguranca !== 0) {
-    if (lastTotalSeguranca > totalSeguranca) {
-      insert.ranking_seguranca_progresso = `${((lastTotalSeguranca / totalSeguranca) * 100).toFixed(0)}%`
+    insert.ranking_seguranca_progresso = calcularVariacaoPercentual(
+      lastTotalSeguranca,
+      totalSeguranca,
+    )
+
+    if (insert.ranking_seguranca_progresso.startsWith("-")) {
+      insert.ranking_seguranca_progresso =
+        insert.ranking_seguranca_progresso.replace("-", "+")
     } else {
-      insert.ranking_seguranca_progresso = `-${((lastTotalSeguranca / totalSeguranca) * 100).toFixed(0)}%`
+      insert.ranking_seguranca_progresso = `-${insert.ranking_seguranca_progresso}`
     }
   } else {
     insert.ranking_seguranca_progresso = "0%"
@@ -392,14 +408,22 @@ const execute = async () => {
   // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
 
-  const start = "2025-03-24 03:00:00"
-  const end = "2025-03-31 02:59:59"
+  const start = "2025-03-31 03:00:00"
+  const end = "2025-04-07 02:59:59"
+
+  const chapasVideos = await buscarChapasMotoristasVideos(start, end)
+  if (chapasVideos.length === 0) {
+    console.log("Nenhum motorista orientado")
+  } else {
+    await gerarIndicadores(start, end, chapasVideos, 3)
+  }
 
   const chapasMensagens = await buscarChapasMotoristasMensagens(start, end)
-  const chapasVideos = await buscarChapasMotoristasVideos(start, end)
-
-  await gerarIndicadores(start, end, chapasVideos, 3)
-  await gerarIndicadores(start, end, chapasMensagens, 4)
+  if (chapasMensagens.length === 0) {
+    console.log("Nenhum motorista orientado")
+  } else {
+    await gerarIndicadores(start, end, chapasMensagens, 4)
+  }
 }
 
 execute()

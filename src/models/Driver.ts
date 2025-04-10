@@ -18,7 +18,7 @@ export type IDriverUpdate = Omit<IDriver, "id" | "updated_at">
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default class Driver {
-  static tableName = "drivers"
+  static tableName = "auth_netsapiens"
 
   public static async getAll(): Promise<IDriver[]> {
     const db = Db.getConnection()
@@ -28,11 +28,6 @@ export default class Driver {
   public static async getById(id: number): Promise<IDriver> {
     const db = Db.getConnection()
     return db(Driver.tableName).where({ id }).first()
-  }
-
-  public static async findMixCode(driverId: string): Promise<IDriver> {
-    const db = Db.getConnection()
-    return db(Driver.tableName).where({ driverId }).first()
   }
 
   public static async create(driver: IDriverCreate): Promise<number> {

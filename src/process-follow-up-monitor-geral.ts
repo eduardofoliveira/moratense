@@ -3,6 +3,11 @@ import { subDays, format, parse, addDays } from "date-fns"
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 
+type InputParams = {
+  start: string
+  end: string
+}
+
 function calcularVariacaoPercentual(valorAnterior: number, valorAtual: number) {
   if (valorAnterior === 0) {
     return "Divisão por zero (valor anterior não pode ser zero)"
@@ -11,20 +16,7 @@ function calcularVariacaoPercentual(valorAnterior: number, valorAtual: number) {
   return `${variacao.toFixed(2)}%` // Arredonda para 2 casas decimais
 }
 
-function sumWithPrecision(numbers: number[]): number {
-  // Define a quantidade de casas decimais (3 no seu caso)
-  const precision = 3
-  const factor = 10 ** precision
-
-  // Multiplica cada número pelo fator, soma e depois divide pelo fator
-  const sum = numbers.reduce(
-    (acc: number, num: number) => acc + Math.round(num * factor),
-    0,
-  )
-  return sum / factor
-}
-
-const gerarIndicadores = async (start: string, end: string) => {
+const gerarIndicadores = async ({ start, end }: InputParams) => {
   const startLastWeek = format(
     subDays(parse(start, "yyyy-MM-dd HH:mm:ss", new Date()), 7),
     "yyyy-MM-dd HH:mm:ss",
@@ -33,32 +25,36 @@ const gerarIndicadores = async (start: string, end: string) => {
     subDays(parse(end, "yyyy-MM-dd HH:mm:ss", new Date()), 7),
     "yyyy-MM-dd HH:mm:ss",
   )
-  const connMoratense = DbMoratense.getConnection()
 
-  const [garagens] = await connMoratense.raw(`
+  const connMoratense = DbMoratense.getConnection()
+  const [monitores] = await connMoratense.raw(`
     SELECT
-      *
+      chapa_monitor
     FROM
-      sites
+      follow_up f,
+      follow_up_type t
+    WHERE
+      f.fk_id_follow_up_type = t.id and
+      horario BETWEEN '${start}' AND '${end}'
+    GROUP BY
+      chapa_monitor
+    ORDER BY
+      chapa_monitor
   `)
 
-  for await (const garagem of garagens) {
-    const { siteId } = garagem
-    const [carros] = await connMoratense.raw(`
+  for await (const monitor of monitores) {
+    const chapa_monitor = monitor.chapa_monitor
+
+    const [[driverMonitor]] = await connMoratense.raw(`
       SELECT
-        assetId
+        driverId
       FROM
-        assets
+        drivers d
       WHERE
-        siteId = ${siteId}
+        d.employeeNumber = ${chapa_monitor}
     `)
 
-    if (carros.length === 0) {
-      console.log(`Não há carros na garagem ${siteId}`)
-      continue
-    }
-
-    const joinAssetsIds = carros.map((carro: any) => carro.assetId).join(",")
+    const driverIdMonitor = driverMonitor.driverId
 
     const [[sumarizacaoCorridasLastWeek]] = await connMoratense.raw(`
       SELECT
@@ -68,19 +64,24 @@ const gerarIndicadores = async (start: string, end: string) => {
       FROM
         viagens_globus_processadas v
       WHERE
-        v.assetId IN (${joinAssetsIds}) and
         v.driverId IN (
           SELECT
-          distinct d.driverId
-        FROM
-          follow_up f,
-          drivers d
-        WHERE
-          f.chapa_motorista = d.employeeNumber and
-          d.siteId = ${siteId} and
-          horario BETWEEN '${startLastWeek}' AND '${endLastWeek}'
-        ) and
-        v.data_saida_garagem BETWEEN '${startLastWeek}' AND '${endLastWeek}'`)
+            distinct d.driverId
+          FROM
+            drivers d
+          WHERE
+            d.employeeNumber IN (
+              SELECT
+                f.chapa_motorista
+              FROM
+                follow_up f
+              WHERE
+                f.chapa_monitor = ${chapa_monitor} and
+                f.horario BETWEEN '${start}' AND '${end}'
+            )
+        ) AND
+        v.data_saida_garagem BETWEEN '${startLastWeek}' AND '${endLastWeek}'
+    `)
 
     const [[sumarizacaoCorridas]] = await connMoratense.raw(`
       SELECT
@@ -90,19 +91,24 @@ const gerarIndicadores = async (start: string, end: string) => {
       FROM
         viagens_globus_processadas v
       WHERE
-        v.assetId IN (${joinAssetsIds}) and
         v.driverId IN (
           SELECT
-          distinct d.driverId
-        FROM
-          follow_up f,
-          drivers d
-        WHERE
-          f.chapa_motorista = d.employeeNumber and
-          d.siteId = ${siteId} and
-          horario BETWEEN '${start}' AND '${end}'
-        ) and
-        v.data_saida_garagem BETWEEN '${start}' AND '${end}'`)
+            distinct d.driverId
+          FROM
+            drivers d
+          WHERE
+            d.employeeNumber IN (
+              SELECT
+                f.chapa_motorista
+              FROM
+                follow_up f
+              WHERE
+                f.chapa_monitor = ${chapa_monitor} and
+                f.horario BETWEEN '${start}' AND '${end}'
+            )
+        ) AND
+        v.data_saida_garagem BETWEEN '${start}' AND '${end}'
+    `)
 
     const [eventosLastWeek] = await connMoratense.raw(`
       SELECT
@@ -117,24 +123,29 @@ const gerarIndicadores = async (start: string, end: string) => {
         eventos_viagens_globus_processadas e
       WHERE
         v.id = e.fk_id_viagens_globus_processadas and
-        v.assetId IN (${joinAssetsIds}) and
         v.driverId IN (
           SELECT
-          distinct d.driverId
-        FROM
-          follow_up f,
-          drivers d
-        WHERE
-          f.chapa_motorista = d.employeeNumber and
-          d.siteId = ${siteId} and
-          horario BETWEEN '${startLastWeek}' AND '${endLastWeek}'
+            distinct d.driverId
+          FROM
+            drivers d
+          WHERE
+            d.employeeNumber IN (
+              SELECT
+                f.chapa_motorista
+              FROM
+                follow_up f
+              WHERE
+                f.chapa_monitor = ${chapa_monitor} and
+                f.horario BETWEEN '${start}' AND '${end}'
+            )
         ) and
         v.data_saida_garagem BETWEEN '${startLastWeek}' AND '${endLastWeek}'
       GROUP BY
-        e.code`)
+        e.code
+  `)
 
     const [eventos] = await connMoratense.raw(`
-      SELECT
+    SELECT
           e.code,
           e.descricao_exibida,
           SUM(e.totalOccurances) AS totalOccurances,
@@ -146,57 +157,57 @@ const gerarIndicadores = async (start: string, end: string) => {
         eventos_viagens_globus_processadas e
       WHERE
         v.id = e.fk_id_viagens_globus_processadas and
-        v.assetId IN (${joinAssetsIds}) and
         v.driverId IN (
           SELECT
-          distinct d.driverId
-        FROM
-          follow_up f,
-          drivers d
-        WHERE
-          f.chapa_motorista = d.employeeNumber and
-          d.siteId = ${siteId} and
-          horario BETWEEN '${start}' AND '${end}'
+            distinct d.driverId
+          FROM
+            drivers d
+          WHERE
+            d.employeeNumber IN (
+              SELECT
+                f.chapa_motorista
+              FROM
+                follow_up f
+              WHERE
+                f.chapa_monitor = ${chapa_monitor} and
+                f.horario BETWEEN '${start}' AND '${end}'
+            )
         ) and
         v.data_saida_garagem BETWEEN '${start}' AND '${end}'
       GROUP BY
-        e.code`)
+        e.code
+  `)
 
-    const [quantidadeMotoristas] = await connMoratense.raw(`
+    const [[quantidadeMotoristas]] = await connMoratense.raw(`
       SELECT
-        count(distinct d.driverId) AS total,
-        (
-        SELECT
-          count(distinct f.chapa_motorista)
-        FROM
-          follow_up f,
-          drivers d
-        WHERE
-          f.chapa_motorista = d.employeeNumber and
-          d.siteId = ${siteId} and
-          f.horario BETWEEN '${start}' AND '${end}'
-        ) AS qtd_orientados
+        count(distinct d.driverId) AS qtd_orientados,
+        (SELECT COUNT(distinct chapa_motorista) FROM follow_up WHERE horario BETWEEN '${start}' AND '${end}') AS total
       FROM
         drivers d,
         viagens_globus_processadas v
       WHERE
         d.driverId = v.driverId and
-        v.assetId IN (${joinAssetsIds})`)
-    const { qtd_orientados, total } = quantidadeMotoristas[0]
+        d.employeeNumber IN (
+          SELECT
+            f.chapa_motorista
+          FROM
+            follow_up f
+          WHERE
+            f.chapa_monitor = ${chapa_monitor} and
+            f.horario BETWEEN '${start}' AND '${end}'
+        )
+    `)
 
-    console.log({ siteId })
-    console.log({ qtd_orientados, total })
+    const { qtd_orientados, total } = quantidadeMotoristas
+    const porcentagemMotoristas = `${((qtd_orientados / total) * 100).toFixed(2)}%`
 
-    let porcentagemMotoristas = "0%"
-    if (qtd_orientados !== "0" && total !== "0") {
-      porcentagemMotoristas = `${((qtd_orientados / total) * 100).toFixed(2)}%`
-    }
+    // const numerosEventos = eventos.map((evento: any) => evento.code)
 
     let totalConsumo = 0
     let totalSeguranca = 0
     const insert: any = {}
-    insert.siteId = siteId
     insert.follow_up_date = end.replace("02:59:59", "08:00:00")
+    insert.monitorId = driverIdMonitor
     insert.motorista_porcentagem = porcentagemMotoristas
     insert.quantidade_motoristas = qtd_orientados
 
@@ -235,11 +246,11 @@ const gerarIndicadores = async (start: string, end: string) => {
 
     const { fuelUsedLitres, distanceKilometers, duracao_viagens_segundos } =
       sumarizacaoCorridas
-
     for await (const evento of eventos) {
       const eventoLastWeek = eventosLastWeek.find(
         (e: any) => e.code === evento.code,
       )
+      // const eventoAtual = eventos.find((e: any) => e.code === evento.code)
 
       let mkbeLastWeek = "0"
       let progressoTempo = "0%"
@@ -274,11 +285,6 @@ const gerarIndicadores = async (start: string, end: string) => {
           }
         }
       }
-
-      console.log({
-        distanceKilometers,
-        totalOccurances: evento.totalOccurances,
-      })
 
       const mkbe = (distanceKilometers / evento.totalOccurances).toFixed(2)
       let progressoMkbe = "0%"
@@ -370,16 +376,17 @@ const gerarIndicadores = async (start: string, end: string) => {
     let lastTotalConsumo = 0
     let lastTotalSeguranca = 0
     if (eventosLastWeek.length > 0) {
-      lastTotalConsumo = sumWithPrecision(
-        eventosLastWeek
-          .filter((e: any) => e.consumo === 1)
-          .map((e: any) => Number.parseInt(e.totalOccurances, 10)),
-      )
-      lastTotalSeguranca = sumWithPrecision(
-        eventosLastWeek
-          .filter((e: any) => e.seguranca === 1)
-          .map((e: any) => Number.parseInt(e.totalOccurances, 10)),
-      )
+      eventosLastWeek
+        .filter((e: any) => e.consumo === 1)
+        .map((e: any) => {
+          lastTotalConsumo += Number.parseInt(e.totalOccurances, 10)
+        })
+
+      eventosLastWeek
+        .filter((e: any) => e.seguranca === 1)
+        .map((e: any) => {
+          lastTotalSeguranca += Number.parseInt(e.totalOccurances, 10)
+        })
     }
 
     if (lastTotalConsumo !== 0 && totalConsumo !== 0) {
@@ -420,7 +427,7 @@ const gerarIndicadores = async (start: string, end: string) => {
       insert.ranking_seguranca_mkbe = 0
     }
 
-    await connMoratense("follow_up_garage").insert(insert)
+    await connMoratense("follow_up_monitor_geral").insert(insert)
   }
 }
 
@@ -431,7 +438,7 @@ const execute = async () => {
   const start = "2025-03-31 03:00:00"
   const end = "2025-04-07 02:59:59"
 
-  await gerarIndicadores(start, end)
+  await gerarIndicadores({ start, end })
 }
 
 execute()
