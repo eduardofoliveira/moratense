@@ -18,7 +18,7 @@ export type IDriverUpdate = Omit<IDriver, "id" | "updated_at">
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default class Driver {
-  static tableName = "auth_netsapiens"
+  static tableName = "drivers"
 
   public static async getAll(): Promise<IDriver[]> {
     const db = Db.getConnection()
