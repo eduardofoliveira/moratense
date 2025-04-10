@@ -27,6 +27,8 @@ const executar = async () => {
     for await (const motorista of motoristas) {
       console.log(`Motorista: ${count++}`)
       console.log(`Motorista: ${motorista.Name}`)
+      console.log(`Motorista: ${Number.parseInt(motorista.EmployeeNumber, 10)}`)
+      console.log("")
 
       const motoristaExistDrank = await showDrankTelMotorista({
         codigo_mix: motorista.DriverId.toString(),

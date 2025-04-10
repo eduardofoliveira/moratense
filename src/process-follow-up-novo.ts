@@ -1,10 +1,17 @@
 import "dotenv/config"
 import { subDays, format, parse, addDays } from "date-fns"
-import fs from "node:fs"
+// import fs from "node:fs"
+const Excel = require("exceljs")
+
+const workbook = new Excel.Workbook()
+const worksheet = workbook.addWorksheet("Relatorio", {
+  views: [{ showGridLines: false }],
+})
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 
-const arquivo = fs.createWriteStream("log.txt", { flags: "a" })
+// const arquivo = fs.createWriteStream("log.txt", { flags: "a" })
+// const arquivo = fs.createWriteStream("relatorio.csv", { flags: "a" })
 
 type ListProcessar = {
   fk_id_follow_up_type: string
@@ -168,6 +175,8 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
       let lastTotalSeguranca = 0
       let totalConsumo = 0
       let totalSeguranca = 0
+
+      const dadosPlanilha: any = {}
       for await (const evento of eventos) {
         if (evento.consumo === 1) {
           totalConsumo += Number.parseInt(evento.totalOccurances, 10)
@@ -207,18 +216,17 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         }
 
         if (viagensLastWeek && eventoLastWeek) {
-          arquivo.write("INICIO EVENTO\r\n")
-          arquivo.write(`${evento.code}\r\n`)
-          arquivo.write("mkbeLastWeek\r\n")
-          arquivo.write(
-            `viagensLastWeek.distanceKilometers ${viagensLastWeek.distanceKilometers}\r\n`,
-          )
-          arquivo.write(
-            `eventoLastWeek.totalOccurances ${eventoLastWeek.totalOccurances}\r\n`,
-          )
-          arquivo.write(`${mkbeLastWeek}\r\n`)
-          arquivo.write("\r\n")
-
+          // arquivo.write("INICIO EVENTO\r\n")
+          // arquivo.write(`${evento.code}\r\n`)
+          // arquivo.write("mkbeLastWeek\r\n")
+          // arquivo.write(
+          //   `viagensLastWeek.distanceKilometers ${viagensLastWeek.distanceKilometers}\r\n`,
+          // )
+          // arquivo.write(
+          //   `eventoLastWeek.totalOccurances ${eventoLastWeek.totalOccurances}\r\n`,
+          // )
+          // arquivo.write(`${mkbeLastWeek}\r\n`)
+          // arquivo.write("\r\n")
           // console.log("INICIO EVENTO")
           // console.log(evento.code)
           // console.log("mkbeLastWeek")
@@ -266,23 +274,21 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
           Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) &&
           Number.parseInt(evento.totalTimeSeconds, 10)
         ) {
-          arquivo.write("progressoTempo\r\n")
-          arquivo.write(`eventoLastWeek ${eventoLastWeek.totalTimeSeconds}\r\n`)
-          arquivo.write(`evento ${evento.totalTimeSeconds}\r\n`)
-          arquivo.write(`${progressoTempo}\r\n`)
-          arquivo.write(`${progressoTempo}\r\n`)
-          arquivo.write("\r\n")
-          arquivo.write("mkbe\r\n")
-          arquivo.write(`distanceKilometers ${distanceKilometers}\r\n`)
-          arquivo.write(`totalOccurances ${evento.totalOccurances}\r\n`)
-          arquivo.write("\r\n")
-
+          // arquivo.write("progressoTempo\r\n")
+          // arquivo.write(`eventoLastWeek ${eventoLastWeek.totalTimeSeconds}\r\n`)
+          // arquivo.write(`evento ${evento.totalTimeSeconds}\r\n`)
+          // arquivo.write(`${progressoTempo}\r\n`)
+          // arquivo.write(`${progressoTempo}\r\n`)
+          // arquivo.write("\r\n")
+          // arquivo.write("mkbe\r\n")
+          // arquivo.write(`distanceKilometers ${distanceKilometers}\r\n`)
+          // arquivo.write(`totalOccurances ${evento.totalOccurances}\r\n`)
+          // arquivo.write("\r\n")
           // console.log("progressoTempo")
           // console.log("eventoLastWeek", eventoLastWeek.totalTimeSeconds)
           // console.log("evento", evento.totalTimeSeconds)
           // console.log(progressoTempo)
           // console.log("")
-
           // console.log("mkbe")
           // console.log("distanceKilometers", distanceKilometers)
           // console.log("totalOccurances", evento.totalOccurances)
@@ -290,7 +296,7 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         }
 
         const mkbe = (distanceKilometers / evento.totalOccurances).toFixed(2)
-        arquivo.write(`mkbe ${mkbe}\r\n`)
+        // arquivo.write(`mkbe ${mkbe}\r\n`)
         // console.log("mkbe", mkbe)
 
         let progressoMkbe = ""
@@ -317,11 +323,11 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
           progressoMkbe = "0%"
         }
 
-        arquivo.write("progressoMkbe\r\n")
-        arquivo.write(`mkbeLastWeek ${mkbeLastWeek}\r\n`)
-        arquivo.write(`mkbe ${mkbe}\r\n`)
-        arquivo.write(`${progressoMkbe}\r\n`)
-        arquivo.write("\r\n")
+        // arquivo.write("progressoMkbe\r\n")
+        // arquivo.write(`mkbeLastWeek ${mkbeLastWeek}\r\n`)
+        // arquivo.write(`mkbe ${mkbe}\r\n`)
+        // arquivo.write(`${progressoMkbe}\r\n`)
+        // arquivo.write("\r\n")
 
         // console.log("progressoMkbe")
         // console.log("mkbeLastWeek", mkbeLastWeek)
@@ -333,6 +339,15 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
           (evento.totalTimeSeconds / duracao_viagens_segundos) *
           100
         ).toFixed(2)
+
+        dadosPlanilha[evento.code] = {
+          totalOccurances: evento.totalOccurances,
+          totalTimeSeconds: evento.totalTimeSeconds,
+          mkbe: mkbe,
+          progressoTempo,
+          progressoMkbe,
+          porcentagem,
+        }
 
         if (evento.code === 1255) {
           // (RT) Inércia M.Benz
@@ -443,7 +458,224 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         "yyyy-MM-dd HH:mm:ss",
       )
 
-      await dbMoratense("follow_up_driver").insert(insert)
+      // Define columns in the worksheet, these columns are identified using a key.
+      worksheet.columns = [
+        { header: "distanceKilometers", key: "distanceKilometers", width: 25 },
+        { header: "lastTotalConsumo", key: "lastTotalConsumo", width: 20 },
+        { header: "totalConsumo", key: "totalConsumo", width: 25 },
+        { header: "lastTotalSeguranca", key: "lastTotalSeguranca", width: 20 },
+        { header: "totalSeguranca", key: "totalSeguranca", width: 20 },
+
+        { header: "1255-name", key: "1255-name", width: 20 },
+        {
+          header: "1255-totalOccurances",
+          key: "1255-totalOccurances",
+          width: 20,
+        },
+        {
+          header: "1255-totalTimeSeconds",
+          key: "1255-totalTimeSeconds",
+          width: 20,
+        },
+        { header: "1255-mkbe", key: "1255-mkbe", width: 20 },
+        {
+          header: "1255-progressoTempo",
+          key: "1255-progressoTempo",
+          width: 20,
+        },
+        { header: "1255-progressoMkbe", key: "1255-progressoMkbe", width: 20 },
+        { header: "1255-porcentagem", key: "1255-porcentagem", width: 20 },
+
+        { header: "1124-name", key: "1124-name", width: 20 },
+        {
+          header: "1124-totalOccurances",
+          key: "1124-totalOccurances",
+          width: 20,
+        },
+        {
+          header: "1124-totalTimeSeconds",
+          key: "1124-totalTimeSeconds",
+          width: 20,
+        },
+        { header: "1124-mkbe", key: "1124-mkbe", width: 20 },
+        {
+          header: "1124-progressoTempo",
+          key: "1124-progressoTempo",
+          width: 20,
+        },
+        { header: "1124-progressoMkbe", key: "1124-progressoMkbe", width: 20 },
+        { header: "1124-porcentagem", key: "1124-porcentagem", width: 20 },
+
+        { header: "1250-name", key: "1250-name", width: 20 },
+        {
+          header: "1250-totalOccurances",
+          key: "1250-totalOccurances",
+          width: 20,
+        },
+        {
+          header: "1250-totalTimeSeconds",
+          key: "1250-totalTimeSeconds",
+          width: 20,
+        },
+        { header: "1250-mkbe", key: "1250-mkbe", width: 20 },
+        {
+          header: "1250-progressoTempo",
+          key: "1250-progressoTempo",
+          width: 20,
+        },
+        { header: "1250-progressoMkbe", key: "1250-progressoMkbe", width: 20 },
+        { header: "1250-porcentagem", key: "1250-porcentagem", width: 20 },
+
+        { header: "1253-name", key: "1253-name", width: 20 },
+        {
+          header: "1253-totalOccurances",
+          key: "1253-totalOccurances",
+          width: 20,
+        },
+        {
+          header: "1253-totalTimeSeconds",
+          key: "1253-totalTimeSeconds",
+          width: 20,
+        },
+        { header: "1253-mkbe", key: "1253-mkbe", width: 20 },
+        {
+          header: "1253-progressoTempo",
+          key: "1253-progressoTempo",
+          width: 20,
+        },
+        { header: "1253-progressoMkbe", key: "1253-progressoMkbe", width: 20 },
+        { header: "1253-porcentagem", key: "1253-porcentagem", width: 20 },
+
+        { header: "1156-name", key: "1156-name", width: 20 },
+        {
+          header: "1156-totalOccurances",
+          key: "1156-totalOccurances",
+          width: 20,
+        },
+        {
+          header: "1156-totalTimeSeconds",
+          key: "1156-totalTimeSeconds",
+          width: 20,
+        },
+        { header: "1156-mkbe", key: "1156-mkbe", width: 20 },
+        {
+          header: "1156-progressoTempo",
+          key: "1156-progressoTempo",
+          width: 20,
+        },
+        { header: "1156-progressoMkbe", key: "1156-progressoMkbe", width: 20 },
+        { header: "1156-porcentagem", key: "1156-porcentagem", width: 20 },
+
+        { header: "1252-name", key: "1252-name", width: 20 },
+        {
+          header: "1252-totalOccurances",
+          key: "1252-totalOccurances",
+          width: 20,
+        },
+        {
+          header: "1252-totalTimeSeconds",
+          key: "1252-totalTimeSeconds",
+          width: 20,
+        },
+        { header: "1252-mkbe", key: "1252-mkbe", width: 20 },
+        {
+          header: "1252-progressoTempo",
+          key: "1252-progressoTempo",
+          width: 20,
+        },
+        { header: "1252-progressoMkbe", key: "1252-progressoMkbe", width: 20 },
+        { header: "1252-porcentagem", key: "1252-porcentagem", width: 20 },
+
+        { header: "1136-name", key: "1136-name", width: 20 },
+        {
+          header: "1136-totalOccurances",
+          key: "1136-totalOccurances",
+          width: 20,
+        },
+        {
+          header: "1136-totalTimeSeconds",
+          key: "1136-totalTimeSeconds",
+          width: 20,
+        },
+        { header: "1136-mkbe", key: "1136-mkbe", width: 20 },
+        {
+          header: "1136-progressoTempo",
+          key: "1136-progressoTempo",
+          width: 20,
+        },
+        { header: "1136-progressoMkbe", key: "1136-progressoMkbe", width: 20 },
+        { header: "1136-porcentagem", key: "1136-porcentagem", width: 20 },
+      ]
+
+      worksheet.addRow({
+        distanceKilometers,
+        lastTotalConsumo,
+        totalConsumo,
+        lastTotalSeguranca,
+        totalSeguranca,
+        "1255-name": "Inércia",
+        "1255-totalOccurances": dadosPlanilha[1255]?.totalOccurances ?? 0,
+        "1255-totalTimeSeconds": dadosPlanilha[1255]?.totalTimeSeconds ?? 0,
+        "1255-mkbe": dadosPlanilha[1255]?.mkbe ?? 0,
+        "1255-progressoTempo": dadosPlanilha[1255]?.progressoTempo ?? "0%",
+        "1255-progressoMkbe": dadosPlanilha[1255]?.progressoMkbe ?? "0%",
+        "1255-porcentagem": dadosPlanilha[1255]?.porcentagem ?? 0,
+
+        "1124-name": "Fora da Faixa Verde",
+        "1124-totalOccurances": dadosPlanilha[1124]?.totalOccurances ?? 0,
+        "1124-totalTimeSeconds": dadosPlanilha[1124]?.totalTimeSeconds ?? 0,
+        "1124-mkbe": dadosPlanilha[1124]?.mkbe ?? 0,
+        "1124-progressoTempo": dadosPlanilha[1124]?.progressoTempo ?? "0%",
+        "1124-progressoMkbe": dadosPlanilha[1124]?.progressoMkbe ?? "0%",
+        "1124-porcentagem": dadosPlanilha[1124]?.porcentagem ?? 0,
+
+        "1250-name": "Excesso de Rotação",
+        "1250-totalOccurances": dadosPlanilha[1250]?.totalOccurances ?? 0,
+        "1250-totalTimeSeconds": dadosPlanilha[1250]?.totalTimeSeconds ?? 0,
+
+        "1250-mkbe": dadosPlanilha[1250]?.mkbe ?? 0,
+        "1250-progressoTempo": dadosPlanilha[1250]?.progressoTempo ?? "0%",
+        "1250-progressoMkbe": dadosPlanilha[1250]?.progressoMkbe ?? "0%",
+        "1250-porcentagem": dadosPlanilha[1250]?.porcentagem ?? 0,
+
+        "1253-name": "Freada Brusca",
+        "1253-totalOccurances": dadosPlanilha[1253]?.totalOccurances ?? 0,
+        "1253-totalTimeSeconds": dadosPlanilha[1253]?.totalTimeSeconds ?? 0,
+        "1253-mkbe": dadosPlanilha[1253]?.mkbe ?? 0,
+        "1253-progressoTempo": dadosPlanilha[1253]?.progressoTempo ?? "0%",
+        "1253-progressoMkbe": dadosPlanilha[1253]?.progressoMkbe ?? "0%",
+        "1253-porcentagem": dadosPlanilha[1253]?.porcentagem ?? 0,
+
+        "1156-name": "Aceleração Brusca",
+        "1156-totalOccurances": dadosPlanilha[1156]?.totalOccurances ?? 0,
+        "1156-totalTimeSeconds": dadosPlanilha[1156]?.totalTimeSeconds ?? 0,
+        "1156-mkbe": dadosPlanilha[1156]?.mkbe ?? 0,
+        "1156-progressoTempo": dadosPlanilha[1156]?.progressoTempo ?? "0%",
+        "1156-progressoMkbe": dadosPlanilha[1156]?.progressoMkbe ?? "0%",
+        "1156-porcentagem": dadosPlanilha[1156]?.porcentagem ?? 0,
+
+        "1252-name": "Curva Brusca",
+        "1252-totalOccurances": dadosPlanilha[1252]?.totalOccurances ?? 0,
+        "1252-totalTimeSeconds": dadosPlanilha[1252]?.totalTimeSeconds ?? 0,
+        "1252-mkbe": dadosPlanilha[1252]?.mkbe ?? 0,
+        "1252-progressoTempo": dadosPlanilha[1252]?.progressoTempo ?? "0%",
+        "1252-progressoMkbe": dadosPlanilha[1252]?.progressoMkbe ?? "0%",
+        "1252-porcentagem": dadosPlanilha[1252]?.porcentagem ?? 0,
+
+        "1136-name": "Excesso de Velocidade",
+        "1136-totalOccurances": dadosPlanilha[1136]?.totalOccurances ?? 0,
+        "1136-totalTimeSeconds": dadosPlanilha[1136]?.totalTimeSeconds ?? 0,
+        "1136-mkbe": dadosPlanilha[1136]?.mkbe ?? 0,
+        "1136-progressoTempo": dadosPlanilha[1136]?.progressoTempo ?? "0%",
+        "1136-progressoMkbe": dadosPlanilha[1136]?.progressoMkbe ?? "0%",
+        "1136-porcentagem": dadosPlanilha[1136]?.porcentagem ?? 0,
+      })
+
+      await workbook.xlsx.writeFile("relatorio-follow-up.xlsx")
+
+      // Add a row to the worksheet using the data from the object.
+
+      // await dbMoratense("follow_up_driver").insert(insert)
     }
   }
 }
