@@ -30,6 +30,13 @@ export default class Driver {
     return db(Driver.tableName).where({ id }).first()
   }
 
+  public static async findMixCode(
+    mixCode: string,
+  ): Promise<IDriver | undefined> {
+    const db = Db.getConnection()
+    return db(Driver.tableName).where({ mixCode }).first()
+  }
+
   public static async create(driver: IDriverCreate): Promise<number> {
     const db = Db.getConnection()
     const [id] = await db(Driver.tableName).insert(driver)
