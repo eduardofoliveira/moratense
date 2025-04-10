@@ -34,7 +34,7 @@ export default class Driver {
     mixCode: string,
   ): Promise<IDriver | undefined> {
     const db = Db.getConnection()
-    return db(Driver.tableName).where({ mixCode }).first()
+    return db(Driver.tableName).where({ driverId: mixCode }).first()
   }
 
   public static async create(driver: IDriverCreate): Promise<number> {
