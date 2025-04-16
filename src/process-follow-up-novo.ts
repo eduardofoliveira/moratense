@@ -1,12 +1,12 @@
 import "dotenv/config"
 import { subDays, format, parse, addDays } from "date-fns"
 // import fs from "node:fs"
-const Excel = require("exceljs")
+// const Excel = require("exceljs")
 
-const workbook = new Excel.Workbook()
-const worksheet = workbook.addWorksheet("Relatorio", {
-  views: [{ showGridLines: false }],
-})
+// const workbook = new Excel.Workbook()
+// const worksheet = workbook.addWorksheet("Relatorio", {
+//   views: [{ showGridLines: false }],
+// })
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 
@@ -205,14 +205,11 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
           (e: any) => e.code === evento.code,
         )
 
-        let mkbeLastWeek = ""
-        let progressoTempo = ""
+        let mkbeLastWeek: any = "0"
+        let progressoTempo = "0%"
         if (viagensLastWeek && eventoLastWeek) {
-          mkbeLastWeek = (
+          mkbeLastWeek =
             viagensLastWeek.distanceKilometers / eventoLastWeek.totalOccurances
-          ).toFixed(2)
-        } else {
-          mkbeLastWeek = "0"
         }
 
         if (viagensLastWeek && eventoLastWeek) {
@@ -242,6 +239,29 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
           // console.log("")
         }
 
+        if (!eventoLastWeek) {
+          continue
+        }
+
+        let porcentagemLastWeek: any =
+          eventoLastWeek.totalTimeSeconds /
+          viagensLastWeek.duracao_viagens_segundos
+
+        // if (evento.code === 1255) {
+        //   console.log(porcentagemLastWeek)
+        //   console.log(eventoLastWeek.totalTimeSeconds)
+        //   console.log(viagensLastWeek.duracao_viagens_segundos)
+        // }
+
+        let porcentagem: any =
+          evento.totalTimeSeconds / duracao_viagens_segundos
+
+        // if (evento.code === 1255) {
+        //   console.log(porcentagem)
+        //   console.log(evento.totalTimeSeconds)
+        //   console.log(duracao_viagens_segundos)
+        // }
+
         if (
           eventoLastWeek &&
           Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) &&
@@ -249,25 +269,53 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         ) {
           if (evento.code === 1255) {
             progressoTempo = calcularVariacaoPercentual(
-              Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
-              Number.parseInt(evento.totalTimeSeconds, 10),
+              porcentagemLastWeek,
+              porcentagem,
             )
           } else {
             progressoTempo = calcularVariacaoPercentual(
-              Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
-              Number.parseInt(evento.totalTimeSeconds, 10),
+              porcentagemLastWeek,
+              porcentagem,
             )
 
-            // Inverta o sinal para os demais eventos
             if (progressoTempo.startsWith("-")) {
               progressoTempo = progressoTempo.replace("-", "+")
             } else {
               progressoTempo = `-${progressoTempo}`
             }
           }
-        } else {
-          progressoTempo = "0%"
+          // if (evento.code === 1255) {
+          //   progressoTempo = calcularVariacaoPercentual(
+          //     Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
+          //     Number.parseInt(evento.totalTimeSeconds, 10),
+          //   )
+          // } else {
+          //   progressoTempo = calcularVariacaoPercentual(
+          //     Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
+          //     Number.parseInt(evento.totalTimeSeconds, 10),
+          //   )
+
+          //   // Inverta o sinal para os demais eventos
+          //   if (progressoTempo.startsWith("-")) {
+          //     progressoTempo = progressoTempo.replace("-", "+")
+          //   } else {
+          //     progressoTempo = `-${progressoTempo}`
+          //   }
+          // }
         }
+
+        porcentagemLastWeek = `${(
+          (eventoLastWeek.totalTimeSeconds /
+            viagensLastWeek.duracao_viagens_segundos) *
+            100
+        ).toFixed(2)}%`
+        porcentagem = `${((evento.totalTimeSeconds / duracao_viagens_segundos) * 100).toFixed(2)}%`
+
+        // if (evento.code === 1255) {
+        //   console.log("progressoTempo")
+        //   console.log(progressoTempo)
+        //   console.log("")
+        // }
 
         if (
           eventoLastWeek &&
@@ -299,14 +347,9 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         // arquivo.write(`mkbe ${mkbe}\r\n`)
         // console.log("mkbe", mkbe)
 
-        let progressoMkbe = ""
+        let progressoMkbe = "0%"
         if (Number.parseFloat(mkbeLastWeek) && Number.parseFloat(mkbe)) {
           if (evento.code === 1255) {
-            progressoMkbe = calcularVariacaoPercentual(
-              Number.parseFloat(mkbeLastWeek),
-              Number.parseFloat(mkbe),
-            )
-          } else {
             progressoMkbe = calcularVariacaoPercentual(
               Number.parseFloat(mkbeLastWeek),
               Number.parseFloat(mkbe),
@@ -318,9 +361,12 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
             } else {
               progressoMkbe = `-${progressoMkbe}`
             }
+          } else {
+            progressoMkbe = calcularVariacaoPercentual(
+              Number.parseFloat(mkbeLastWeek),
+              Number.parseFloat(mkbe),
+            )
           }
-        } else {
-          progressoMkbe = "0%"
         }
 
         // arquivo.write("progressoMkbe\r\n")
@@ -335,15 +381,18 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         // console.log(progressoMkbe)
         // console.log("")
 
-        const porcentagem = (
-          (evento.totalTimeSeconds / duracao_viagens_segundos) *
-          100
-        ).toFixed(2)
-
         dadosPlanilha[evento.code] = {
           totalOccurances: evento.totalOccurances,
           totalTimeSeconds: evento.totalTimeSeconds,
+          totalOccurancesSemanaPassada: eventoLastWeek.totalOccurances,
+          totalTimeSecondsSemanaPassada: eventoLastWeek.totalTimeSeconds,
+          duracao_viagens_segundos: duracao_viagens_segundos,
+          duracao_viagens_segundos_semana_passada:
+            viagensLastWeek.duracao_viagens_segundos,
           mkbe: mkbe,
+          mkbeLastWeek: mkbeLastWeek,
+          distanceKilometers: distanceKilometers,
+          distanceKilometersLastWeek: viagensLastWeek.distanceKilometers,
           progressoTempo,
           progressoMkbe,
           porcentagem,
@@ -405,31 +454,76 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
       if (lastTotalConsumo !== 0 && totalConsumo !== 0) {
         insert.ranking_consumo_mkbe =
           (distanceKilometers / totalConsumo).toFixed(2) ?? 0
-        insert.ranking_consumo_progresso = calcularVariacaoPercentual(
-          lastTotalConsumo,
-          totalConsumo,
+
+        const mkbeConsumoLastWeek =
+          viagensLastWeek.distanceKilometers / lastTotalConsumo
+        const mkbeConsumo = distanceKilometers / totalConsumo
+
+        const rankingProgressoConsumo = calcularVariacaoPercentual(
+          mkbeConsumoLastWeek,
+          mkbeConsumo,
         )
+
+        // if (rankingProgressoConsumo.startsWith("-")) {
+        //   rankingProgressoConsumo = rankingProgressoConsumo.replace("-", "+")
+        // } else {
+        //   rankingProgressoConsumo = `-${rankingProgressoConsumo}`
+        // }
+
+        // console.log("ranking_consumo_progresso")
+        // console.log(mkbeConsumoLastWeek)
+        // console.log(mkbeConsumo)
+        // console.log(rankingProgressoConsumo)
+
+        insert.ranking_consumo_progresso = rankingProgressoConsumo
       } else {
         insert.ranking_consumo_progresso = "0%"
       }
+
       if (distanceKilometers !== 0 && totalConsumo !== 0) {
         insert.ranking_consumo_mkbe =
           (distanceKilometers / totalConsumo).toFixed(2) ?? 0
       } else {
         insert.ranking_consumo_mkbe = 0
       }
+
       if (lastTotalSeguranca !== 0 && totalSeguranca !== 0) {
-        insert.ranking_seguranca_progresso = calcularVariacaoPercentual(
-          lastTotalSeguranca,
-          totalSeguranca,
+        const mkbeSegurancaLastWeek =
+          viagensLastWeek.distanceKilometers / lastTotalSeguranca
+        const mkbeSeguranca = distanceKilometers / totalSeguranca
+
+        const rankingProgressoSeguranca = calcularVariacaoPercentual(
+          mkbeSegurancaLastWeek,
+          mkbeSeguranca,
         )
 
-        if (insert.ranking_seguranca_progresso.startsWith("-")) {
-          insert.ranking_seguranca_progresso =
-            insert.ranking_seguranca_progresso.replace("-", "+")
-        } else {
-          insert.ranking_seguranca_progresso = `-${insert.ranking_seguranca_progresso}`
-        }
+        // if (rankingProgressoSeguranca.startsWith("-")) {
+        //   rankingProgressoSeguranca = rankingProgressoSeguranca.replace(
+        //     "-",
+        //     "+",
+        //   )
+        // } else {
+        //   rankingProgressoSeguranca = `-${rankingProgressoSeguranca}`
+        // }
+
+        // console.log("ranking_seguranca_progresso")
+        // console.log(mkbeSegurancaLastWeek)
+        // console.log(mkbeSeguranca)
+        // console.log(rankingProgressoSeguranca)
+
+        insert.ranking_seguranca_progresso = rankingProgressoSeguranca
+
+        // insert.ranking_seguranca_progresso = calcularVariacaoPercentual(
+        //   lastTotalSeguranca,
+        //   totalSeguranca,
+        // )
+
+        // if (insert.ranking_seguranca_progresso.startsWith("-")) {
+        //   insert.ranking_seguranca_progresso =
+        //     insert.ranking_seguranca_progresso.replace("-", "+")
+        // } else {
+        //   insert.ranking_seguranca_progresso = `-${insert.ranking_seguranca_progresso}`
+        // }
       } else {
         insert.ranking_seguranca_progresso = "0%"
       }
@@ -459,223 +553,502 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
       )
 
       // Define columns in the worksheet, these columns are identified using a key.
-      worksheet.columns = [
-        { header: "distanceKilometers", key: "distanceKilometers", width: 25 },
-        { header: "lastTotalConsumo", key: "lastTotalConsumo", width: 20 },
-        { header: "totalConsumo", key: "totalConsumo", width: 25 },
-        { header: "lastTotalSeguranca", key: "lastTotalSeguranca", width: 20 },
-        { header: "totalSeguranca", key: "totalSeguranca", width: 20 },
+      // worksheet.columns = [
+      //   { header: "distanceKilometers", key: "distanceKilometers", width: 25 },
+      //   { header: "lastTotalConsumo", key: "lastTotalConsumo", width: 20 },
+      //   { header: "totalConsumo", key: "totalConsumo", width: 25 },
+      //   { header: "lastTotalSeguranca", key: "lastTotalSeguranca", width: 20 },
+      //   { header: "totalSeguranca", key: "totalSeguranca", width: 20 },
 
-        { header: "1255-name", key: "1255-name", width: 20 },
-        {
-          header: "1255-totalOccurances",
-          key: "1255-totalOccurances",
-          width: 20,
-        },
-        {
-          header: "1255-totalTimeSeconds",
-          key: "1255-totalTimeSeconds",
-          width: 20,
-        },
-        { header: "1255-mkbe", key: "1255-mkbe", width: 20 },
-        {
-          header: "1255-progressoTempo",
-          key: "1255-progressoTempo",
-          width: 20,
-        },
-        { header: "1255-progressoMkbe", key: "1255-progressoMkbe", width: 20 },
-        { header: "1255-porcentagem", key: "1255-porcentagem", width: 20 },
+      //   { header: "1255-name", key: "1255-name", width: 20 },
+      //   {
+      //     header: "1255-totalOccurances",
+      //     key: "1255-totalOccurances",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1255-totalTimeSeconds",
+      //     key: "1255-totalTimeSeconds",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1255-totalOccurancesSemanaPassada",
+      //     key: "1255-totalOccurancesSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1255-totalTimeSecondsSemanaPassada",
+      //     key: "1255-totalTimeSecondsSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1255-duracao_viagens_segundos",
+      //     key: "1255-duracao_viagens_segundos",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1255-duracao_viagens_segundos_semana_passada",
+      //     key: "1255-duracao_viagens_segundos_semana_passada",
+      //     width: 20,
+      //   },
+      //   { header: "1255-mkbe", key: "1255-mkbe", width: 20 },
+      //   {
+      //     header: "1255-mkbeLastWeek",
+      //     key: "1255-mkbeLastWeek",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1255-distanceKilometersLastWeek",
+      //     key: "1255-distanceKilometersLastWeek",
+      //   },
+      //   {
+      //     header: "1255-progressoTempo",
+      //     key: "1255-progressoTempo",
+      //     width: 20,
+      //   },
+      //   { header: "1255-progressoMkbe", key: "1255-progressoMkbe", width: 20 },
+      //   { header: "1255-porcentagem", key: "1255-porcentagem", width: 20 },
 
-        { header: "1124-name", key: "1124-name", width: 20 },
-        {
-          header: "1124-totalOccurances",
-          key: "1124-totalOccurances",
-          width: 20,
-        },
-        {
-          header: "1124-totalTimeSeconds",
-          key: "1124-totalTimeSeconds",
-          width: 20,
-        },
-        { header: "1124-mkbe", key: "1124-mkbe", width: 20 },
-        {
-          header: "1124-progressoTempo",
-          key: "1124-progressoTempo",
-          width: 20,
-        },
-        { header: "1124-progressoMkbe", key: "1124-progressoMkbe", width: 20 },
-        { header: "1124-porcentagem", key: "1124-porcentagem", width: 20 },
+      //   { header: "1124-name", key: "1124-name", width: 20 },
+      //   {
+      //     header: "1124-totalOccurances",
+      //     key: "1124-totalOccurances",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1124-totalTimeSeconds",
+      //     key: "1124-totalTimeSeconds",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1124-totalOccurancesSemanaPassada",
+      //     key: "1124-totalOccurancesSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1124-totalTimeSecondsSemanaPassada",
+      //     key: "1124-totalTimeSecondsSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1124-duracao_viagens_segundos",
+      //     key: "1124-duracao_viagens_segundos",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1124-duracao_viagens_segundos_semana_passada",
+      //     key: "1124-duracao_viagens_segundos_semana_passada",
+      //     width: 20,
+      //   },
+      //   { header: "1124-mkbe", key: "1124-mkbe", width: 20 },
+      //   {
+      //     header: "1124-mkbeLastWeek",
+      //     key: "1124-mkbeLastWeek",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1124-distanceKilometersLastWeek",
+      //     key: "1124-distanceKilometersLastWeek",
+      //   },
+      //   {
+      //     header: "1124-progressoTempo",
+      //     key: "1124-progressoTempo",
+      //     width: 20,
+      //   },
+      //   { header: "1124-progressoMkbe", key: "1124-progressoMkbe", width: 20 },
+      //   { header: "1124-porcentagem", key: "1124-porcentagem", width: 20 },
 
-        { header: "1250-name", key: "1250-name", width: 20 },
-        {
-          header: "1250-totalOccurances",
-          key: "1250-totalOccurances",
-          width: 20,
-        },
-        {
-          header: "1250-totalTimeSeconds",
-          key: "1250-totalTimeSeconds",
-          width: 20,
-        },
-        { header: "1250-mkbe", key: "1250-mkbe", width: 20 },
-        {
-          header: "1250-progressoTempo",
-          key: "1250-progressoTempo",
-          width: 20,
-        },
-        { header: "1250-progressoMkbe", key: "1250-progressoMkbe", width: 20 },
-        { header: "1250-porcentagem", key: "1250-porcentagem", width: 20 },
+      //   { header: "1250-name", key: "1250-name", width: 20 },
+      //   {
+      //     header: "1250-totalOccurances",
+      //     key: "1250-totalOccurances",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1250-totalTimeSeconds",
+      //     key: "1250-totalTimeSeconds",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1250-totalOccurancesSemanaPassada",
+      //     key: "1250-totalOccurancesSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1250-totalTimeSecondsSemanaPassada",
+      //     key: "1250-totalTimeSecondsSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1250-duracao_viagens_segundos",
+      //     key: "1250-duracao_viagens_segundos",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1250-duracao_viagens_segundos_semana_passada",
+      //     key: "1250-duracao_viagens_segundos_semana_passada",
+      //     width: 20,
+      //   },
+      //   { header: "1250-mkbe", key: "1250-mkbe", width: 20 },
+      //   {
+      //     header: "1250-mkbeLastWeek",
+      //     key: "1250-mkbeLastWeek",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1250-distanceKilometersLastWeek",
+      //     key: "1250-distanceKilometersLastWeek",
+      //   },
+      //   {
+      //     header: "1250-progressoTempo",
+      //     key: "1250-progressoTempo",
+      //     width: 20,
+      //   },
+      //   { header: "1250-progressoMkbe", key: "1250-progressoMkbe", width: 20 },
+      //   { header: "1250-porcentagem", key: "1250-porcentagem", width: 20 },
 
-        { header: "1253-name", key: "1253-name", width: 20 },
-        {
-          header: "1253-totalOccurances",
-          key: "1253-totalOccurances",
-          width: 20,
-        },
-        {
-          header: "1253-totalTimeSeconds",
-          key: "1253-totalTimeSeconds",
-          width: 20,
-        },
-        { header: "1253-mkbe", key: "1253-mkbe", width: 20 },
-        {
-          header: "1253-progressoTempo",
-          key: "1253-progressoTempo",
-          width: 20,
-        },
-        { header: "1253-progressoMkbe", key: "1253-progressoMkbe", width: 20 },
-        { header: "1253-porcentagem", key: "1253-porcentagem", width: 20 },
+      //   { header: "1253-name", key: "1253-name", width: 20 },
+      //   {
+      //     header: "1253-totalOccurances",
+      //     key: "1253-totalOccurances",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1253-totalTimeSeconds",
+      //     key: "1253-totalTimeSeconds",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1253-totalOccurancesSemanaPassada",
+      //     key: "1253-totalOccurancesSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1253-totalTimeSecondsSemanaPassada",
+      //     key: "1253-totalTimeSecondsSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1253-duracao_viagens_segundos",
+      //     key: "1253-duracao_viagens_segundos",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1253-duracao_viagens_segundos_semana_passada",
+      //     key: "1253-duracao_viagens_segundos_semana_passada",
+      //     width: 20,
+      //   },
+      //   { header: "1253-mkbe", key: "1253-mkbe", width: 20 },
+      //   {
+      //     header: "1253-mkbeLastWeek",
+      //     key: "1253-mkbeLastWeek",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1253-distanceKilometersLastWeek",
+      //     key: "1253-distanceKilometersLastWeek",
+      //   },
+      //   {
+      //     header: "1253-progressoTempo",
+      //     key: "1253-progressoTempo",
+      //     width: 20,
+      //   },
+      //   { header: "1253-progressoMkbe", key: "1253-progressoMkbe", width: 20 },
+      //   { header: "1253-porcentagem", key: "1253-porcentagem", width: 20 },
 
-        { header: "1156-name", key: "1156-name", width: 20 },
-        {
-          header: "1156-totalOccurances",
-          key: "1156-totalOccurances",
-          width: 20,
-        },
-        {
-          header: "1156-totalTimeSeconds",
-          key: "1156-totalTimeSeconds",
-          width: 20,
-        },
-        { header: "1156-mkbe", key: "1156-mkbe", width: 20 },
-        {
-          header: "1156-progressoTempo",
-          key: "1156-progressoTempo",
-          width: 20,
-        },
-        { header: "1156-progressoMkbe", key: "1156-progressoMkbe", width: 20 },
-        { header: "1156-porcentagem", key: "1156-porcentagem", width: 20 },
+      //   { header: "1156-name", key: "1156-name", width: 20 },
+      //   {
+      //     header: "1156-totalOccurances",
+      //     key: "1156-totalOccurances",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1156-totalTimeSeconds",
+      //     key: "1156-totalTimeSeconds",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1156-totalOccurancesSemanaPassada",
+      //     key: "1156-totalOccurancesSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1156-totalTimeSecondsSemanaPassada",
+      //     key: "1156-totalTimeSecondsSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1156-duracao_viagens_segundos",
+      //     key: "1156-duracao_viagens_segundos",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1156-duracao_viagens_segundos_semana_passada",
+      //     key: "1156-duracao_viagens_segundos_semana_passada",
+      //     width: 20,
+      //   },
+      //   { header: "1156-mkbe", key: "1156-mkbe", width: 20 },
+      //   {
+      //     header: "1156-mkbeLastWeek",
+      //     key: "1156-mkbeLastWeek",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1156-distanceKilometersLastWeek",
+      //     key: "1156-distanceKilometersLastWeek",
+      //   },
+      //   {
+      //     header: "1156-progressoTempo",
+      //     key: "1156-progressoTempo",
+      //     width: 20,
+      //   },
+      //   { header: "1156-progressoMkbe", key: "1156-progressoMkbe", width: 20 },
+      //   { header: "1156-porcentagem", key: "1156-porcentagem", width: 20 },
 
-        { header: "1252-name", key: "1252-name", width: 20 },
-        {
-          header: "1252-totalOccurances",
-          key: "1252-totalOccurances",
-          width: 20,
-        },
-        {
-          header: "1252-totalTimeSeconds",
-          key: "1252-totalTimeSeconds",
-          width: 20,
-        },
-        { header: "1252-mkbe", key: "1252-mkbe", width: 20 },
-        {
-          header: "1252-progressoTempo",
-          key: "1252-progressoTempo",
-          width: 20,
-        },
-        { header: "1252-progressoMkbe", key: "1252-progressoMkbe", width: 20 },
-        { header: "1252-porcentagem", key: "1252-porcentagem", width: 20 },
+      //   { header: "1252-name", key: "1252-name", width: 20 },
+      //   {
+      //     header: "1252-totalOccurances",
+      //     key: "1252-totalOccurances",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1252-totalTimeSeconds",
+      //     key: "1252-totalTimeSeconds",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1252-totalOccurancesSemanaPassada",
+      //     key: "1252-totalOccurancesSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1252-totalTimeSecondsSemanaPassada",
+      //     key: "1252-totalTimeSecondsSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1252-duracao_viagens_segundos",
+      //     key: "1252-duracao_viagens_segundos",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1252-duracao_viagens_segundos_semana_passada",
+      //     key: "1252-duracao_viagens_segundos_semana_passada",
+      //     width: 20,
+      //   },
+      //   { header: "1252-mkbe", key: "1252-mkbe", width: 20 },
+      //   {
+      //     header: "1252-mkbeLastWeek",
+      //     key: "1252-mkbeLastWeek",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1252-distanceKilometersLastWeek",
+      //     key: "1252-distanceKilometersLastWeek",
+      //   },
+      //   {
+      //     header: "1252-progressoTempo",
+      //     key: "1252-progressoTempo",
+      //     width: 20,
+      //   },
+      //   { header: "1252-progressoMkbe", key: "1252-progressoMkbe", width: 20 },
+      //   { header: "1252-porcentagem", key: "1252-porcentagem", width: 20 },
 
-        { header: "1136-name", key: "1136-name", width: 20 },
-        {
-          header: "1136-totalOccurances",
-          key: "1136-totalOccurances",
-          width: 20,
-        },
-        {
-          header: "1136-totalTimeSeconds",
-          key: "1136-totalTimeSeconds",
-          width: 20,
-        },
-        { header: "1136-mkbe", key: "1136-mkbe", width: 20 },
-        {
-          header: "1136-progressoTempo",
-          key: "1136-progressoTempo",
-          width: 20,
-        },
-        { header: "1136-progressoMkbe", key: "1136-progressoMkbe", width: 20 },
-        { header: "1136-porcentagem", key: "1136-porcentagem", width: 20 },
-      ]
+      //   { header: "1136-name", key: "1136-name", width: 20 },
+      //   {
+      //     header: "1136-totalOccurances",
+      //     key: "1136-totalOccurances",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1136-totalTimeSeconds",
+      //     key: "1136-totalTimeSeconds",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1136-totalOccurancesSemanaPassada",
+      //     key: "1136-totalOccurancesSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1136-totalTimeSecondsSemanaPassada",
+      //     key: "1136-totalTimeSecondsSemanaPassada",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1136-duracao_viagens_segundos",
+      //     key: "1136-duracao_viagens_segundos",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1136-duracao_viagens_segundos_semana_passada",
+      //     key: "1136-duracao_viagens_segundos_semana_passada",
+      //     width: 20,
+      //   },
+      //   { header: "1136-mkbe", key: "1136-mkbe", width: 20 },
+      //   {
+      //     header: "1136-mkbeLastWeek",
+      //     key: "1136-mkbeLastWeek",
+      //     width: 20,
+      //   },
+      //   {
+      //     header: "1136-distanceKilometersLastWeek",
+      //     key: "1136-distanceKilometersLastWeek",
+      //   },
+      //   {
+      //     header: "1136-progressoTempo",
+      //     key: "1136-progressoTempo",
+      //     width: 20,
+      //   },
+      //   { header: "1136-progressoMkbe", key: "1136-progressoMkbe", width: 20 },
+      //   { header: "1136-porcentagem", key: "1136-porcentagem", width: 20 },
+      // ]
 
-      worksheet.addRow({
-        distanceKilometers,
-        lastTotalConsumo,
-        totalConsumo,
-        lastTotalSeguranca,
-        totalSeguranca,
-        "1255-name": "Inércia",
-        "1255-totalOccurances": dadosPlanilha[1255]?.totalOccurances ?? 0,
-        "1255-totalTimeSeconds": dadosPlanilha[1255]?.totalTimeSeconds ?? 0,
-        "1255-mkbe": dadosPlanilha[1255]?.mkbe ?? 0,
-        "1255-progressoTempo": dadosPlanilha[1255]?.progressoTempo ?? "0%",
-        "1255-progressoMkbe": dadosPlanilha[1255]?.progressoMkbe ?? "0%",
-        "1255-porcentagem": dadosPlanilha[1255]?.porcentagem ?? 0,
+      // worksheet.addRow({
+      //   distanceKilometers,
+      //   lastTotalConsumo,
+      //   totalConsumo,
+      //   lastTotalSeguranca,
+      //   totalSeguranca,
+      //   "1255-name": "Inércia",
+      //   "1255-totalOccurances": dadosPlanilha[1255]?.totalOccurances ?? 0,
+      //   "1255-totalTimeSeconds": dadosPlanilha[1255]?.totalTimeSeconds ?? 0,
+      //   "1255-totalOccurancesSemanaPassada":
+      //     dadosPlanilha[1255]?.totalOccurancesSemanaPassada ?? 0,
+      //   "1255-totalTimeSecondsSemanaPassada":
+      //     dadosPlanilha[1255]?.totalTimeSecondsSemanaPassada ?? 0,
+      //   "1255-duracao_viagens_segundos":
+      //     dadosPlanilha[1255]?.duracao_viagens_segundos ?? 0,
+      //   "1255-duracao_viagens_segundos_semana_passada":
+      //     dadosPlanilha[1255]?.duracao_viagens_segundos_semana_passada ?? 0,
+      //   "1255-mkbe": dadosPlanilha[1255]?.mkbe ?? 0,
+      //   "1255-mkbeLastWeek": dadosPlanilha[1255]?.mkbeLastWeek ?? 0,
+      //   "1255-distanceKilometersLastWeek":
+      //     dadosPlanilha[1255]?.distanceKilometersLastWeek ?? 0,
+      //   "1255-progressoTempo": dadosPlanilha[1255]?.progressoTempo ?? "0%",
+      //   "1255-progressoMkbe": dadosPlanilha[1255]?.progressoMkbe ?? "0%",
+      //   "1255-porcentagem": dadosPlanilha[1255]?.porcentagem ?? 0,
 
-        "1124-name": "Fora da Faixa Verde",
-        "1124-totalOccurances": dadosPlanilha[1124]?.totalOccurances ?? 0,
-        "1124-totalTimeSeconds": dadosPlanilha[1124]?.totalTimeSeconds ?? 0,
-        "1124-mkbe": dadosPlanilha[1124]?.mkbe ?? 0,
-        "1124-progressoTempo": dadosPlanilha[1124]?.progressoTempo ?? "0%",
-        "1124-progressoMkbe": dadosPlanilha[1124]?.progressoMkbe ?? "0%",
-        "1124-porcentagem": dadosPlanilha[1124]?.porcentagem ?? 0,
+      //   "1124-name": "Fora da Faixa Verde",
+      //   "1124-totalOccurances": dadosPlanilha[1124]?.totalOccurances ?? 0,
+      //   "1124-totalTimeSeconds": dadosPlanilha[1124]?.totalTimeSeconds ?? 0,
+      //   "1124-totalOccurancesSemanaPassada":
+      //     dadosPlanilha[1124]?.totalOccurancesSemanaPassada ?? 0,
+      //   "1124-totalTimeSecondsSemanaPassada":
+      //     dadosPlanilha[1124]?.totalTimeSecondsSemanaPassada ?? 0,
+      //   "1124-duracao_viagens_segundos":
+      //     dadosPlanilha[1124]?.duracao_viagens_segundos ?? 0,
+      //   "1124-duracao_viagens_segundos_semana_passada":
+      //     dadosPlanilha[1124]?.duracao_viagens_segundos_semana_passada ?? 0,
+      //   "1124-mkbe": dadosPlanilha[1124]?.mkbe ?? 0,
+      //   "1124-mkbeLastWeek": dadosPlanilha[1124]?.mkbeLastWeek ?? 0,
+      //   "1124-distanceKilometersLastWeek":
+      //     dadosPlanilha[1124]?.distanceKilometersLastWeek ?? 0,
+      //   "1124-progressoTempo": dadosPlanilha[1124]?.progressoTempo ?? "0%",
+      //   "1124-progressoMkbe": dadosPlanilha[1124]?.progressoMkbe ?? "0%",
+      //   "1124-porcentagem": dadosPlanilha[1124]?.porcentagem ?? 0,
 
-        "1250-name": "Excesso de Rotação",
-        "1250-totalOccurances": dadosPlanilha[1250]?.totalOccurances ?? 0,
-        "1250-totalTimeSeconds": dadosPlanilha[1250]?.totalTimeSeconds ?? 0,
+      //   "1250-name": "Excesso de Rotação",
+      //   "1250-totalOccurances": dadosPlanilha[1250]?.totalOccurances ?? 0,
+      //   "1250-totalTimeSeconds": dadosPlanilha[1250]?.totalTimeSeconds ?? 0,
+      //   "1250-totalOccurancesSemanaPassada":
+      //     dadosPlanilha[1250]?.totalOccurancesSemanaPassada ?? 0,
+      //   "1250-totalTimeSecondsSemanaPassada":
+      //     dadosPlanilha[1250]?.totalTimeSecondsSemanaPassada ?? 0,
+      //   "1250-duracao_viagens_segundos":
+      //     dadosPlanilha[1250]?.duracao_viagens_segundos ?? 0,
+      //   "1250-duracao_viagens_segundos_semana_passada":
+      //     dadosPlanilha[1250]?.duracao_viagens_segundos_semana_passada ?? 0,
+      //   "1250-mkbe": dadosPlanilha[1250]?.mkbe ?? 0,
+      //   "1250-mkbeLastWeek": dadosPlanilha[1250]?.mkbeLastWeek ?? 0,
+      //   "1250-distanceKilometersLastWeek":
+      //     dadosPlanilha[1250]?.distanceKilometersLastWeek ?? 0,
+      //   "1250-progressoTempo": dadosPlanilha[1250]?.progressoTempo ?? "0%",
+      //   "1250-progressoMkbe": dadosPlanilha[1250]?.progressoMkbe ?? "0%",
+      //   "1250-porcentagem": dadosPlanilha[1250]?.porcentagem ?? 0,
 
-        "1250-mkbe": dadosPlanilha[1250]?.mkbe ?? 0,
-        "1250-progressoTempo": dadosPlanilha[1250]?.progressoTempo ?? "0%",
-        "1250-progressoMkbe": dadosPlanilha[1250]?.progressoMkbe ?? "0%",
-        "1250-porcentagem": dadosPlanilha[1250]?.porcentagem ?? 0,
+      //   "1253-name": "Freada Brusca",
+      //   "1253-totalOccurances": dadosPlanilha[1253]?.totalOccurances ?? 0,
+      //   "1253-totalTimeSeconds": dadosPlanilha[1253]?.totalTimeSeconds ?? 0,
+      //   "1253-totalOccurancesSemanaPassada":
+      //     dadosPlanilha[1253]?.totalOccurancesSemanaPassada ?? 0,
+      //   "1253-totalTimeSecondsSemanaPassada":
+      //     dadosPlanilha[1253]?.totalTimeSecondsSemanaPassada ?? 0,
+      //   "1253-duracao_viagens_segundos":
+      //     dadosPlanilha[1253]?.duracao_viagens_segundos ?? 0,
+      //   "1253-duracao_viagens_segundos_semana_passada":
+      //     dadosPlanilha[1253]?.duracao_viagens_segundos_semana_passada ?? 0,
+      //   "1253-mkbe": dadosPlanilha[1253]?.mkbe ?? 0,
+      //   "1253-mkbeLastWeek": dadosPlanilha[1253]?.mkbeLastWeek ?? 0,
+      //   "1253-distanceKilometersLastWeek":
+      //     dadosPlanilha[1253]?.distanceKilometersLastWeek ?? 0,
+      //   "1253-progressoTempo": dadosPlanilha[1253]?.progressoTempo ?? "0%",
+      //   "1253-progressoMkbe": dadosPlanilha[1253]?.progressoMkbe ?? "0%",
+      //   "1253-porcentagem": dadosPlanilha[1253]?.porcentagem ?? 0,
 
-        "1253-name": "Freada Brusca",
-        "1253-totalOccurances": dadosPlanilha[1253]?.totalOccurances ?? 0,
-        "1253-totalTimeSeconds": dadosPlanilha[1253]?.totalTimeSeconds ?? 0,
-        "1253-mkbe": dadosPlanilha[1253]?.mkbe ?? 0,
-        "1253-progressoTempo": dadosPlanilha[1253]?.progressoTempo ?? "0%",
-        "1253-progressoMkbe": dadosPlanilha[1253]?.progressoMkbe ?? "0%",
-        "1253-porcentagem": dadosPlanilha[1253]?.porcentagem ?? 0,
+      //   "1156-name": "Aceleração Brusca",
+      //   "1156-totalOccurances": dadosPlanilha[1156]?.totalOccurances ?? 0,
+      //   "1156-totalTimeSeconds": dadosPlanilha[1156]?.totalTimeSeconds ?? 0,
+      //   "1156-totalOccurancesSemanaPassada":
+      //     dadosPlanilha[1156]?.totalOccurancesSemanaPassada ?? 0,
+      //   "1156-totalTimeSecondsSemanaPassada":
+      //     dadosPlanilha[1156]?.totalTimeSecondsSemanaPassada ?? 0,
+      //   "1156-duracao_viagens_segundos":
+      //     dadosPlanilha[1156]?.duracao_viagens_segundos ?? 0,
+      //   "1156-duracao_viagens_segundos_semana_passada":
+      //     dadosPlanilha[1156]?.duracao_viagens_segundos_semana_passada ?? 0,
+      //   "1156-mkbe": dadosPlanilha[1156]?.mkbe ?? 0,
+      //   "1156-mkbeLastWeek": dadosPlanilha[1156]?.mkbeLastWeek ?? 0,
+      //   "1156-distanceKilometersLastWeek":
+      //     dadosPlanilha[1156]?.distanceKilometersLastWeek ?? 0,
+      //   "1156-progressoTempo": dadosPlanilha[1156]?.progressoTempo ?? "0%",
+      //   "1156-progressoMkbe": dadosPlanilha[1156]?.progressoMkbe ?? "0%",
+      //   "1156-porcentagem": dadosPlanilha[1156]?.porcentagem ?? 0,
 
-        "1156-name": "Aceleração Brusca",
-        "1156-totalOccurances": dadosPlanilha[1156]?.totalOccurances ?? 0,
-        "1156-totalTimeSeconds": dadosPlanilha[1156]?.totalTimeSeconds ?? 0,
-        "1156-mkbe": dadosPlanilha[1156]?.mkbe ?? 0,
-        "1156-progressoTempo": dadosPlanilha[1156]?.progressoTempo ?? "0%",
-        "1156-progressoMkbe": dadosPlanilha[1156]?.progressoMkbe ?? "0%",
-        "1156-porcentagem": dadosPlanilha[1156]?.porcentagem ?? 0,
+      //   "1252-name": "Curva Brusca",
+      //   "1252-totalOccurances": dadosPlanilha[1252]?.totalOccurances ?? 0,
+      //   "1252-totalTimeSeconds": dadosPlanilha[1252]?.totalTimeSeconds ?? 0,
+      //   "1252-totalOccurancesSemanaPassada":
+      //     dadosPlanilha[1252]?.totalOccurancesSemanaPassada ?? 0,
+      //   "1252-totalTimeSecondsSemanaPassada":
+      //     dadosPlanilha[1252]?.totalTimeSecondsSemanaPassada ?? 0,
+      //   "1252-duracao_viagens_segundos":
+      //     dadosPlanilha[1252]?.duracao_viagens_segundos ?? 0,
+      //   "1252-duracao_viagens_segundos_semana_passada":
+      //     dadosPlanilha[1252]?.duracao_viagens_segundos_semana_passada ?? 0,
+      //   "1252-mkbe": dadosPlanilha[1252]?.mkbe ?? 0,
+      //   "1252-mkbeLastWeek": dadosPlanilha[1252]?.mkbeLastWeek ?? 0,
+      //   "1252-distanceKilometersLastWeek":
+      //     dadosPlanilha[1252]?.distanceKilometersLastWeek ?? 0,
+      //   "1252-progressoTempo": dadosPlanilha[1252]?.progressoTempo ?? "0%",
+      //   "1252-progressoMkbe": dadosPlanilha[1252]?.progressoMkbe ?? "0%",
+      //   "1252-porcentagem": dadosPlanilha[1252]?.porcentagem ?? 0,
 
-        "1252-name": "Curva Brusca",
-        "1252-totalOccurances": dadosPlanilha[1252]?.totalOccurances ?? 0,
-        "1252-totalTimeSeconds": dadosPlanilha[1252]?.totalTimeSeconds ?? 0,
-        "1252-mkbe": dadosPlanilha[1252]?.mkbe ?? 0,
-        "1252-progressoTempo": dadosPlanilha[1252]?.progressoTempo ?? "0%",
-        "1252-progressoMkbe": dadosPlanilha[1252]?.progressoMkbe ?? "0%",
-        "1252-porcentagem": dadosPlanilha[1252]?.porcentagem ?? 0,
+      //   "1136-name": "Excesso de Velocidade",
+      //   "1136-totalOccurances": dadosPlanilha[1136]?.totalOccurances ?? 0,
+      //   "1136-totalTimeSeconds": dadosPlanilha[1136]?.totalTimeSeconds ?? 0,
+      //   "1136-totalOccurancesSemanaPassada":
+      //     dadosPlanilha[1136]?.totalOccurancesSemanaPassada ?? 0,
+      //   "1136-totalTimeSecondsSemanaPassada":
+      //     dadosPlanilha[1136]?.totalTimeSecondsSemanaPassada ?? 0,
+      //   "1136-duracao_viagens_segundos":
+      //     dadosPlanilha[1136]?.duracao_viagens_segundos ?? 0,
+      //   "1136-duracao_viagens_segundos_semana_passada":
+      //     dadosPlanilha[1136]?.duracao_viagens_segundos_semana_passada ?? 0,
+      //   "1136-mkbe": dadosPlanilha[1136]?.mkbe ?? 0,
+      //   "1136-mkbeLastWeek": dadosPlanilha[1136]?.mkbeLastWeek ?? 0,
+      //   "1136-distanceKilometersLastWeek":
+      //     dadosPlanilha[1136]?.distanceKilometersLastWeek ?? 0,
+      //   "1136-progressoTempo": dadosPlanilha[1136]?.progressoTempo ?? "0%",
+      //   "1136-progressoMkbe": dadosPlanilha[1136]?.progressoMkbe ?? "0%",
+      //   "1136-porcentagem": dadosPlanilha[1136]?.porcentagem ?? 0,
+      // })
 
-        "1136-name": "Excesso de Velocidade",
-        "1136-totalOccurances": dadosPlanilha[1136]?.totalOccurances ?? 0,
-        "1136-totalTimeSeconds": dadosPlanilha[1136]?.totalTimeSeconds ?? 0,
-        "1136-mkbe": dadosPlanilha[1136]?.mkbe ?? 0,
-        "1136-progressoTempo": dadosPlanilha[1136]?.progressoTempo ?? "0%",
-        "1136-progressoMkbe": dadosPlanilha[1136]?.progressoMkbe ?? "0%",
-        "1136-porcentagem": dadosPlanilha[1136]?.porcentagem ?? 0,
-      })
-
-      await workbook.xlsx.writeFile("relatorio-follow-up.xlsx")
+      // await workbook.xlsx.writeFile("relatorio-follow-up-2.xlsx")
 
       // Add a row to the worksheet using the data from the object.
 
-      // await dbMoratense("follow_up_driver").insert(insert)
+      await dbMoratense("follow_up_driver").insert(insert)
     }
   }
 }
@@ -685,8 +1058,8 @@ const test = async () => {
   // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
 
-  const start = "2025-03-31 03:00:00"
-  const end = "2025-04-07 02:59:59"
+  const start = "2025-04-07 03:00:00"
+  const end = "2025-04-14 02:59:59"
 
   const connMoratense = DbMoratense.getConnection()
   const [listaProcessar] = await connMoratense.raw(`
@@ -712,8 +1085,7 @@ const test = async () => {
       horario BETWEEN '${start}' AND '${end}' and
       f.processado = 0
     GROUP BY
-      f.chapa_motorista,
-      f.chapa_monitor
+      f.chapa_motorista
   `)
 
   await execute({

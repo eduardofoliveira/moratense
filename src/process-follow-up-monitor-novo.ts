@@ -356,6 +356,21 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
 
       let totalConsumo = 0
       let totalSeguranca = 0
+      let lastTotalConsumo = 0
+      let lastTotalSeguranca = 0
+      if (eventosLastWeek.length > 0) {
+        eventosLastWeek
+          .filter((e: any) => e.consumo === 1)
+          .map((e: any) => {
+            lastTotalConsumo += Number.parseInt(e.totalOccurances, 10)
+          })
+        eventosLastWeek
+          .filter((e: any) => e.seguranca === 1)
+          .map((e: any) => {
+            lastTotalSeguranca += Number.parseInt(e.totalOccurances, 10)
+          })
+      }
+
       const insert: any = {}
       insert.fk_id_follow_up_type = followUpType
       insert.follow_up_date = end.replace("02:59:59", "08:00:00")
@@ -398,10 +413,6 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
         (e: any) => e.numero_chassi === chassiAtual,
       )
 
-      // console.log(chassiAtual)
-      // console.log(eventosChassi[0])
-      // console.log(eventosLastWeekChassi[0])
-
       if (
         !sumarizacaoCorridasLastWeek.find(
           (c: any) => c.numero_chassi === chassiAtual,
@@ -418,12 +429,6 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
         (c: any) => c.numero_chassi === chassiAtual,
       )
 
-      // console.log({
-      //   fuelUsedLitresLastWeek,
-      //   distanceKilometersLastWeek,
-      //   duracao_viagens_segundosLastWeek,
-      // })
-
       if (
         !sumarizacaoCorridas.find((c: any) => c.numero_chassi === chassiAtual)
       ) {
@@ -433,26 +438,27 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
       const { fuelUsedLitres, distanceKilometers, duracao_viagens_segundos } =
         sumarizacaoCorridas.find((c: any) => c.numero_chassi === chassiAtual)
 
-      // console.log({
-      //   fuelUsedLitres,
-      //   distanceKilometers,
-      //   duracao_viagens_segundos,
-      // })
-
       for await (const evento of eventosChassi) {
         const eventoLastWeek = eventosLastWeekChassi.find(
           (e: any) => e.code === evento.code,
         )
 
-        let mkbeLastWeek = "0"
+        if (!eventoLastWeek) {
+          continue
+        }
+
+        let mkbeLastWeek: any = "0"
         let progressoTempo = "0%"
         if (distanceKilometersLastWeek && eventoLastWeek) {
-          mkbeLastWeek = (
+          mkbeLastWeek =
             distanceKilometersLastWeek / eventoLastWeek.totalOccurances
-          ).toFixed(2)
-        } else {
-          mkbeLastWeek = "0"
         }
+
+        let porcentagemLastWeek: any =
+          eventoLastWeek.totalTimeSeconds / duracao_viagens_segundosLastWeek
+        let porcentagem: any =
+          evento.totalTimeSeconds / duracao_viagens_segundos
+
         if (
           eventoLastWeek &&
           Number.parseInt(eventoLastWeek.totalTimeSeconds, 10) &&
@@ -460,16 +466,15 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
         ) {
           if (evento.code === 1255) {
             progressoTempo = calcularVariacaoPercentual(
-              Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
-              Number.parseInt(evento.totalTimeSeconds, 10),
+              porcentagemLastWeek,
+              porcentagem,
             )
           } else {
             progressoTempo = calcularVariacaoPercentual(
-              Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
-              Number.parseInt(evento.totalTimeSeconds, 10),
+              porcentagemLastWeek,
+              porcentagem,
             )
 
-            // Inverta o sinal para os demais eventos
             if (progressoTempo.startsWith("-")) {
               progressoTempo = progressoTempo.replace("-", "+")
             } else {
@@ -478,32 +483,32 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
           }
         }
 
-        const mkbe = (distanceKilometers / evento.totalOccurances).toFixed(2)
-        let progressoMkbe = "0%"
-        if (Number.parseFloat(mkbeLastWeek) && Number.parseFloat(mkbe)) {
-          if (evento.code === 1255) {
-            progressoMkbe = calcularVariacaoPercentual(
-              Number.parseFloat(mkbeLastWeek),
-              Number.parseFloat(mkbe),
-            )
-          } else {
-            progressoMkbe = calcularVariacaoPercentual(
-              Number.parseFloat(mkbeLastWeek),
-              Number.parseFloat(mkbe),
-            )
+        porcentagemLastWeek = `${(
+          (eventoLastWeek.totalTimeSeconds / duracao_viagens_segundosLastWeek) *
+            100
+        ).toFixed(2)}%`
+        porcentagem = `${((evento.totalTimeSeconds / duracao_viagens_segundos) * 100).toFixed(2)}%`
 
-            // Inverta o sinal para os demais eventos
+        let mkbe: any = distanceKilometers / evento.totalOccurances
+
+        let progressoMkbe = "0%"
+        if (mkbeLastWeek && mkbe) {
+          if (evento.code === 1255) {
+            progressoMkbe = calcularVariacaoPercentual(mkbeLastWeek, mkbe)
+
             if (progressoMkbe.startsWith("-")) {
               progressoMkbe = progressoMkbe.replace("-", "+")
             } else {
               progressoMkbe = `-${progressoMkbe}`
             }
+          } else {
+            progressoMkbe = calcularVariacaoPercentual(mkbeLastWeek, mkbe)
           }
         }
 
-        const porcentagem = `${(
-          (evento.totalTimeSeconds / duracao_viagens_segundos) * 100
-        ).toFixed(2)}%`
+        // const porcentagem = `${(
+        //   (evento.totalTimeSeconds / duracao_viagens_segundos) * 100
+        // ).toFixed(2)}%`
 
         if (evento.consumo === 1) {
           totalConsumo += Number.parseInt(evento.totalOccurances, 10)
@@ -511,6 +516,8 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
         if (evento.seguranca === 1) {
           totalSeguranca += Number.parseInt(evento.totalOccurances, 10)
         }
+
+        mkbe = mkbe.toFixed(2)
 
         if (evento.code === 1255) {
           // (RT) Inércia M.Benz
@@ -565,72 +572,52 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
         }
       }
 
-      let lastTotalConsumo = 0
-      let lastTotalSeguranca = 0
-      if (eventosLastWeek.length > 0) {
-        sumWithPrecision(
-          eventosLastWeek
-            .filter((e: any) => e.consumo === 1)
-            .map((e: any) => {
-              lastTotalConsumo += Number.parseInt(e.totalOccurances, 10)
-            }),
-        )
-        sumWithPrecision(
-          eventosLastWeek
-            .filter((e: any) => e.seguranca === 1)
-            .map((e: any) => {
-              lastTotalSeguranca += Number.parseInt(e.totalOccurances, 10)
-            }),
-        )
-      }
-
       if (lastTotalConsumo !== 0 && totalConsumo !== 0) {
         insert.ranking_consumo_mkbe =
           (distanceKilometers / totalConsumo).toFixed(2) ?? 0
-        insert.ranking_consumo_progresso = calcularVariacaoPercentual(
-          lastTotalConsumo,
-          totalConsumo,
+
+        const mkbeConsumoLastWeek =
+          distanceKilometersLastWeek / lastTotalConsumo
+        const mkbeConsumo = distanceKilometers / totalConsumo
+
+        const rankingProgressoConsumo = calcularVariacaoPercentual(
+          mkbeConsumoLastWeek,
+          mkbeConsumo,
         )
+
+        insert.ranking_consumo_progresso = rankingProgressoConsumo
       } else {
         insert.ranking_consumo_progresso = "0%"
       }
+
       if (distanceKilometers !== 0 && totalConsumo !== 0) {
         insert.ranking_consumo_mkbe =
           (distanceKilometers / totalConsumo).toFixed(2) ?? 0
       } else {
         insert.ranking_consumo_mkbe = 0
       }
+
       if (lastTotalSeguranca !== 0 && totalSeguranca !== 0) {
-        insert.ranking_seguranca_progresso = calcularVariacaoPercentual(
-          lastTotalSeguranca,
-          totalSeguranca,
+        const mkbeSegurancaLastWeek =
+          distanceKilometersLastWeek / lastTotalSeguranca
+        const mkbeSeguranca = distanceKilometers / totalSeguranca
+
+        const rankingProgressoSeguranca = calcularVariacaoPercentual(
+          mkbeSegurancaLastWeek,
+          mkbeSeguranca,
         )
 
-        if (insert.ranking_seguranca_progresso.startsWith("-")) {
-          insert.ranking_seguranca_progresso =
-            insert.ranking_seguranca_progresso.replace("-", "+")
-        } else {
-          insert.ranking_seguranca_progresso = `-${insert.ranking_seguranca_progresso}`
-        }
+        insert.ranking_seguranca_progresso = rankingProgressoSeguranca
       } else {
         insert.ranking_seguranca_progresso = "0%"
       }
+
       if (distanceKilometers !== 0 && totalSeguranca !== 0) {
         insert.ranking_seguranca_mkbe =
           (distanceKilometers / totalSeguranca).toFixed(2) ?? 0
       } else {
         insert.ranking_seguranca_mkbe = 0
       }
-
-      console.log("ranking_consumo_progresso")
-      console.log(lastTotalConsumo)
-      console.log(totalConsumo)
-      console.log(insert.ranking_consumo_progresso)
-
-      console.log("ranking_seguranca_progresso")
-      console.log(lastTotalSeguranca)
-      console.log(totalSeguranca)
-      console.log(insert.ranking_seguranca_progresso)
 
       const exists = await connMoratense("follow_up_monitor")
         .select("*")
@@ -652,8 +639,8 @@ const execute = async () => {
   // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
 
-  const start = "2025-03-31 03:00:00"
-  const end = "2025-04-07 02:59:59"
+  const start = "2025-04-07 03:00:00"
+  const end = "2025-04-14 02:59:59"
 
   const connMoratense = DbMoratense.getConnection()
   const [listMonitores] = await connMoratense.raw(`

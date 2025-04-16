@@ -241,18 +241,24 @@ const gerarIndicadores = async ({ start, end }: InputParams) => {
         const eventoLastWeek = eventosLastWeek.find(
           (e: any) => e.code === evento.code,
         )
-        const eventosLastWeekChassi = eventosLastWeek.filter(
-          (e: any) => e.numero_chassi === chassiAtual,
-        )
+        if (!eventoLastWeek) {
+          continue
+        }
 
-        let mkbeLastWeek = ""
-        let progressoTempo = ""
+        // const eventosLastWeekChassi = eventosLastWeek.filter(
+        //   (e: any) => e.numero_chassi === chassiAtual,
+        // )
+
+        let porcentagemLastWeek: any =
+          eventoLastWeek.totalTimeSeconds / duracao_viagens_segundosLastWeek
+        let porcentagem: any =
+          evento.totalTimeSeconds / duracao_viagens_segundos
+
+        let mkbeLastWeek: any = "0"
+        let progressoTempo = "0%"
         if (distanceKilometersLastWeek && eventoLastWeek) {
-          mkbeLastWeek = (
+          mkbeLastWeek =
             distanceKilometersLastWeek / eventoLastWeek.totalOccurances
-          ).toFixed(2)
-        } else {
-          mkbeLastWeek = "0"
         }
 
         if (
@@ -262,55 +268,46 @@ const gerarIndicadores = async ({ start, end }: InputParams) => {
         ) {
           if (evento.code === 1255) {
             progressoTempo = calcularVariacaoPercentual(
-              Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
-              Number.parseInt(evento.totalTimeSeconds, 10),
+              porcentagemLastWeek,
+              porcentagem,
             )
           } else {
             progressoTempo = calcularVariacaoPercentual(
-              Number.parseInt(eventoLastWeek.totalTimeSeconds, 10),
-              Number.parseInt(evento.totalTimeSeconds, 10),
+              porcentagemLastWeek,
+              porcentagem,
             )
 
-            // Inverta o sinal para os demais eventos
             if (progressoTempo.startsWith("-")) {
               progressoTempo = progressoTempo.replace("-", "+")
             } else {
               progressoTempo = `-${progressoTempo}`
             }
           }
-        } else {
-          progressoTempo = "0%"
         }
 
-        const mkbe = (distanceKilometers / evento.totalOccurances).toFixed(2)
-        let progressoMkbe = ""
-        if (Number.parseFloat(mkbeLastWeek) && Number.parseFloat(mkbe)) {
-          if (evento.code === 1255) {
-            progressoMkbe = calcularVariacaoPercentual(
-              Number.parseFloat(mkbeLastWeek),
-              Number.parseFloat(mkbe),
-            )
-          } else {
-            progressoMkbe = calcularVariacaoPercentual(
-              Number.parseFloat(mkbeLastWeek),
-              Number.parseFloat(mkbe),
-            )
+        let mkbe: any = distanceKilometers / evento.totalOccurances
 
-            // Inverta o sinal para os demais eventos
+        let progressoMkbe = "0%"
+        if (mkbeLastWeek && mkbe) {
+          if (evento.code === 1255) {
+            progressoMkbe = calcularVariacaoPercentual(mkbeLastWeek, mkbe)
+
             if (progressoMkbe.startsWith("-")) {
               progressoMkbe = progressoMkbe.replace("-", "+")
             } else {
               progressoMkbe = `-${progressoMkbe}`
             }
+          } else {
+            progressoMkbe = calcularVariacaoPercentual(mkbeLastWeek, mkbe)
           }
-        } else {
-          progressoMkbe = "0%"
         }
 
-        const porcentagem = (
-          (evento.totalTimeSeconds / duracao_viagens_segundos) *
-          100
-        ).toFixed(2)
+        porcentagemLastWeek = `${(
+          (eventoLastWeek.totalTimeSeconds / duracao_viagens_segundosLastWeek) *
+            100
+        ).toFixed(2)}%`
+        porcentagem = `${((evento.totalTimeSeconds / duracao_viagens_segundos) * 100).toFixed(2)}%`
+        mkbe = mkbe.toFixed(2)
 
         if (evento.code === 1255) {
           // (RT) Inércia M.Benz
@@ -369,45 +366,38 @@ const gerarIndicadores = async ({ start, end }: InputParams) => {
         insert.ranking_consumo_mkbe =
           (distanceKilometers / totalConsumo).toFixed(2) ?? 0
 
-        // console.log("ranking_consumo_progresso")
-        // console.log(lastTotalConsumo)
-        // console.log(totalConsumo)
-        // console.log(calcularVariacaoPercentual(lastTotalConsumo, totalConsumo))
-        // console.log("")
+        const mkbeConsumoLastWeek =
+          distanceKilometersLastWeek / lastTotalConsumo
+        const mkbeConsumo = distanceKilometers / totalConsumo
 
-        insert.ranking_consumo_progresso = calcularVariacaoPercentual(
-          lastTotalConsumo,
-          totalConsumo,
+        const rankingProgressoConsumo = calcularVariacaoPercentual(
+          mkbeConsumoLastWeek,
+          mkbeConsumo,
         )
+
+        insert.ranking_consumo_progresso = rankingProgressoConsumo
       } else {
         insert.ranking_consumo_progresso = "0%"
       }
+
       if (distanceKilometers !== 0 && totalConsumo !== 0) {
         insert.ranking_consumo_mkbe =
           (distanceKilometers / totalConsumo).toFixed(2) ?? 0
       } else {
         insert.ranking_consumo_mkbe = 0
       }
-      if (lastTotalSeguranca !== 0 && totalSeguranca !== 0) {
-        // console.log("ranking_seguranca_progresso")
-        // console.log(lastTotalSeguranca)
-        // console.log(totalSeguranca)
-        // console.log(
-        //   calcularVariacaoPercentual(lastTotalSeguranca, totalSeguranca),
-        // )
-        // console.log("")
 
-        insert.ranking_seguranca_progresso = calcularVariacaoPercentual(
-          lastTotalSeguranca,
-          totalSeguranca,
+      if (lastTotalSeguranca !== 0 && totalSeguranca !== 0) {
+        const mkbeSegurancaLastWeek =
+          distanceKilometersLastWeek / lastTotalSeguranca
+        const mkbeSeguranca = distanceKilometers / totalSeguranca
+
+        const rankingProgressoSeguranca = calcularVariacaoPercentual(
+          mkbeSegurancaLastWeek,
+          mkbeSeguranca,
         )
 
-        if (insert.ranking_seguranca_progresso.startsWith("-")) {
-          insert.ranking_seguranca_progresso =
-            insert.ranking_seguranca_progresso.replace("-", "+")
-        } else {
-          insert.ranking_seguranca_progresso = `-${insert.ranking_seguranca_progresso}`
-        }
+        insert.ranking_seguranca_progresso = rankingProgressoSeguranca
       } else {
         insert.ranking_seguranca_progresso = "0%"
       }
@@ -430,8 +420,8 @@ const execute = async () => {
   // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
 
-  const start = "2025-03-31 03:00:00"
-  const end = "2025-04-07 02:59:59"
+  const start = "2025-04-07 03:00:00"
+  const end = "2025-04-14 02:59:59"
 
   await gerarIndicadores({
     start,
