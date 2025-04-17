@@ -9,7 +9,8 @@ import Position from "./models/Position"
 import Trip from "./models/Trip"
 import EventTypes from "./models/EventTypes"
 import Event from "./models/Event"
-import dbMoratense from "./database/connectionManagerHomeLab"
+import Site from "./models/moratense/Site"
+// import dbMoratense from "./database/connectionManagerHomeLab"
 // import dbTeleconsult from "./database/connectionManager"
 
 const today = new Date()
@@ -30,6 +31,14 @@ const syncDrivers = async () => {
     })
 
     for await (const motorista of motoristas) {
+      const siteExists = await Site.getBySiteId(motorista.SiteId.toString())
+      if (!siteExists) {
+        await Site.create({
+          siteId: motorista.SiteId.toString(),
+          name: "Desconhecido",
+        })
+      }
+
       const driver = await Driver.findMixCode(motorista.DriverId.toString())
       if (driver) {
         await Driver.update(driver.id, {
@@ -74,6 +83,14 @@ const syncAssets = async () => {
     })
 
     for await (const carro of carros) {
+      const siteExists = await Site.getBySiteId(carro.SiteId.toString())
+      if (!siteExists) {
+        await Site.create({
+          siteId: carro.SiteId.toString(),
+          name: "Desconhecido",
+        })
+      }
+
       // const connTeleconstult = await dbTeleconsult.getConnection()
       // await connTeleconstult.raw(`
       //   UPDATE
@@ -700,7 +717,7 @@ const syncSites = async () => {
 // syncDrivers()
 // syncAssets()
 // eventTypes()
-syncSites()
+// syncSites()
 // syncTrips()
 // syncPositionsByAsset()
 // syncEvents()
