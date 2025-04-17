@@ -501,7 +501,7 @@ class ApiMix {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const options = {
-          method: "POST",
+          method: "GET",
           url: `https://integrate.us.mixtelematics.com/api/organisationgroups/siteswithlegacyid/${groupId}`,
           headers: {
             "Content-Type": "application/json",
