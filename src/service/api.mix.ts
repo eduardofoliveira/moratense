@@ -3,6 +3,10 @@ import JSONBig from "json-bigint"
 
 import LogsMix from "../models/moratense/LogsMix"
 
+type IGetSites = {
+  groupId: string
+}
+
 class ApiMix {
   private static instance: ApiMix
   private localAxios: AxiosInstance
@@ -467,6 +471,49 @@ class ApiMix {
         }
 
         const response = await this.localAxios.request(options)
+
+        return response.data
+      } catch (error) {
+        console.error(`Erro na tentativa ${attempt}:`, new Date())
+
+        if (attempt === maxRetries) {
+          console.error("Número máximo de tentativas atingido. Lançando erro.")
+          if (error instanceof AxiosError) {
+            console.error("Axios Error")
+            console.error(error)
+          }
+
+          throw error
+        }
+
+        console.log(
+          `Aguardando antes da próxima tentativa... (${attempt} de ${maxRetries})`,
+        )
+        await delay(60000) // Espera 2 segundos antes de tentar novamente
+      }
+    }
+  }
+
+  public async getSites({ groupId }: IGetSites): Promise<any> {
+    const maxRetries = 20 // Número máximo de tentativas
+    const delay = (ms: number) => new Promise((res) => setTimeout(res, ms))
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const options = {
+          method: "POST",
+          url: `https://integrate.us.mixtelematics.com/api/organisationgroups/siteswithlegacyid/${groupId}`,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+
+        const response = await this.localAxios.request(options)
+
+        console.log(" ")
+        console.log(response.status)
+        console.log(response.statusText)
+        console.log(response.data.length)
 
         return response.data
       } catch (error) {

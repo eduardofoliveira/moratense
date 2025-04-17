@@ -9,6 +9,7 @@ import Position from "./models/Position"
 import Trip from "./models/Trip"
 import EventTypes from "./models/EventTypes"
 import Event from "./models/Event"
+import dbMoratense from "./database/connectionManagerHomeLab"
 // import dbTeleconsult from "./database/connectionManager"
 
 const today = new Date()
@@ -668,6 +669,23 @@ const syncEvents = async () => {
   }
 }
 
+const syncSites = async () => {
+  try {
+    const idEmpresa = 4
+    const empresa = await showEmpresa({ id: idEmpresa })
+    const apiMix = await ApiMix.getInstance()
+
+    const sites = await apiMix.getSites({
+      groupId: empresa.mix_groupId,
+    })
+
+    console.log("sites")
+    console.log(sites)
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 // const sync = async () => {
 //   // await syncDrivers()
 //   // await syncAssets()
@@ -679,9 +697,10 @@ const syncEvents = async () => {
 // }
 
 // sync()
-syncDrivers()
-syncAssets()
-eventTypes()
+// syncDrivers()
+// syncAssets()
+// eventTypes()
+syncSites()
 // syncTrips()
 // syncPositionsByAsset()
 // syncEvents()
