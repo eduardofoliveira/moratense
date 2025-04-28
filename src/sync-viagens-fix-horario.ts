@@ -57,6 +57,8 @@ const execute = async () => {
       assetId
     FROM
       assets
+    WHERE
+      assetId not in ('1599384190004375552')
   `)
   const viagens = await apiMix.getTripsByAsset({
     assets: result.map((r: any) => r.assetId),
