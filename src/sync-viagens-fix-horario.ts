@@ -62,8 +62,8 @@ const execute = async () => {
     assets: result.map((r: any) => r.assetId),
     // start: format(subMinutes(addHours(new Date(), 3), 240), "yyyyMMddHHmmss"),
     // end: format(addHours(new Date(), 3), "yyyyMMddHHmmss"),
-    start: "20250403200000",
-    end: "20250404022100",
+    start: "20250427000000",
+    end: "20250427235959",
   })
   // const subTripFix = (subTrip: any) => {
   //   subTrip.SubTripStart = format(
