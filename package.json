@@ -30,6 +30,7 @@
     "vinculo": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/vinculo.ts",
     "gerar_tabela_trip_globus": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/gerar_tabela_trip_globus.ts",
     "crontab": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/crontab.ts",
+    "sync-dev": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules --respawn src/sync-prod-to-dev.ts",
     "build": "tsc"
   },
   "keywords": [],
