@@ -26,7 +26,7 @@ config.production = {
   },
   pool: {
     min: 0,
-    max: 5,
+    max: 28,
   },
 }
 config.development = {
@@ -50,7 +50,7 @@ config.development = {
   },
   pool: {
     min: 0,
-    max: 5,
+    max: 28,
   },
 }
 

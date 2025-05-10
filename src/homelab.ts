@@ -268,88 +268,90 @@ const syncTripsOnDatabaseMoratense = async (trips: any) => {
         continue
       }
 
-      if (trip.StartPosition) {
-        const startPositionExists = await Position.findMixCode(
-          trip.StartPosition.PositionId.toString(),
-        )
-        if (!startPositionExists) {
-          await Position.create({
-            positionId: trip.StartPosition.PositionId.toString(),
-            driverId: trip.StartPosition.DriverId.toString(),
-            assetId: trip.StartPosition.AssetId.toString(),
-            lat: trip.StartPosition.Latitude.toString(),
-            long: trip.StartPosition.Longitude.toString(),
-            km: trip.StartPosition.SpeedKilometresPerHour,
-            data: new Date(trip.StartPosition.Timestamp),
-          })
-        }
-      }
+      // if (trip.StartPosition) {
+      //   const startPositionExists = await Position.findMixCode(
+      //     trip.StartPosition.PositionId.toString(),
+      //   )
+      //   if (!startPositionExists) {
+      //     await Position.create({
+      //       positionId: trip.StartPosition.PositionId.toString(),
+      //       driverId: trip.StartPosition.DriverId.toString(),
+      //       assetId: trip.StartPosition.AssetId.toString(),
+      //       lat: trip.StartPosition.Latitude.toString(),
+      //       long: trip.StartPosition.Longitude.toString(),
+      //       km: trip.StartPosition.SpeedKilometresPerHour,
+      //       data: new Date(trip.StartPosition.Timestamp),
+      //     })
+      //   }
+      // }
 
-      if (trip.EndPosition) {
-        const endPositionExists = await Position.findMixCode(
-          trip.EndPosition.PositionId.toString(),
-        )
-        if (!endPositionExists) {
-          await Position.create({
-            positionId: trip.EndPosition.PositionId.toString(),
-            driverId: trip.EndPosition.DriverId.toString(),
-            assetId: trip.EndPosition.AssetId.toString(),
-            lat: trip.EndPosition.Latitude.toString(),
-            long: trip.EndPosition.Longitude.toString(),
-            km: trip.EndPosition.SpeedKilometresPerHour,
-            data: new Date(trip.EndPosition.Timestamp),
-          })
-        }
-      }
+      // if (trip.EndPosition) {
+      //   const endPositionExists = await Position.findMixCode(
+      //     trip.EndPosition.PositionId.toString(),
+      //   )
+      //   if (!endPositionExists) {
+      //     await Position.create({
+      //       positionId: trip.EndPosition.PositionId.toString(),
+      //       driverId: trip.EndPosition.DriverId.toString(),
+      //       assetId: trip.EndPosition.AssetId.toString(),
+      //       lat: trip.EndPosition.Latitude.toString(),
+      //       long: trip.EndPosition.Longitude.toString(),
+      //       km: trip.EndPosition.SpeedKilometresPerHour,
+      //       data: new Date(trip.EndPosition.Timestamp),
+      //     })
+      //   }
+      // }
 
-      if (trip.SubTrips) {
-        for await (const subTrip of trip.SubTrips) {
-          try {
-            if (subTrip.StartPosition) {
-              const positionExists = await Position.findMixCode(
-                subTrip.StartPosition.PositionId.toString(),
-              )
-              if (!positionExists) {
-                await Position.create({
-                  positionId: subTrip.StartPosition.PositionId.toString(),
-                  driverId: subTrip.StartPosition.DriverId.toString(),
-                  assetId: subTrip.StartPosition.AssetId.toString(),
-                  lat: subTrip.StartPosition.Latitude.toString(),
-                  long: subTrip.StartPosition.Longitude.toString(),
-                  km: subTrip.StartPosition.SpeedKilometresPerHour,
-                  data: new Date(subTrip.StartPosition.Timestamp),
-                })
-              }
-            }
-            if (subTrip.EndPosition) {
-              const positionExists = await Position.findMixCode(
-                subTrip.EndPosition.PositionId.toString(),
-              )
+      // if (trip.SubTrips) {
+      //   for await (const subTrip of trip.SubTrips) {
+      //     try {
+      //       if (subTrip.StartPosition) {
+      //         const positionExists = await Position.findMixCode(
+      //           subTrip.StartPosition.PositionId.toString(),
+      //         )
+      //         if (!positionExists) {
+      //           await Position.create({
+      //             positionId: subTrip.StartPosition.PositionId.toString(),
+      //             driverId: subTrip.StartPosition.DriverId.toString(),
+      //             assetId: subTrip.StartPosition.AssetId.toString(),
+      //             lat: subTrip.StartPosition.Latitude.toString(),
+      //             long: subTrip.StartPosition.Longitude.toString(),
+      //             km: subTrip.StartPosition.SpeedKilometresPerHour,
+      //             data: new Date(subTrip.StartPosition.Timestamp),
+      //           })
+      //         }
+      //       }
+      //       if (subTrip.EndPosition) {
+      //         const positionExists = await Position.findMixCode(
+      //           subTrip.EndPosition.PositionId.toString(),
+      //         )
 
-              if (!positionExists) {
-                await Position.create({
-                  positionId: subTrip.EndPosition.PositionId.toString(),
-                  driverId: subTrip.EndPosition.DriverId.toString(),
-                  assetId: subTrip.EndPosition.AssetId.toString(),
-                  lat: subTrip.EndPosition.Latitude.toString(),
-                  long: subTrip.EndPosition.Longitude.toString(),
-                  km: subTrip.EndPosition.SpeedKilometresPerHour,
-                  data: new Date(subTrip.EndPosition.Timestamp),
-                })
-              }
-            }
-          } catch (error) {
-            console.error(error)
-          }
-        }
-      }
+      //         if (!positionExists) {
+      //           await Position.create({
+      //             positionId: subTrip.EndPosition.PositionId.toString(),
+      //             driverId: subTrip.EndPosition.DriverId.toString(),
+      //             assetId: subTrip.EndPosition.AssetId.toString(),
+      //             lat: subTrip.EndPosition.Latitude.toString(),
+      //             long: subTrip.EndPosition.Longitude.toString(),
+      //             km: subTrip.EndPosition.SpeedKilometresPerHour,
+      //             data: new Date(subTrip.EndPosition.Timestamp),
+      //           })
+      //         }
+      //       }
+      //     } catch (error) {
+      //       console.error(error)
+      //     }
+      //   }
+      // }
 
       await Trip.create({
         assetId: trip.AssetId.toString(),
         driverId: trip.DriverId.toString(),
         tripId: trip.TripId.toString(),
-        startPositionId: trip?.StartPositionId?.toString(),
-        endPositionId: trip?.EndPositionId?.toString(),
+        // startPositionId: trip?.StartPositionId?.toString(),
+        // endPositionId: trip?.EndPositionId?.toString(),
+        startPositionId: null,
+        endPositionId: null,
         distanceKilometers: trip.DistanceKilometers,
         duration: trip.Duration,
         drivingTime: trip.DrivingTime,
@@ -575,45 +577,45 @@ const insertEvents = async (events: any) => {
     try {
       const eventExists = await Event.findMixCode(event.EventId.toString())
 
-      if (event.StartPosition) {
-        const positionExists = await Position.findMixCode(
-          event.StartPosition.PositionId.toString(),
-        )
-        if (
-          !positionExists &&
-          driversIds.includes(event.StartPosition.DriverId.toString())
-        ) {
-          await Position.create({
-            positionId: event.StartPosition.PositionId.toString(),
-            driverId: event.StartPosition.DriverId.toString(),
-            assetId: event.StartPosition.AssetId.toString(),
-            lat: event.StartPosition.Latitude.toString(),
-            long: event.StartPosition.Longitude.toString(),
-            km: event.StartPosition.SpeedKilometresPerHour,
-            data: new Date(event.StartPosition.Timestamp),
-          })
-        }
-      }
+      // if (event.StartPosition) {
+      //   const positionExists = await Position.findMixCode(
+      //     event.StartPosition.PositionId.toString(),
+      //   )
+      //   if (
+      //     !positionExists &&
+      //     driversIds.includes(event.StartPosition.DriverId.toString())
+      //   ) {
+      //     await Position.create({
+      //       positionId: event.StartPosition.PositionId.toString(),
+      //       driverId: event.StartPosition.DriverId.toString(),
+      //       assetId: event.StartPosition.AssetId.toString(),
+      //       lat: event.StartPosition.Latitude.toString(),
+      //       long: event.StartPosition.Longitude.toString(),
+      //       km: event.StartPosition.SpeedKilometresPerHour,
+      //       data: new Date(event.StartPosition.Timestamp),
+      //     })
+      //   }
+      // }
 
-      if (event.EndPosition) {
-        const positionExists = await Position.findMixCode(
-          event.EndPosition.PositionId.toString(),
-        )
-        if (
-          !positionExists &&
-          driversIds.includes(event.EndPosition.DriverId.toString())
-        ) {
-          await Position.create({
-            positionId: event.EndPosition.PositionId.toString(),
-            driverId: event.EndPosition.DriverId.toString(),
-            assetId: event.EndPosition.AssetId.toString(),
-            lat: event.EndPosition.Latitude.toString(),
-            long: event.EndPosition.Longitude.toString(),
-            km: event.EndPosition.SpeedKilometresPerHour,
-            data: new Date(event.EndPosition.Timestamp),
-          })
-        }
-      }
+      // if (event.EndPosition) {
+      //   const positionExists = await Position.findMixCode(
+      //     event.EndPosition.PositionId.toString(),
+      //   )
+      //   if (
+      //     !positionExists &&
+      //     driversIds.includes(event.EndPosition.DriverId.toString())
+      //   ) {
+      //     await Position.create({
+      //       positionId: event.EndPosition.PositionId.toString(),
+      //       driverId: event.EndPosition.DriverId.toString(),
+      //       assetId: event.EndPosition.AssetId.toString(),
+      //       lat: event.EndPosition.Latitude.toString(),
+      //       long: event.EndPosition.Longitude.toString(),
+      //       km: event.EndPosition.SpeedKilometresPerHour,
+      //       data: new Date(event.EndPosition.Timestamp),
+      //     })
+      //   }
+      // }
 
       if (!eventExists && driversIds.includes(event.DriverId.toString())) {
         await Event.create({
@@ -621,9 +623,11 @@ const insertEvents = async (events: any) => {
           eventId: event.EventId.toString(),
           driverId: event.DriverId.toString(),
           assetId: event.AssetId.toString(),
-          startPosition:
-            event?.StartPosition?.PositionId?.toString() ?? undefined,
-          endPosition: event?.EndPosition?.PositionId?.toString() ?? undefined,
+          startPosition: null,
+          // startPosition:
+          //   event?.StartPosition?.PositionId?.toString() ?? undefined,
+          // endPosition: event?.EndPosition?.PositionId?.toString() ?? undefined,
+          endPosition: null,
           totalOccurances: event?.TotalOccurances,
           totalTimeSeconds: event?.TotalTimeSeconds,
           startDateTime: event.StartDateTime

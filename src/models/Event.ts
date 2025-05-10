@@ -6,8 +6,8 @@ export type IEvent = {
   eventTypeId: string
   driverId: string
   assetId: string
-  startPosition: string
-  endPosition: string
+  startPosition: string | null
+  endPosition: string | null
   totalOccurances: number
   totalTimeSeconds: number
   startDateTime?: Date

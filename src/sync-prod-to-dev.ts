@@ -62,4 +62,72 @@ const execute = async () => {
   process.exit(0)
 }
 
-execute()
+// execute()
+
+const deletePositions = async () => {
+  const devConnection = DbDev.getConnection()
+
+  const pageSize = 50000 // Número máximo de registros por página
+  let offset = 0
+  let hasMoreData = true
+
+  while (hasMoreData) {
+    // Get a page of data from the positions table
+    const [data] = await devConnection.raw(
+      `SELECT * FROM positions ORDER BY id LIMIT ${pageSize} OFFSET ${offset}`,
+    )
+
+    if (data.length === 0) {
+      hasMoreData = false
+      break
+    }
+
+    // Filter rows that are safe to delete
+    const idsToDelete: number[] = []
+
+    await Promise.all(
+      data.map(async (row: any) => {
+        const existsEvent = devConnection("events")
+          .where("startPosition", row.positionId)
+          .orWhere("endPosition", row.positionId)
+          .first()
+
+        const existsTripPosition = devConnection("trips")
+          .where("endPositionId", row.positionId)
+          .orWhere("startPositionId", row.positionId)
+          .first()
+
+        const [existsEventAwait, existsTripPositionAwait] = await Promise.all([
+          existsEvent,
+          existsTripPosition,
+        ])
+
+        if (!existsEventAwait && !existsTripPositionAwait) {
+          idsToDelete.push(row.id)
+        }
+      }),
+    )
+
+    // Perform batch delete for all IDs in the current page
+    if (idsToDelete.length > 0) {
+      try {
+        console.log(
+          `Deleting ${idsToDelete.length} positions from development.`,
+        )
+        await devConnection("positions").whereIn("id", idsToDelete).del()
+      } catch (error) {
+        console.error("Erro ao deletar posições:", error)
+      }
+    }
+
+    console.log(
+      `Page of data from positions (offset: ${offset}) processed for deletion.`,
+    )
+
+    offset += pageSize
+  }
+
+  console.log("Deletion process completed.")
+}
+
+deletePositions()

@@ -23,8 +23,8 @@ export type ITrip = {
   startOdometerKilometers: number
   lastHalt: Date
   firstDepart: Date
-  endPositionId: string
-  startPositionId: string
+  endPositionId: string | null
+  startPositionId: string | null
   created_at: Date
   updated_at: Date
 }
