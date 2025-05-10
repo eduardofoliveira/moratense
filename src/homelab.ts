@@ -720,8 +720,8 @@ const syncEvents = async () => {
 // }
 
 // sync()
-syncDrivers()
-syncAssets()
+// syncDrivers()
+// syncAssets()
 // eventTypes()
 // syncSites()
 // syncTrips()

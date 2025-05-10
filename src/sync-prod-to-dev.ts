@@ -4,130 +4,51 @@ import DbDev from "./database/connectionManagerDev"
 import DbProd from "./database/connectionManagerHomeLab"
 
 const execute = async () => {
-  const devConnection = DbDev.getConnection()
-  const prodConnection = DbProd.getConnection()
+  const db =
+    process.env.ENV === "production"
+      ? DbProd.getConnection()
+      : DbDev.getConnection()
 
-  const pageSize = 50000 // Número máximo de registros por página
+  const processarQuantidadeEventos = await db("viagens_globus_processadas")
+    .select("*")
+    .where("eventos_processados", 1)
 
-  // Get all tables from the production database
-  // const [tables] = await prodConnection.raw("SHOW TABLES")
-  const tables = [["positions"]]
+  const total = processarQuantidadeEventos.length
+  let atual = 0
+  let progress = (atual / total) * 100
 
-  for (const table of tables) {
-    const tableName = Object.values(table)[0]
+  for await (const viagemGlobus of processarQuantidadeEventos) {
+    console.log(`progresso - ${progress.toFixed(2)}%`)
+    atual++
+    progress = (atual / total) * 100
 
-    // Check if the table exists in the development database
-    const [tableExists] = await devConnection.raw(
-      `SHOW TABLES LIKE '${tableName}'`,
+    const eventos = await db("eventos_viagens_globus_processadas").where(
+      "fk_id_viagens_globus_processadas",
+      viagemGlobus.id,
     )
 
-    if (tableExists.length === 0) {
-      console.log(`Table ${tableName} does not exist in development. Skipping.`)
-      continue
+    for await (const evento of eventos) {
+      const {
+        fk_id_viagens_globus_processadas,
+        code,
+        totalOccurances,
+        totalTimeSeconds,
+      } = evento
+
+      await db("viagens_globus_processadas")
+        .update({
+          [`event_${code}`]: totalOccurances ? totalOccurances : 0,
+          [`event_${code}_time`]: totalTimeSeconds ? totalTimeSeconds : 0,
+        })
+        .where("id", fk_id_viagens_globus_processadas)
     }
 
-    let offset = 0
-    let hasMoreData = true
-
-    while (hasMoreData) {
-      // Get a page of data from the production table
-      const [data] = await prodConnection.raw(
-        `SELECT * FROM ${tableName} ORDER BY id LIMIT ${pageSize} OFFSET ${offset}`,
-      )
-
-      if (data.length === 0) {
-        hasMoreData = false
-        break
-      }
-
-      // Perform batch insert into the development table
-      const insertQuery = devConnection(tableName)
-        .insert(data)
-        .onConflict("id") // Assuming "id" is the unique key
-        .merge()
-
-      await insertQuery
-
-      console.log(
-        `Page of data from ${tableName} (offset: ${offset}) synced to development.`,
-      )
-
-      offset += pageSize
-    }
-
-    console.log(`Data from ${tableName} fully synced to development.`)
+    await db("viagens_globus_processadas")
+      .update({
+        eventos_processados: 2,
+      })
+      .where("id", viagemGlobus.id)
   }
-
-  console.log("Data sync completed.")
-  process.exit(0)
 }
 
-// execute()
-
-const deletePositions = async () => {
-  const devConnection = DbDev.getConnection()
-
-  const pageSize = 50000 // Número máximo de registros por página
-  let offset = 0
-  let hasMoreData = true
-
-  while (hasMoreData) {
-    // Get a page of data from the positions table
-    const [data] = await devConnection.raw(
-      `SELECT * FROM positions ORDER BY id LIMIT ${pageSize} OFFSET ${offset}`,
-    )
-
-    if (data.length === 0) {
-      hasMoreData = false
-      break
-    }
-
-    // Filter rows that are safe to delete
-    const idsToDelete: number[] = []
-
-    await Promise.all(
-      data.map(async (row: any) => {
-        const existsEvent = devConnection("events")
-          .where("startPosition", row.positionId)
-          .orWhere("endPosition", row.positionId)
-          .first()
-
-        const existsTripPosition = devConnection("trips")
-          .where("endPositionId", row.positionId)
-          .orWhere("startPositionId", row.positionId)
-          .first()
-
-        const [existsEventAwait, existsTripPositionAwait] = await Promise.all([
-          existsEvent,
-          existsTripPosition,
-        ])
-
-        if (!existsEventAwait && !existsTripPositionAwait) {
-          idsToDelete.push(row.id)
-        }
-      }),
-    )
-
-    // Perform batch delete for all IDs in the current page
-    if (idsToDelete.length > 0) {
-      try {
-        console.log(
-          `Deleting ${idsToDelete.length} positions from development.`,
-        )
-        await devConnection("positions").whereIn("id", idsToDelete).del()
-      } catch (error) {
-        console.error("Erro ao deletar posições:", error)
-      }
-    }
-
-    console.log(
-      `Page of data from positions (offset: ${offset}) processed for deletion.`,
-    )
-
-    offset += pageSize
-  }
-
-  console.log("Deletion process completed.")
-}
-
-deletePositions()
+execute()
