@@ -471,8 +471,8 @@ const execute = async () => {
   // const hoje = new Date()
   // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
-  const start = "2025-04-14 03:00:00"
-  const end = "2025-04-21 02:59:59"
+  const start = "2025-04-21 03:00:00"
+  const end = "2025-04-28 02:59:59"
 
   await gerarIndicadores({ start, end })
 }

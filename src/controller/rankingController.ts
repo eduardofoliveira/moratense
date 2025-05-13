@@ -75,13 +75,45 @@ const buscarViagensGlobusProcessadas = async ({
   })
 }
 
+const buscarMetas = async () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = Db.getConnection()
+
+      const [metas] = await db.raw(`
+        SELECT
+          c.numero_chassi,
+          m.*
+        FROM
+          metas m,
+          chassi c
+        WHERE
+          m.fk_id_chassi = c.id
+      `)
+
+      resolve(metas)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
+const ENUMS = {
+  FATOR: 2.671, // Cada 1 litro de diesel gera 2.671 kg de CO2
+  ARVORE: 163, // Cada árvore absorve 163 kg de CO2 por ano
+  MEDIA_CALC_CO2: 1.91,
+  VALOR_DIESEL: 5.51728,
+}
+
 const index = async (req: Request, res: Response): Promise<any> => {
   const { start, end } = req.query
 
   // distanceKilometers: sumWithPrecision(arrayKm),
   // fuelUsedLitres: sumWithPrecision(arrayLitros),
 
-  const tiposEventos = await buscarTiposEventos()
+  const listaMetas: any = await buscarMetas()
+
+  const tiposEventos: any = await buscarTiposEventos()
   let viagens: any = await buscarViagensGlobusProcessadas({
     start: start as string,
     end: end as string,
@@ -93,6 +125,18 @@ const index = async (req: Request, res: Response): Promise<any> => {
   const fuelUsedLitres = sumWithPrecision(
     viagens.map((viagem: any) => viagem.fuelUsedLitres),
   )
+  const assetQuantity = new Set(viagens.map((viagem: any) => viagem.assetId))
+    .size
+
+  let mediaGeral = viagens
+    .map((viagem: any) => viagem.media)
+    .filter((item: string) => item !== null)
+
+  const soma = mediaGeral.reduce(
+    (acc: number, val: string) => acc + Number.parseFloat(val),
+    0,
+  )
+  const media = soma / mediaGeral.length
 
   // const result = Summary.getSummary({
   //   start: start as string,
@@ -105,22 +149,111 @@ const index = async (req: Request, res: Response): Promise<any> => {
   // })
 
   viagens = viagens.map((viagem: any) => {
+    const findMeta = listaMetas.find(
+      (meta: any) =>
+        meta.numero_chassi === viagem.numero_chassi &&
+        meta.id_linha_globus === viagem.id_linha_globus,
+    )
+
     const data_saida_garagem = format(
       new Date(viagem.data_saida_garagem),
       "yyyy-MM-dd HH:mm:ss",
     )
 
+    let atingiuMeta = false
+    if (
+      findMeta &&
+      Number.parseFloat(viagem.media) >= Number.parseFloat(findMeta.meta)
+    ) {
+      atingiuMeta = true
+    }
+
     return {
       ...viagem,
+      findMeta,
+      atingiuMeta,
       data_saida_garagem,
     }
   })
+
+  const totalAtingiuMeta = viagens.filter(
+    (viagem: any) => viagem.atingiuMeta === true,
+  ).length
+  const potencialMelhoria = (totalAtingiuMeta / viagens.length) * 100
+
+  const listaComMetas = viagens.filter(
+    (viagem: any) => viagem.findMeta !== null,
+  )
+  const totalMetas = listaComMetas.length
+  const mediaMeta =
+    listaComMetas.reduce((acc: number, meta: any) => {
+      if (meta.findMeta) {
+        return acc + Number.parseFloat(meta.findMeta.meta)
+      }
+      return acc
+    }, 0) / totalMetas
+
+  const evetosConsumo = tiposEventos.filter(
+    (evento: any) => evento.consumo === 1,
+  )
+  // const eventosSeguranca = tiposEventos.filter(
+  //   (evento: any) => evento.seguranca === 1,
+  // )
+
+  const totalizacaoEventosConsumo = viagens.reduce((acc: any, viagem: any) => {
+    for (const evento of evetosConsumo) {
+      if (evento.consumo === 1) {
+        if (!acc[evento.code]) {
+          acc[evento.code] = {
+            nome: evento.descricao_exibida,
+            quantidade: 0,
+            seguranca: evento.seguranca,
+            consumo: evento.consumo,
+          }
+        }
+
+        if (viagem[`event_${evento.code}`]) {
+          acc[evento.code].quantidade =
+            acc[evento.code].quantidade +
+            Number.parseFloat(viagem[`event_${evento.code}`])
+        }
+      }
+    }
+
+    return acc
+  }, {})
+
+  const resumoConsumo = Object.keys(totalizacaoEventosConsumo)
+    .map((key) => {
+      const item = totalizacaoEventosConsumo[key]
+      return {
+        ...item,
+        quantidade: Number.parseFloat(item.quantidade),
+        code: key,
+      }
+    })
+    .sort((a: any, b: any) => {
+      if (a.nome < b.nome) {
+        return -1
+      }
+      if (a.nome > b.nome) {
+        return 1
+      }
+      return 0
+    })
 
   return res.json({
     resumo: {
       distanceKilometers,
       fuelUsedLitres,
+      assetQuantity,
+      potencialMelhoria: potencialMelhoria
+        ? `${potencialMelhoria.toFixed(0)}%`
+        : "0%",
+      mediaMeta: mediaMeta ? Number(mediaMeta.toFixed(2)) : 0,
+      media: media ? Number(media.toFixed(2)) : 0,
     },
+    resumoConsumo,
     tiposEventos,
     viagens: viagens,
   })
