@@ -49,8 +49,12 @@ const batchInsert = async (req: Request, res: Response): Promise<any> => {
               max_kmh: subTrip.MaxSpeedKilometersPerHour,
               subviagem: 1,
               motor_tempo: subTrip.EngineSeconds ? subTrip.EngineSeconds : 0,
-              long: subTrip?.StartPosition?.Longitude.toString(),
-              lat: subTrip?.StartPosition?.Latitude.toString(),
+              long: subTrip?.StartPosition?.Longitude.toString()
+                ? subTrip?.StartPosition?.Longitude.toString()
+                : "",
+              lat: subTrip?.StartPosition?.Latitude.toString()
+                ? subTrip?.StartPosition?.Latitude.toString()
+                : "",
               data: new Date(),
               motor_ini: 0,
               motor_fim: 0,
@@ -86,8 +90,12 @@ const batchInsert = async (req: Request, res: Response): Promise<any> => {
           max_kmh: viagem.MaxSpeedKilometersPerHour,
           subviagem: 0,
           motor_tempo: viagem.EngineSeconds ? viagem.EngineSeconds : 0,
-          long: viagem?.StartPosition?.Longitude.toString(),
-          lat: viagem?.StartPosition?.Latitude.toString(),
+          long: viagem?.StartPosition?.Longitude.toString()
+            ? viagem?.StartPosition?.Longitude.toString()
+            : "",
+          lat: viagem?.StartPosition?.Latitude.toString()
+            ? viagem?.StartPosition?.Latitude.toString()
+            : "",
           data: new Date(),
           motor_ini: 0,
           motor_fim: 0,
