@@ -87,6 +87,8 @@ const batchInsert = async (req: Request, res: Response): Promise<any> => {
           long: viagem?.StartPosition?.Longitude.toString(),
           lat: viagem?.StartPosition?.Latitude.toString(),
           data: new Date(),
+          motor_ini: 0,
+          motor_fim: 0,
         })
 
         await insertAuxViagem({
