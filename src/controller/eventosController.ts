@@ -112,6 +112,7 @@ const batchInsert = async (req: Request, res: Response): Promise<any> => {
         data: new Date(),
         long,
         lat,
+        id_endereco: 0,
       }
 
       const id = await insertDrankTelEvento(insert)

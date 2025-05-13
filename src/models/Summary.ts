@@ -116,7 +116,8 @@ export default class Summary {
         c.id,
         gf.id
       ORDER BY
-        gl.nome_linha
+        gl.nome_linha,
+        gf.nome
     `)
 
     return trips
@@ -260,7 +261,7 @@ export default class Summary {
         (SELECT ec.code FROM events_converter ec WHERE ec.eventTypeId = e.eventTypeId) AS code
       FROM
         events e,
-        eventType et
+        eventtype et
       WHERE
         e.driverId != -9110386254540308778 and
         e.eventTypeId = et.eventTypeId and
@@ -297,7 +298,7 @@ export default class Summary {
         (SELECT ec.code FROM events_converter ec WHERE ec.eventTypeId = e.eventTypeId) AS code
       FROM
         events e,
-        eventType et
+        eventtype et
       WHERE
         e.eventTypeId = et.eventTypeId and
         e.driverId = ${driverId} and

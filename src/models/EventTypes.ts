@@ -24,7 +24,7 @@ export type IEventTypeUpdate = Omit<IEventType, "id" | "updated_at">
 
 // biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export default class EventTypes {
-  static tableName = "eventType"
+  static tableName = "eventtype"
 
   public static async getAll(): Promise<IEventType[]> {
     const db = Db.getConnection()

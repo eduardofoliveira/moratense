@@ -1,6 +1,8 @@
 import { addHours, format, subHours } from "date-fns"
 import type { Request, Response } from "express"
 
+import Db from "../database/connectionManagerDev"
+
 import Summary from "../models/Summary"
 import Meta from "../models/moratense/Meta"
 import EventTypes from "../models/EventTypes"
@@ -19,17 +21,108 @@ function sumWithPrecision(numbers: number[]): number {
   return sum / factor
 }
 
+const buscarTiposEventos = async () => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = Db.getConnection()
+
+      const [tiposEventos] = await db.raw(`
+          SELECT
+            code,
+            descricao_exibida,
+            consumo,
+            seguranca
+          FROM
+            eventos_viagens_globus_processadas
+          GROUP BY
+            code
+        `)
+
+      resolve(tiposEventos)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
+const buscarViagensGlobusProcessadas = async ({
+  start,
+  end,
+}: { start: string; end: string }) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const db = Db.getConnection()
+
+      const [viagensGlobus] = await db.raw(`
+            SELECT
+              c.numero_chassi,
+              gl.nome_linha,
+              vgp.*
+            FROM
+              viagens_globus_processadas vgp,
+              globus_linha gl,
+              chassi c
+            WHERE
+              vgp.fk_id_linha_globus = gl.id and
+              vgp.fk_id_chassi = c.id and
+              data_saida_garagem BETWEEN '${start}' AND '${end}'
+          `)
+
+      resolve(viagensGlobus)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
 const index = async (req: Request, res: Response): Promise<any> => {
   const { start, end } = req.query
 
-  const result = Summary.getSummary({
+  // distanceKilometers: sumWithPrecision(arrayKm),
+  // fuelUsedLitres: sumWithPrecision(arrayLitros),
+
+  const tiposEventos = await buscarTiposEventos()
+  let viagens: any = await buscarViagensGlobusProcessadas({
     start: start as string,
     end: end as string,
   })
 
-  let trips = await Summary.getTrips({
-    start: start as string,
-    end: end as string,
+  const distanceKilometers = sumWithPrecision(
+    viagens.map((viagem: any) => viagem.distanceKilometers),
+  )
+  const fuelUsedLitres = sumWithPrecision(
+    viagens.map((viagem: any) => viagem.fuelUsedLitres),
+  )
+
+  // const result = Summary.getSummary({
+  //   start: start as string,
+  //   end: end as string,
+  // })
+
+  // let trips = await Summary.getTrips({
+  //   start: start as string,
+  //   end: end as string,
+  // })
+
+  viagens = viagens.map((viagem: any) => {
+    const data_saida_garagem = format(
+      new Date(viagem.data_saida_garagem),
+      "yyyy-MM-dd HH:mm:ss",
+    )
+
+    return {
+      ...viagem,
+      data_saida_garagem,
+    }
+  })
+
+  return res.json({
+    resumo: {
+      distanceKilometers,
+      fuelUsedLitres,
+    },
+    tiposEventos,
+    viagens: viagens,
   })
 
   const arrayKm = []
