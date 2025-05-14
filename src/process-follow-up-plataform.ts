@@ -408,8 +408,8 @@ const execute = async () => {
   // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
 
-  const start = "2025-04-21 03:00:00"
-  const end = "2025-04-28 02:59:59"
+  const start = "2025-04-28 03:00:00"
+  const end = "2025-05-05 02:59:59"
 
   const chapasVideos = await buscarChapasMotoristasVideos(start, end)
   if (chapasVideos.length === 0) {
@@ -424,6 +424,7 @@ const execute = async () => {
   } else {
     await gerarIndicadores(start, end, chapasMensagens, 4)
   }
+  console.log("Indicadores gerados com sucesso!")
 }
 
 execute()

@@ -1058,8 +1058,8 @@ const test = async () => {
   // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
 
-  const start = "2025-04-21 03:00:00"
-  const end = "2025-04-28 02:59:59"
+  const start = "2025-04-28 03:00:00"
+  const end = "2025-05-05 02:59:59"
 
   const connMoratense = DbMoratense.getConnection()
   const [listaProcessar] = await connMoratense.raw(`
@@ -1093,6 +1093,7 @@ const test = async () => {
     end,
     listaProcessar,
   })
+  console.log("Indicadores gerados com sucesso!")
 }
 
 test()
