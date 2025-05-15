@@ -3,9 +3,9 @@ import type { Request, Response } from "express"
 
 import Db from "../database/connectionManagerDev"
 
-import Summary from "../models/Summary"
-import Meta from "../models/moratense/Meta"
-import EventTypes from "../models/EventTypes"
+// import Summary from "../models/Summary"
+// import Meta from "../models/moratense/Meta"
+// import EventTypes from "../models/EventTypes"
 
 // Função para somar números com precisão
 function sumWithPrecision(numbers: number[]): number {
@@ -57,12 +57,16 @@ const buscarViagensGlobusProcessadas = async ({
             SELECT
               c.numero_chassi,
               gl.nome_linha,
+              d.employeeNumber AS chapa,
+              d.name AS motorista,
               vgp.*
             FROM
               viagens_globus_processadas vgp,
               globus_linha gl,
-              chassi c
+              chassi c,
+              drivers d
             WHERE
+              vgp.driverId = d.driverId and
               vgp.fk_id_linha_globus = gl.id and
               vgp.fk_id_chassi = c.id and
               data_saida_garagem BETWEEN '${start}' AND '${end}'
@@ -128,7 +132,7 @@ const index = async (req: Request, res: Response): Promise<any> => {
   const assetQuantity = new Set(viagens.map((viagem: any) => viagem.assetId))
     .size
 
-  let mediaGeral = viagens
+  const mediaGeral = viagens
     .map((viagem: any) => viagem.media)
     .filter((item: string) => item !== null)
 
