@@ -59,7 +59,36 @@ const buscarViagensGlobusProcessadas = async ({
               gl.nome_linha,
               d.employeeNumber AS chapa,
               d.name AS motorista,
-              vgp.*
+              vgp.fk_id_linha_globus,
+              sum(vgp.fuelUsedLitres) AS fuelUsedLitres,
+              sum(vgp.distanceKilometers) AS distanceKilometers,
+              GROUP_CONCAT(vgp.tripsIds SEPARATOR ',') AS tripsIds,
+              vgp.data_saida_garagem,
+              avg(vgp.media) AS media,
+              sum(vgp.duracao_viagens_segundos) AS duracao_viagens_segundos,
+              sum(vgp.event_1295_time) AS event_1295_time,
+              sum(vgp.event_1255_time) AS event_1255_time,
+              sum(vgp.event_1253_time) AS event_1253_time,
+              sum(vgp.event_1252_time) AS event_1252_time,
+              sum(vgp.event_1250_time) AS event_1250_time,
+              sum(vgp.event_1246_time) AS event_1246_time,
+              sum(vgp.event_1227_time) AS event_1227_time,
+              sum(vgp.event_1156_time) AS event_1156_time,
+              sum(vgp.event_1153_time) AS event_1153_time,
+              sum(vgp.event_1136_time) AS event_1136_time,
+              sum(vgp.event_1124_time) AS event_1124_time,
+              sum(vgp.event_1295) AS event_1295,
+              sum(vgp.event_1255) AS event_1255,
+              sum(vgp.event_1253) AS event_1253,
+              sum(vgp.event_1252) AS event_1252,
+              sum(vgp.event_1250) AS event_1250,
+              sum(vgp.event_1246) AS event_1246,
+              sum(vgp.event_1227) AS event_1227,
+              sum(vgp.event_1156) AS event_1156,
+              sum(vgp.event_1153) AS event_1153,
+              sum(vgp.event_1136) AS event_1136,
+              sum(vgp.event_1124) AS event_1124,
+              sum(vgp.quantidade_viagens) AS quantidade_viagens
             FROM
               viagens_globus_processadas vgp,
               globus_linha gl,
@@ -70,7 +99,13 @@ const buscarViagensGlobusProcessadas = async ({
               vgp.fk_id_linha_globus = gl.id and
               vgp.fk_id_chassi = c.id and
               data_saida_garagem BETWEEN '${start}' AND '${end}'
-          `)
+            GROUP BY
+              vgp.fk_id_linha_globus,
+              c.numero_chassi,
+              d.employeeNumber
+            ORDER BY
+              gl.nome_linha,
+              d.name`)
 
       resolve(viagensGlobus)
     } catch (error) {
@@ -172,9 +207,53 @@ const index = async (req: Request, res: Response): Promise<any> => {
       atingiuMeta = true
     }
 
+    let combustivel_economizado_meta = 0
+    let combustivel_economizado_media = 0
+    let premiacao = 0
+
+    if (findMeta) {
+      combustivel_economizado_meta =
+        (viagem.distanceKilometers / findMeta.meta - viagem.fuelUsedLitres) *
+        ENUMS.VALOR_DIESEL
+    }
+
+    combustivel_economizado_media =
+      (viagem.distanceKilometers / media - viagem.fuelUsedLitres) *
+      ENUMS.VALOR_DIESEL
+
+    if (media < findMeta.meta) {
+      premiacao = combustivel_economizado_meta * findMeta.premiacao_meta
+    }
+    if (media >= findMeta.meta && media < findMeta.premiacao_supermeta) {
+      premiacao = combustivel_economizado_meta * findMeta.premiacao_meta
+    }
+    if (media >= findMeta.premiacao_supermeta) {
+      premiacao = combustivel_economizado_meta * findMeta.premiacao_supermeta
+    }
+
+    const kg_co2 = viagem.fuelUsedLitres * ENUMS.FATOR
+    const kg_co2_km =
+      (viagem.fuelUsedLitres * ENUMS.FATOR) / viagem.distanceKilometers
+    const lt2 = viagem.distanceKilometers / ENUMS.MEDIA_CALC_CO2
+    const kg_co2_2 = lt2 * ENUMS.FATOR
+    const reducao_co2 = kg_co2 - kg_co2_2
+    const arvores_preservadas = (reducao_co2 / ENUMS.ARVORE) * -1
+
     return {
       ...viagem,
       findMeta,
+      combustivel_economizado_meta: combustivel_economizado_meta
+        ? combustivel_economizado_meta.toFixed(2)
+        : 0,
+      combustivel_economizado_media: combustivel_economizado_media
+        ? combustivel_economizado_media.toFixed(2)
+        : 0,
+      premiacao: premiacao ? premiacao.toFixed(2) : 0,
+      kg_co2: kg_co2.toFixed(0),
+      kg_co2_km: kg_co2_km.toFixed(2),
+      kg_co2_2: kg_co2_2.toFixed(2),
+      reducao_co2: reducao_co2.toFixed(0),
+      arvores_preservadas: arvores_preservadas.toFixed(2),
       atingiuMeta,
       data_saida_garagem,
     }
