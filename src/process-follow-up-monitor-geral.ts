@@ -272,6 +272,14 @@ const gerarIndicadores = async ({ start, end }: InputParams) => {
       const eventoLastWeek = eventosLastWeek.find(
         (e: any) => e.code === evento.code,
       )
+
+      if (
+        !eventoLastWeek ||
+        !eventoLastWeek.totalOccurances ||
+        !eventoLastWeek.totalTimeSeconds
+      ) {
+        continue
+      }
       // const eventoAtual = eventos.find((e: any) => e.code === evento.code)
 
       // let mkbeLastWeek: any = "0"
