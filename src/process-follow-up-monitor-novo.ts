@@ -639,8 +639,8 @@ const execute = async () => {
   // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
 
-  const start = "2025-05-12 03:00:00"
-  const end = "2025-05-19 02:59:59"
+  const start = "2025-05-19 03:00:00"
+  const end = "2025-05-26 02:59:59"
 
   const connMoratense = DbMoratense.getConnection()
   const [listMonitores] = await connMoratense.raw(`
