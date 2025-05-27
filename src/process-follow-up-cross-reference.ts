@@ -273,6 +273,14 @@ const gerarIndicadores = async (
       (e: any) => e.code === evento.code,
     )
 
+    if (
+      !eventoLastWeek ||
+      !eventoLastWeek.totalOccurances ||
+      !eventoLastWeek.totalTimeSeconds
+    ) {
+      continue
+    }
+
     let mkbeLastWeek: any = "0"
     let progressoTempo = "0%"
     if (distanceKilometersLastWeek && eventoLastWeek) {
