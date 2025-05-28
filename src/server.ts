@@ -6,6 +6,12 @@ import cors from "cors"
 import authRoutes from "./routes/authRoutes"
 import reportRoutes from "./routes/reportRoutes"
 import dataRoutes from "./routes/dataRoutes"
+import eventsRoutes from "./routes/eventsRoutes"
+import chassiRoutes from "./routes/chassiRoutes"
+import driverRoutes from "./routes/driverRoutes"
+import busLinhaRoutes from "./routes/busLinhaRoutes"
+import assetRoutes from "./routes/assetRoutes"
+
 import responseError from "./middleware/response-error"
 
 const app = express()
@@ -18,6 +24,11 @@ app.use(express.urlencoded({ extended: true, limit: "200mb" }))
 app.use(authRoutes)
 app.use(dataRoutes)
 app.use(reportRoutes)
+app.use(eventsRoutes)
+app.use(chassiRoutes)
+app.use(driverRoutes)
+app.use(busLinhaRoutes)
+app.use(assetRoutes)
 
 app.use(responseError)
 

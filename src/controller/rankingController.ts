@@ -48,7 +48,20 @@ const buscarTiposEventos = async () => {
 const buscarViagensGlobusProcessadas = async ({
   start,
   end,
-}: { start: string; end: string }) => {
+  excludeAssets,
+  includeAssets,
+  includeBusLines,
+  includeChassiNumbers,
+  includeDrivers,
+}: {
+  start: string
+  end: string
+  excludeAssets: number[]
+  includeAssets: number[]
+  includeBusLines: number[]
+  includeChassiNumbers: string[]
+  includeDrivers: string[]
+}) => {
   return new Promise(async (resolve, reject) => {
     try {
       const db = Db.getConnection()
@@ -62,6 +75,7 @@ const buscarViagensGlobusProcessadas = async ({
               vgp.fk_id_linha_globus,
               sum(vgp.fuelUsedLitres) AS fuelUsedLitres,
               sum(vgp.distanceKilometers) AS distanceKilometers,
+              vgp.assetId,
               GROUP_CONCAT(vgp.tripsIds SEPARATOR ',') AS tripsIds,
               vgp.data_saida_garagem,
               avg(vgp.media) AS media,
@@ -99,6 +113,11 @@ const buscarViagensGlobusProcessadas = async ({
               vgp.fk_id_linha_globus = gl.id and
               vgp.fk_id_chassi = c.id and
               data_saida_garagem BETWEEN '${start}' AND '${end}'
+              ${excludeAssets.length > 0 ? `AND vgp.assetId NOT IN (${excludeAssets.join(",")})` : ""}
+              ${includeAssets.length > 0 ? `AND vgp.assetId IN (${includeAssets.join(",")})` : ""}
+              ${includeBusLines.length > 0 ? `AND vgp.fk_id_linha_globus IN (${includeBusLines.join(",")})` : ""}
+              ${includeChassiNumbers.length > 0 ? `AND c.numero_chassi IN ('${includeChassiNumbers.join("','")}')` : ""}
+              ${includeDrivers.length > 0 ? `AND d.employeeNumber IN (${includeDrivers.join(",")})` : ""}
             GROUP BY
               vgp.fk_id_linha_globus,
               c.numero_chassi,
@@ -145,7 +164,15 @@ const ENUMS = {
 }
 
 const index = async (req: Request, res: Response): Promise<any> => {
-  const { start, end } = req.query
+  const {
+    start,
+    end,
+    excludeAssets,
+    includeAssets,
+    includeBusLines,
+    includeChassiNumbers,
+    includeDrivers,
+  } = req.body
 
   // distanceKilometers: sumWithPrecision(arrayKm),
   // fuelUsedLitres: sumWithPrecision(arrayLitros),
@@ -156,6 +183,11 @@ const index = async (req: Request, res: Response): Promise<any> => {
   let viagens: any = await buscarViagensGlobusProcessadas({
     start: start as string,
     end: end as string,
+    excludeAssets,
+    includeAssets,
+    includeBusLines,
+    includeChassiNumbers,
+    includeDrivers,
   })
 
   const distanceKilometers = sumWithPrecision(
