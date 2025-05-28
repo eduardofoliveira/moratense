@@ -66,6 +66,19 @@ const buscarViagensGlobusProcessadas = async ({
     try {
       const db = Db.getConnection()
 
+      if (includeDrivers.length === 0) {
+        return resolve([])
+      }
+      if (includeChassiNumbers.length === 0) {
+        return resolve([])
+      }
+      if (includeBusLines.length === 0) {
+        return resolve([])
+      }
+      if (includeAssets.length === 0) {
+        return resolve([])
+      }
+
       const [viagensGlobus] = await db.raw(`
             SELECT
               c.numero_chassi,
