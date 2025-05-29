@@ -692,22 +692,22 @@ const syncEvents = async () => {
   }
 }
 
-// const syncSites = async () => {
-//   try {
-//     const idEmpresa = 4
-//     const empresa = await showEmpresa({ id: idEmpresa })
-//     const apiMix = await ApiMix.getInstance()
+const syncSites = async () => {
+  try {
+    const idEmpresa = 4
+    const empresa = await showEmpresa({ id: idEmpresa })
+    const apiMix = await ApiMix.getInstance()
 
-//     const sites = await apiMix.getSites({
-//       groupId: empresa.mix_groupId,
-//     })
+    const sites = await apiMix.getSites({
+      groupId: empresa.mix_groupId,
+    })
 
-//     console.log("sites")
-//     console.log(sites)
-//   } catch (error) {
-//     console.error(error)
-//   }
-// }
+    console.log("sites")
+    console.log(sites)
+  } catch (error) {
+    console.error(error)
+  }
+}
 
 // const sync = async () => {
 //   // await syncDrivers()
@@ -720,10 +720,10 @@ const syncEvents = async () => {
 // }
 
 // sync()
-// syncDrivers()
-// syncAssets()
-// eventTypes()
-// syncSites()
+syncDrivers()
+syncAssets()
+eventTypes()
+syncSites()
 // syncTrips()
 // syncPositionsByAsset()
 // syncEvents()
