@@ -307,7 +307,7 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
         porcentagemLastWeek = `${(
           (eventoLastWeek.totalTimeSeconds /
             viagensLastWeek.duracao_viagens_segundos) *
-            100
+          100
         ).toFixed(2)}%`
         porcentagem = `${((evento.totalTimeSeconds / duracao_viagens_segundos) * 100).toFixed(2)}%`
 
@@ -1054,12 +1054,12 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
 }
 
 const test = async () => {
-  // const hoje = new Date()
-  // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
-  // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
+  const hoje = new Date()
+  const start = format(subDays(hoje, 8), "yyyy-MM-dd 03:00:00")
+  const end = format(subDays(hoje, 1), "yyyy-MM-dd 02:59:59")
 
-  const start = "2025-05-19 03:00:00"
-  const end = "2025-05-26 02:59:59"
+  // const start = "2025-05-26 03:00:00"
+  // const end = "2025-06-02 02:59:59"
 
   const connMoratense = DbMoratense.getConnection()
   const [listaProcessar] = await connMoratense.raw(`
@@ -1094,6 +1094,7 @@ const test = async () => {
     listaProcessar,
   })
   console.log("Indicadores gerados com sucesso!")
+  process.exit(0)
 }
 
 test()

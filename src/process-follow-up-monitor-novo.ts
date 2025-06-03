@@ -485,7 +485,7 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
 
         porcentagemLastWeek = `${(
           (eventoLastWeek.totalTimeSeconds / duracao_viagens_segundosLastWeek) *
-            100
+          100
         ).toFixed(2)}%`
         porcentagem = `${((evento.totalTimeSeconds / duracao_viagens_segundos) * 100).toFixed(2)}%`
 
@@ -635,12 +635,12 @@ const gerar = async ({ start, end, monitor }: IParamsGerar) => {
 }
 
 const execute = async () => {
-  // const hoje = new Date()
-  // const start = format(subDays(hoje, 7), "yyyy-MM-dd 00:00:00")
-  // const end = format(subDays(hoje, 1), "yyyy-MM-dd 23:59:59")
+  const hoje = new Date()
+  const start = format(subDays(hoje, 8), "yyyy-MM-dd 03:00:00")
+  const end = format(subDays(hoje, 1), "yyyy-MM-dd 02:59:59")
 
-  const start = "2025-05-19 03:00:00"
-  const end = "2025-05-26 02:59:59"
+  // const start = "2025-05-26 03:00:00"
+  // const end = "2025-06-02 02:59:59"
 
   const connMoratense = DbMoratense.getConnection()
   const [listMonitores] = await connMoratense.raw(`
@@ -669,6 +669,7 @@ const execute = async () => {
   }
 
   console.log("Processo finalizado com sucesso!")
+  process.exit(0)
 }
 
 execute()
