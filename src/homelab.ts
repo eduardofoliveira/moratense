@@ -720,10 +720,10 @@ const syncSites = async () => {
 // }
 
 // sync()
-syncDrivers()
-syncAssets()
-eventTypes()
-syncSites()
+// syncDrivers()
+// syncAssets()
+// eventTypes()
+// syncSites()
 // syncTrips()
 // syncPositionsByAsset()
 // syncEvents()
