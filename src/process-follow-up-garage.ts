@@ -427,11 +427,12 @@ const gerarIndicadores = async (start: string, end: string) => {
 }
 
 const execute = async () => {
-  const hoje = new Date()
-  const start = format(subDays(hoje, 8), "yyyy-MM-dd 03:00:00")
-  const end = format(subDays(hoje, 1), "yyyy-MM-dd 02:59:59")
-  // const start = "2025-05-26 03:00:00"
-  // const end = "2025-06-02 02:59:59"
+  // const hoje = new Date()
+  // const start = format(subDays(hoje, 8), "yyyy-MM-dd 03:00:00")
+  // const end = format(subDays(hoje, 1), "yyyy-MM-dd 02:59:59")
+
+  const start = "2025-06-02 03:00:00"
+  const end = "2025-06-09 02:59:59"
 
   await gerarIndicadores(start, end)
   console.log("Indicadores gerados com sucesso!")
