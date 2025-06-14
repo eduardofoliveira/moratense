@@ -4,7 +4,7 @@ import DbDev from "./database/connectionManagerDev"
 import DbProd from "./database/connectionManagerHomeLab"
 
 const sumarizarEventosPorViagensProcessadasGlobus = async () => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve, reject): Promise<void> => {
     try {
       const db =
         process.env.ENV === "production"
@@ -99,6 +99,9 @@ const sumarizarEventosPorViagensProcessadasGlobus = async () => {
           })
           .where("id", viagemGlobus.id)
       }
+
+      process.exit(0)
+      resolve(null)
     } catch (error) {
       reject(error)
     }
