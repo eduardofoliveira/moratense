@@ -100,6 +100,7 @@ const sumarizarEventosPorViagensProcessadasGlobus = async () => {
           .where("id", viagemGlobus.id)
       }
 
+      console.log("Processamento concluído com sucesso!")
       process.exit(0)
       resolve(null)
     } catch (error) {
