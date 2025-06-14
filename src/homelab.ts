@@ -709,15 +709,22 @@ const syncSites = async () => {
   }
 }
 
-// const sync = async () => {
-//   // await syncDrivers()
-//   // await syncAssets()
-//   // await syncTrips()
-//   // await eventTypes()
-//   // await syncPositionsByAsset()
-//   await syncEvents()
-//   process.exit(0)
-// }
+const sync = async () => {
+  await syncDrivers()
+  await syncAssets()
+  await eventTypes()
+
+  // await syncTrips()
+  // await syncPositionsByAsset()
+  // await syncEvents()
+  process.exit(0)
+}
+
+if (require.main === module) {
+  // O script foi executado diretamente
+  console.log("Executado diretamente");
+  sync()
+}
 
 // sync()
 // syncDrivers()
