@@ -28,6 +28,7 @@ export type IAsset = {
   defaultDriverId: number
   created_at: Date
   updated_at: Date
+  id_empresa: number
 }
 
 export type IAssetCreate = Omit<IAsset, "id" | "created_at" | "updated_at">

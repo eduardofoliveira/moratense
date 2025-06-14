@@ -51,6 +51,7 @@ const syncDrivers = async () => {
             : 0,
           name: motorista.Name,
           created_at: new Date(),
+          id_empresa: 4,
         })
       } else {
         await Driver.create({
@@ -62,6 +63,7 @@ const syncDrivers = async () => {
             ? Number.parseInt(motorista.EmployeeNumber, 10)
             : 0,
           name: motorista.Name,
+          id_empresa: 4,
         })
       }
     }
@@ -141,6 +143,7 @@ const syncAssets = async () => {
           odometer: carro.Odometer,
           fmVehicleId: carro.FmVehicleId,
           updated_at: new Date(),
+          id_empresa: 4,
         })
       } else {
         await Asset.create({
@@ -169,6 +172,7 @@ const syncAssets = async () => {
           engineHours: carro.EngineHours,
           odometer: carro.Odometer,
           fmVehicleId: carro.FmVehicleId,
+          id_empresa: 4,
         })
       }
     }

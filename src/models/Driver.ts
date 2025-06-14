@@ -10,6 +10,7 @@ export type IDriver = {
   name: string
   created_at: Date
   updated_at: Date
+  id_empresa: number
 }
 
 export type IDriverCreate = Omit<IDriver, "id" | "created_at" | "updated_at">
