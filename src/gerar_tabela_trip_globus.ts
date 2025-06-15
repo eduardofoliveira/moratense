@@ -20,8 +20,10 @@ const inserirViagensRelacionadas = async ({
       gl.nome_linha,
       c.id AS id_chassi,
       c.numero_chassi,
+      c.text_chassi,
       d.name AS nome_motorista,
       d.driverId AS driverId,
+      gv.driverId as GlobusDriverId,
       a.assetId,
       a.registrationNumber,
       d.employeeNumber AS chapa,
@@ -80,7 +82,7 @@ const inserirViagensRelacionadas = async ({
         INSERT INTO viagens_globus_processadas
           (fk_id_linha_globus, fk_id_chassi, driverId, assetId, fuelUsedLitres, distanceKilometers, media, duracao_viagens_segundos, quantidade_viagens, tripsIds, data_saida_garagem)
         VALUES
-          (${viagem.id_linha_globus}, ${viagem.id_chassi}, ${viagem.driverId}, ${viagem.assetId}, ${viagem.fuelUsedLitres}, ${viagem.distanceKilometers}, ${viagem.media}, ${viagem.duracao_viagens_segundos}, ${viagem.quantidade_viagens}, '${viagem.tripIds}', '${format(viagem.data_saida_garagem, "yyyy-MM-dd HH:mm:ss")}')
+          (${viagem.id_linha_globus}, ${viagem.id_chassi}, ${viagem.GlobusDriverId ? viagem.GlobusDriverId : viagem.driverId}, ${viagem.assetId}, ${viagem.fuelUsedLitres}, ${viagem.distanceKilometers}, ${viagem.media}, ${viagem.duracao_viagens_segundos}, ${viagem.quantidade_viagens}, '${viagem.tripIds}', '${format(viagem.data_saida_garagem, "yyyy-MM-dd HH:mm:ss")}')
     `)
   }
 }
@@ -148,9 +150,9 @@ const gerarIndicadores = async ({
         continue
       }
 
-      if (trip.driverId && trip.driverId === "-9110386254540308778") {
-        continue
-      }
+      // if (trip.driverId && trip.driverId === "-9110386254540308778") {
+      //   continue
+      // }
 
       const [resumoEventos] = await connMoratense.raw(`
         SELECT
