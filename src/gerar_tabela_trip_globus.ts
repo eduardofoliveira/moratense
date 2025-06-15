@@ -263,7 +263,7 @@ const executar = async () => {
   }
 
   console.log("FIM")
-  process.exit(0)
+  // process.exit(0)
 }
 
 executar()
