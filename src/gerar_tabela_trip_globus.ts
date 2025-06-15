@@ -292,11 +292,16 @@ const executar = async () => {
     addDays(parse(start, "yyyy-MM-dd", new Date()), 1),
     "yyyy-MM-dd",
   )
+
+  const lista = []
+
   while (start !== termino) {
     console.log({ start, endDate })
 
-    await inserirViagensRelacionadas({ inicio: start, termino: endDate })
-    await gerarIndicadores({ inicio: start, termino: endDate })
+    lista.push({
+      start,
+      endDate,
+    })
 
     start = format(
       addDays(parse(start, "yyyy-MM-dd", new Date()), 1),
@@ -306,6 +311,16 @@ const executar = async () => {
       addDays(parse(endDate, "yyyy-MM-dd", new Date()), 1),
       "yyyy-MM-dd",
     )
+  }
+
+  for await (const item of lista) {
+    const { start, endDate } = item
+    console.log(`Processando de ${start} até ${endDate}`)
+
+    await inserirViagensRelacionadas({ inicio: start, termino: endDate })
+    await gerarIndicadores({ inicio: start, termino: endDate })
+
+    console.log(`Processado de ${item.start} até ${item.endDate}`)
   }
 
   console.log("FIM")
