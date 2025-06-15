@@ -164,7 +164,7 @@ const gerarIndicadores = async ({
 
           if (trip.driverId && trip.driverId === "-9110386254540308778") {
             trip.driverId = null
-            // continue
+            continue
           }
 
           console.log(`
