@@ -167,31 +167,31 @@ const gerarIndicadores = async ({
             continue
           }
 
-          console.log(`
-            SELECT
-              ec.descricao_exibida,
-              ec.code,
-              sum(e.totalOccurances) AS totalOccurances,
-              sum(e.totalTimeSeconds) AS totalTimeSeconds,
-              et.seguranca,
-              et.consumo
-            FROM
-              events e,
-              eventtype et,
-              events_converter ec
-            WHERE
-              e.eventTypeId = et.eventTypeId and
-              e.eventTypeId = ec.eventTypeId and
-              ${!trip.driverId ? "" : `e.driverId = ${trip.driverId} and`}
-              e.assetId = ${trip.assetId} and
-              e.startDateTime BETWEEN '${format(trip.tripStart, "yyyy-MM-dd HH:mm:ss")}' AND '${format(trip.tripEnd, "yyyy-MM-dd HH:mm:ss")}'
-            GROUP BY
-              e.eventTypeId
-            ORDER BY
-              et.consumo desc,
-              et.seguranca desc,
-              ec.descricao_exibida asc
-          `)
+          // console.log(`
+          //   SELECT
+          //     ec.descricao_exibida,
+          //     ec.code,
+          //     sum(e.totalOccurances) AS totalOccurances,
+          //     sum(e.totalTimeSeconds) AS totalTimeSeconds,
+          //     et.seguranca,
+          //     et.consumo
+          //   FROM
+          //     events e,
+          //     eventtype et,
+          //     events_converter ec
+          //   WHERE
+          //     e.eventTypeId = et.eventTypeId and
+          //     e.eventTypeId = ec.eventTypeId and
+          //     ${!trip.driverId ? "" : `e.driverId = ${trip.driverId} and`}
+          //     e.assetId = ${trip.assetId} and
+          //     e.startDateTime BETWEEN '${format(trip.tripStart, "yyyy-MM-dd HH:mm:ss")}' AND '${format(trip.tripEnd, "yyyy-MM-dd HH:mm:ss")}'
+          //   GROUP BY
+          //     e.eventTypeId
+          //   ORDER BY
+          //     et.consumo desc,
+          //     et.seguranca desc,
+          //     ec.descricao_exibida asc
+          // `)
 
           const [resumoEventos] = await connMoratense.raw(`
             SELECT
