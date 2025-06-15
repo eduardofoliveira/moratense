@@ -303,12 +303,12 @@ const executar = async () => {
     `)
 
     await vinculoPorCorridasGlobus({
-      start: inicio,
-      end: termino,
+      start: start,
+      end: endDate,
     })
     await vinculoPorMotorista({
-      start: inicio,
-      end: termino,
+      start: start,
+      end: endDate,
     })
 
     start = format(
