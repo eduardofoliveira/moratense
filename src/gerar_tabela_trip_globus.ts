@@ -162,9 +162,10 @@ const gerarIndicadores = async ({
             continue
           }
 
-          // if (trip.driverId && trip.driverId === "-9110386254540308778") {
-          //   continue
-          // }
+          if (trip.driverId && trip.driverId === "-9110386254540308778") {
+            trip.driverId = null
+            // continue
+          }
 
           const [resumoEventos] = await connMoratense.raw(`
             SELECT
