@@ -202,7 +202,7 @@ const gerarIndicadores = async ({
               et.seguranca,
               et.consumo
             FROM
-              events_01_2025 e,
+              events_04_2025 e,
               eventtype et,
               events_converter ec
             WHERE
@@ -284,8 +284,8 @@ const executar = async () => {
   // const today = new Date()
   // const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd")
   // const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd")
-  const inicio = "2025-01-01"
-  const termino = "2025-01-31"
+  const inicio = "2025-04-01"
+  const termino = "2025-04-30"
 
   let start = inicio
   let endDate = format(

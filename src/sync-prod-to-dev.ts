@@ -16,6 +16,9 @@ const sumarizarEventosPorViagensProcessadasGlobus = async () => {
       const processarQuantidadeEventos = await db("viagens_globus_processadas")
         .select("*")
         .where("eventos_processados", 1)
+        .andWhereBetween(
+          "data_saida_garagem",
+          ["2025-04-01 00:00:00", "2025-04-30 23:59:59"],)
 
       const total = processarQuantidadeEventos.length
       let atual = 0
@@ -40,7 +43,7 @@ const sumarizarEventosPorViagensProcessadasGlobus = async () => {
                 sum(e.totalTimeSeconds) AS totalTimeSeconds
               FROM
                 trips t,
-                events e
+                events_04_2025 e
               WHERE
                 e.assetId = t.assetId and
                 e.startDateTime BETWEEN t.tripStart AND t.tripEnd and

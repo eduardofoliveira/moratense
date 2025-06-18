@@ -262,12 +262,12 @@ const vinculoPorMotorista = async ({
 const executar = async () => {
   const connMoratense = DbMoratense.getConnection()
 
-  const today = new Date()
-  const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd")
-  const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd")
+  // const today = new Date()
+  // const inicio = format(startOfDay(subDays(today, 2)), "yyyy-MM-dd")
+  // const termino = format(endOfDay(subDays(today, 1)), "yyyy-MM-dd")
 
-  // const inicio = "2025-01-01"
-  // const termino = "2025-06-14"
+  const inicio = "2025-01-01"
+  const termino = "2025-06-14"
 
   let start = inicio
   let endDate = format(
@@ -291,7 +291,7 @@ const executar = async () => {
           FROM
             trips
           WHERE
-            tripStart BETWEEN '${inicio} 03:00:00' AND '${termino} 02:59:59'
+            tripStart BETWEEN '${start} 03:00:00' AND '${endDate} 02:59:59'
         )
     `)
 

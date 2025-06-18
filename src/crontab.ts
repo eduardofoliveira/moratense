@@ -28,20 +28,20 @@ const executarRotina = async () => {
     console.log(new Date().toLocaleString())
     console.log(`node ${path.resolve("./dist/syncGlobus.js")}`)
 
-    executarComando(`node ${path.resolve("./dist/vinculo.js")}`, () => {
-      console.log(new Date().toLocaleString())
-      console.log(`node ${path.resolve("./dist/vinculo.js")}`)
+    // executarComando(`node ${path.resolve("./dist/vinculo_v2.js")}`, () => {
+    //   console.log(new Date().toLocaleString())
+    //   console.log(`node ${path.resolve("./dist/vinculo_v2.js")}`)
 
-      executarComando(
-        `node ${path.resolve("./dist/gerar_tabela_trip_globus.js")}`,
-        () => {
-          console.log(new Date().toLocaleString())
-          console.log(
-            `node ${path.resolve("./dist/gerar_tabela_trip_globus.js")}`,
-          )
-        },
-      )
-    })
+    //   executarComando(
+    //     `node ${path.resolve("./dist/gerar_tabela_trip_globus.js")}`,
+    //     () => {
+    //       console.log(new Date().toLocaleString())
+    //       console.log(
+    //         `node ${path.resolve("./dist/gerar_tabela_trip_globus.js")}`,
+    //       )
+    //     },
+    //   )
+    // })
   })
 }
 
