@@ -202,7 +202,7 @@ const gerarIndicadores = async ({
               et.seguranca,
               et.consumo
             FROM
-              events_04_2025 e,
+              events e,
               eventtype et,
               events_converter ec
             WHERE
