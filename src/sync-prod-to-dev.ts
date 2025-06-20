@@ -43,7 +43,7 @@ const sumarizarEventosPorViagensProcessadasGlobus = async () => {
                 sum(e.totalTimeSeconds) AS totalTimeSeconds
               FROM
                 trips t,
-                events_04_2025 e
+                events e
               WHERE
                 e.assetId = t.assetId and
                 e.startDateTime BETWEEN t.tripStart AND t.tripEnd and
