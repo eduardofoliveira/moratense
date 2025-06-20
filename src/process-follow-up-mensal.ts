@@ -45,14 +45,12 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
   )
 
   console.log({
-    start,
-    end,
-    startLastWeek,
-    endLastWeek,
-    lastDayOfMonthFormatted
+    inicio: start,
+    termino: end,
+    inicio_mes_passado: startLastWeek,
+    termino_mes_passado: endLastWeek,
+    follow_up_date: lastDayOfMonthFormatted
   })
-
-  // process.exit(0)
 
   let count = 0
   for await (const item of listaProcessar) {
