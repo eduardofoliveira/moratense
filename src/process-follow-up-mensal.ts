@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { subDays, format, parse, subMonths, lastDayOfMonth } from "date-fns"
+import { subDays, format, parse, subMonths, lastDayOfMonth, endOfMonth, startOfMonth, addDays } from "date-fns"
 
 import DbMoratense from "./database/connectionManagerHomeLab"
 
@@ -35,8 +35,8 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
     "yyyy-MM-dd HH:mm:ss",
   )
   const endLastWeek = format(
-    subMonths(parse(end, "yyyy-MM-dd HH:mm:ss", new Date()), 1),
-    "yyyy-MM-dd HH:mm:ss",
+    addDays(endOfMonth(subMonths(parse(start, "yyyy-MM-dd HH:mm:ss", new Date()), 1)), 1),
+    "yyyy-MM-dd 02:59:59",
   )
 
   const lastDayOfMonthFormatted = format(
@@ -425,8 +425,8 @@ const execute = async ({ start, end, listaProcessar }: Params) => {
 
 const test = async () => {
   const hoje = new Date()
-  const start = format(subDays(hoje, 8), "yyyy-MM-dd 03:00:00")
-  const end = format(subDays(hoje, 1), "yyyy-MM-dd 02:59:59")
+  const start = format(startOfMonth(subMonths(hoje, 1)), "yyyy-MM-dd 03:00:00")
+  const end = format(addDays(endOfMonth(subMonths(hoje, 1)), 1), "yyyy-MM-dd 02:59:59")
 
   // const start = "2025-06-09 03:00:00"
   // const end = "2025-06-16 02:59:59"
