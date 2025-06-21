@@ -463,8 +463,8 @@ const execute = async () => {
   // const start = format(subDays(hoje, 8), "yyyy-MM-dd 03:00:00")
   // const end = format(subDays(hoje, 1), "yyyy-MM-dd 02:59:59")
 
-  const start = "2025-06-02 03:00:00"
-  const end = "2025-06-09 02:59:59"
+  const start = "2025-06-09 03:00:00"
+  const end = "2025-06-16 02:59:59"
 
   await gerarIndicadores(start, end, 2) // In loco
   await gerarIndicadores(start, end, 1) // Orientação
